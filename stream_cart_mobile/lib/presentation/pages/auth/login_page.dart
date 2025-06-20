@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/routing/app_router.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,24 +29,35 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(        child: BlocListener<AuthBloc, AuthState>(
+      body: SafeArea(
+        child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
-            print('LoginPage: State changed to ${state.runtimeType}');
             if (state is AuthSuccess) {
-              print('LoginPage: Login successful, navigating to home');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Login successful!'),
                   backgroundColor: Colors.green,
                 ),
               );
-              // Navigate to home page
-              Navigator.pushReplacement(
+              Navigator.pushNamedAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
+                AppRouter.home,
+                (route) => false,
+              );
+            } else if (state is AuthNeedsVerification) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Account requires verification. Please check your email for OTP.'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 4),
+                ),
+              );
+              Navigator.pushNamed(
+                context,
+                AppRouter.otpVerification,
+                arguments: state.email,
               );
             } else if (state is AuthFailure) {
-              print('LoginPage: Login failed - ${state.message}');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -194,10 +205,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Forgot Password
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to forgot password page
+                      
                     },
                     child: const Text(
                       'Forgot Password?',
@@ -212,14 +222,13 @@ class _LoginPageState extends State<LoginPage> {
                   // Sign Up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
+                    children: [                      const Text(
                         "Don't have an account? ",
                         style: TextStyle(color: Colors.grey),
                       ),
                       TextButton(
                         onPressed: () {
-                          // TODO: Navigate to sign up page
+                          Navigator.pushNamed(context, AppRouter.register);
                         },
                         child: const Text(
                           'Sign Up',

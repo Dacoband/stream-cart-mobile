@@ -4,8 +4,7 @@ class ApiConstants {
   static const String userBasePath = '/api/user';
   static const String productBasePath = '/api/product';
   static const String imageBasePath = '/api/image';
-  
-  // Auth endpoints (matching .env file)
+    // Auth endpoints (matching .env file)
   static const String loginEndpoint = '/api/auth/login';
   static const String signupEndpoint = '/api/auth/register';
   static const String refreshTokenEndpoint = '/api/auth/refresh-token';
@@ -14,6 +13,10 @@ class ApiConstants {
   static const String resetPasswordEndpoint = '/api/auth/reset-password';
   static const String changePasswordEndpoint = '/api/auth/change-password';
   static const String getMeEndpoint = '/api/auth/me';
+  
+  // OTP endpoints
+  static const String verifyOtpEndpoint = '/api/auth/verify-otp';
+  static const String resendOtpEndpoint = '/api/auth/resend-otp';
   
   // Image endpoints
   static const String uploadImageEndpoint = '/api/image/upload';

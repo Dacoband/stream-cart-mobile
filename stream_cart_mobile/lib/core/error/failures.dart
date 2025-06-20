@@ -28,3 +28,15 @@ class UnauthorizedFailure extends Failure {
 class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }
+
+class ConflictFailure extends Failure {
+  const ConflictFailure(super.message);
+}
+
+class ExpiredFailure extends Failure {
+  const ExpiredFailure(super.message);
+}
+
+class TooManyRequestsFailure extends Failure {
+  const TooManyRequestsFailure(super.message);
+}
