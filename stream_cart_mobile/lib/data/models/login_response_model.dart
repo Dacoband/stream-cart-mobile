@@ -52,33 +52,43 @@ class LoginResponseModel {
   final String message;
   final LoginResponseDataModel? data;
   final List<String>? errors;
+  final Map<String, dynamic>? rawData; // Add this to store raw data
 
   LoginResponseModel({
     required this.success,
     required this.message,
     this.data,
     this.errors,
-  });
-
-  factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
+    this.rawData, // Add this parameter
+  });  factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
-      data: json['data'] != null 
+      data: json['data'] != null && json['success'] == true
           ? LoginResponseDataModel.fromJson(json['data'])
           : null,
       errors: json['errors'] != null 
           ? List<String>.from(json['errors'])
           : null,
+      rawData: json['data'] as Map<String, dynamic>?, // Store raw data
     );
   }
-
   Map<String, dynamic> toJson() {
-    return {
+    // Need to access original JSON data for verification cases
+    // For now, construct the map with available data
+    final Map<String, dynamic> result = {
       'success': success,
       'message': message,
-      'data': data?.toJson(),
       'errors': errors,
     };
+    
+    if (data != null) {
+      result['data'] = data!.toJson();
+    } else {
+      // If data is null but we need to preserve original structure for error cases
+      result['data'] = null;
+    }
+    
+    return result;
   }
 }

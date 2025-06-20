@@ -33,25 +33,31 @@ class ValidationUtils {
     final passedCriteria = validation.values.where((isValid) => isValid).length;
     return (passedCriteria / validation.length) * 100;
   }
-
-  /// Validate phone number (international format)
+  /// Validate phone number (international format including Vietnam)
   static bool isValidPhoneNumber(String phone) {
     if (phone.isEmpty) return false;
     
-    // Remove all non-digit characters
+    // Remove all non-digit characters except +
     final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
     
-    // Check for international format or local format
-    final phoneRegex = RegExp(r'^\+?[1-9]\d{1,14}$');
-    
-    return phoneRegex.hasMatch(cleanPhone) && cleanPhone.length >= 10;
+    // Vietnam phone number patterns:
+    // - Mobile: 09xxxxxxxx, 08xxxxxxxx, 07xxxxxxxx, 05xxxxxxxx, 03xxxxxxxx
+    // - International: +849xxxxxxxx, +848xxxxxxxx, +847xxxxxxxx, +845xxxxxxxx, +843xxxxxxxx
+    if (cleanPhone.startsWith('+84')) {
+      // International Vietnam format
+      return RegExp(r'^\+84[3-9]\d{8}$').hasMatch(cleanPhone);
+    } else {
+      // Local Vietnam format
+      return RegExp(r'^0[3-9]\d{8}$').hasMatch(cleanPhone);
+    }
   }
 
-  /// Validate name (letters, spaces, hyphens, apostrophes only)
+  /// Validate name (letters, spaces, hyphens, apostrophes, and Vietnamese characters)
   static bool isValidName(String name) {
     if (name.isEmpty) return false;
     
-    final nameRegex = RegExp(r"^[a-zA-Z\s\-']+$");
+    // Support Vietnamese characters, letters, spaces, hyphens, apostrophes
+    final nameRegex = RegExp(r"^[a-zA-ZàáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđĐÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸ\s\-']+$");
     return nameRegex.hasMatch(name.trim()) && name.trim().length >= 2;
   }
 

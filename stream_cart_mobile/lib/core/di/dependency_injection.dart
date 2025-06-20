@@ -10,31 +10,27 @@ import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/otp_usecases.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // Core Storage
   getIt.registerLazySingleton<FlutterSecureStorage>(() {
     try {
       return const FlutterSecureStorage();
     } catch (e) {
-      print('FlutterSecureStorage not available on this platform');
+      
       rethrow;
-    }
-  });
+    }  });
   
-  // Storage Service
   getIt.registerLazySingleton<StorageService>(() => StorageService(getIt()));
   
-  // HTTP Service
   HttpService.initialize(storageService: getIt<StorageService>());
   
-  // Core
   getIt.registerLazySingleton<Dio>(() => NetworkConfig.createDio(storageService: getIt()));
   
-  // Data sources
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(getIt()),
   );
@@ -43,28 +39,31 @@ Future<void> setupDependencies() async {
     () {
       FlutterSecureStorage? secureStorage;
       try {
-        secureStorage = getIt<FlutterSecureStorage>();
-      } catch (e) {
-        print('FlutterSecureStorage not available on this platform, using fallback');
+        secureStorage = getIt<FlutterSecureStorage>();      } catch (e) {
+        
         secureStorage = null;
-      }
-      return AuthLocalDataSourceImpl(secureStorage);
+      }      return AuthLocalDataSourceImpl(secureStorage);
     },
   );
-    // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remoteDataSource: getIt(),
       localDataSource: getIt(),
     ),
   );
-  
-  // Services
+    
   getIt.registerLazySingleton<AuthService>(() => AuthService(getIt()));
   
-  // Use cases
   getIt.registerLazySingleton(() => LoginUseCase(getIt()));
+  getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
+  getIt.registerLazySingleton(() => VerifyOtpUseCase(getIt()));
+  getIt.registerLazySingleton(() => ResendOtpUseCase(getIt()));
   
-  // Blocs
-  getIt.registerFactory(() => AuthBloc(loginUseCase: getIt()));
+  getIt.registerFactory(() => AuthBloc(
+    loginUseCase: getIt(),
+    registerUseCase: getIt(),
+    verifyOtpUseCase: getIt(),
+    resendOtpUseCase: getIt(),
+    authRepository: getIt(),
+  ));
 }
