@@ -12,7 +12,13 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
+import '../../domain/usecases/get_categories_usecase.dart';
+import '../../domain/usecases/get_products_usecase.dart';
+import '../../data/datasources/home_remote_data_source.dart';
+import '../../data/repositories/home_repository_impl.dart';
+import '../../domain/repositories/home_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
+import '../../presentation/blocs/home/home_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -53,11 +59,24 @@ Future<void> setupDependencies() async {
   );
     
   getIt.registerLazySingleton<AuthService>(() => AuthService(getIt()));
-  
-  getIt.registerLazySingleton(() => LoginUseCase(getIt()));
+    getIt.registerLazySingleton(() => LoginUseCase(getIt()));
   getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
   getIt.registerLazySingleton(() => VerifyOtpUseCase(getIt()));
   getIt.registerLazySingleton(() => ResendOtpUseCase(getIt()));
+  
+  // Home dependencies
+  getIt.registerLazySingleton<HomeRemoteDataSource>(
+    () => HomeRemoteDataSourceImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton<HomeRepository>(
+    () => HomeRepositoryImpl(
+      remoteDataSource: getIt(),
+    ),
+  );
+    getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductsUseCase(getIt()));
+  getIt.registerLazySingleton(() => SearchProductsUseCase(getIt()));
   
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
@@ -65,5 +84,11 @@ Future<void> setupDependencies() async {
     verifyOtpUseCase: getIt(),
     resendOtpUseCase: getIt(),
     authRepository: getIt(),
+  ));
+  
+  getIt.registerFactory(() => HomeBloc(
+    getCategoriesUseCase: getIt(),
+    getProductsUseCase: getIt(),
+    searchProductsUseCase: getIt(),
   ));
 }
