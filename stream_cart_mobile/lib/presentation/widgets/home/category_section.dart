@@ -1,0 +1,252 @@
+import 'package:flutter/material.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../domain/entities/category_entity.dart';
+
+class CategorySection extends StatelessWidget {
+  final List<CategoryEntity>? categories;
+  
+  const CategorySection({
+    super.key,
+    this.categories,
+  });
+
+  // Mock categories data for fallback
+  static const List<Map<String, dynamic>> _mockCategories = [
+    {
+      'id': '1',
+      'name': 'Điện tử',
+      'icon': Icons.phone_android,
+      'color': Colors.blue,
+    },
+    {
+      'id': '2',
+      'name': 'Thời trang',
+      'icon': Icons.checkroom,
+      'color': Colors.pink,
+    },
+    {
+      'id': '3',
+      'name': 'Gia dụng',
+      'icon': Icons.home,
+      'color': Colors.green,
+    },
+    {
+      'id': '4',
+      'name': 'Làm đẹp',
+      'icon': Icons.face_retouching_natural,
+      'color': Colors.purple,
+    },
+    {
+      'id': '5',
+      'name': 'Thể thao',
+      'icon': Icons.sports_soccer,
+      'color': Colors.orange,
+    },
+    {
+      'id': '6',
+      'name': 'Sách',
+      'icon': Icons.book,
+      'color': Colors.brown,
+    },
+    {
+      'id': '7',
+      'name': 'Thực phẩm',
+      'icon': Icons.restaurant,
+      'color': Colors.red,
+    },
+    {
+      'id': '8',
+      'name': 'Khác',
+      'icon': Icons.more_horiz,
+      'color': Colors.grey,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppConstants.defaultPadding,
+            vertical: 8,
+          ),
+          child: Text(
+            'Danh mục',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        Container(
+          height: 120,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.defaultPadding,
+          ),
+          child: GridView.builder(
+            scrollDirection: Axis.horizontal,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.8,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: categories?.isNotEmpty == true 
+                ? (categories!.length > 8 ? 8 : categories!.length)
+                : _mockCategories.length,
+            itemBuilder: (context, index) {
+              if (categories?.isNotEmpty == true) {
+                final category = categories![index];
+                return _buildCategoryFromEntity(context, category);
+              } else {
+                final category = _mockCategories[index];
+                return _buildCategoryFromMock(context, category);
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryFromEntity(BuildContext context, CategoryEntity category) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to category products
+        print('Category tapped: ${category.categoryName}');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: category.iconURL?.isNotEmpty == true
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.network(
+                        category.iconURL!,
+                        width: 40,
+                        height: 40,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.category,
+                            color: Colors.blue,
+                            size: 24,
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 40,
+                            height: 40,
+                            child: Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
+                      Icons.category,
+                      color: Colors.blue,
+                      size: 24,
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                category.categoryName,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryFromMock(BuildContext context, Map<String, dynamic> category) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to category products
+        print('Category tapped: ${category['name']}');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: (category['color'] as Color).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                category['icon'] as IconData,
+                color: category['color'] as Color,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                category['name'],
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

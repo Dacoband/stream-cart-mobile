@@ -26,12 +26,12 @@ class ApiConstants {
   static const String updateProfileEndpoint = '/api/user/profile';
   
   // Product endpoints
-  static const String productsEndpoint = '/api/product';
-  static const String productDetailsEndpoint = '/api/product/{id}';
-  static const String searchProductsEndpoint = '/api/product/search';
+  static const String productsEndpoint = '/api/products';
+  static const String productDetailsEndpoint = '/api/products/{id}';
+  static const String searchProductsEndpoint = '/api/products/paged';
   
   // Other endpoints
-  static const String categoriesEndpoint = '/api/categories';
+  static const String categoriesEndpoint = '/api/categorys';
   static const String cartEndpoint = '/api/cart';
   static const String ordersEndpoint = '/api/orders';
   
