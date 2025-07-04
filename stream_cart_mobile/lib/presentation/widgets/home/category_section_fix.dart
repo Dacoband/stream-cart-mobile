@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/category_entity.dart';
 
-class CategorySection extends StatelessWidget {
+class CategorySectionWidget extends StatelessWidget {
   final List<CategoryEntity>? categories;
   
-  const CategorySection({
+  const CategorySectionWidget({
     super.key,
     this.categories,
   });
@@ -81,31 +81,34 @@ class CategorySection extends StatelessWidget {
             ),
           ),
         ),
-        Container(
-          height: 120,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding,
-          ),
-          child: GridView.builder(
-            scrollDirection: Axis.horizontal,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+        SizedBox(
+          height: 110, // Giảm height để tránh overflow
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.defaultPadding,
             ),
-            itemCount: categories?.isNotEmpty == true 
-                ? (categories!.length > 8 ? 8 : categories!.length)
-                : _mockCategories.length,
-            itemBuilder: (context, index) {
-              if (categories?.isNotEmpty == true) {
-                final category = categories![index];
-                return _buildCategoryFromEntity(context, category);
-              } else {
-                final category = _mockCategories[index];
-                return _buildCategoryFromMock(context, category);
-              }
-            },
+            child: GridView.builder(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7, // Giảm để có thêm không gian cho text
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              itemCount: categories?.isNotEmpty == true 
+                  ? (categories!.length > 8 ? 8 : categories!.length)
+                  : _mockCategories.length,
+              itemBuilder: (context, index) {
+                if (categories?.isNotEmpty == true) {
+                  final category = categories![index];
+                  return _buildCategoryFromEntity(context, category);
+                } else {
+                  final category = _mockCategories[index];
+                  return _buildCategoryFromMock(context, category);
+                }
+              },
+            ),
           ),
         ),
       ],
@@ -129,38 +132,39 @@ class CategorySection extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min, // Thêm để tránh overflow
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 32, // Giảm kích thước icon
+              height: 32,
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: category.iconURL?.isNotEmpty == true
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.network(
                         category.iconURL!,
-                        width: 40,
-                        height: 40,
+                        width: 32,
+                        height: 32,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
                             Icons.category,
                             color: Colors.blue,
-                            size: 24,
+                            size: 20,
                           );
                         },
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
                           return Container(
-                            width: 40,
-                            height: 40,
+                            width: 32,
+                            height: 32,
                             child: Center(
                               child: SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 16,
+                                height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -174,21 +178,23 @@ class CategorySection extends StatelessWidget {
                   : Icon(
                       Icons.category,
                       color: Colors.blue,
-                      size: 24,
+                      size: 20,
                     ),
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                category.categoryName,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+            const SizedBox(height: 6), // Giảm spacing
+            Flexible( // Thay Padding bằng Flexible để tránh overflow
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  category.categoryName,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10, // Giảm font size
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
             ),
@@ -215,32 +221,35 @@ class CategorySection extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min, // Thêm để tránh overflow
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 32, // Giảm kích thước icon
+              height: 32,
               decoration: BoxDecoration(
                 color: (category['color'] as Color).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 category['icon'] as IconData,
                 color: category['color'] as Color,
-                size: 24,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                category['name'],
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+            const SizedBox(height: 6), // Giảm spacing
+            Flexible( // Thay Padding bằng Flexible để tránh overflow
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  category['name'],
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10, // Giảm font size
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
             ),

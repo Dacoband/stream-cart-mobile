@@ -18,7 +18,7 @@ class CategoryResponseModel {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       data: json['data'] != null
-          ? (json['data'] as List)
+          ? (json['data']['categories'] as List)
               .map((item) => CategoryModel.fromJson(item))
               .toList()
           : [],

@@ -4,8 +4,8 @@ class StorageService {
 
   StorageService(this._secureStorage);
 
-  // Các key cho storage
-  static const String _accessTokenKey = 'access_token';
+  // Các key cho storage - đồng bộ với AuthLocalDataSource
+  static const String _accessTokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _accountIdKey = 'account_id';
 

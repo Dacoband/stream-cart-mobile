@@ -9,9 +9,18 @@ class AuthInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Add auth token to requests if available
     final token = await _storageService.getAccessToken();
+    
+    print('=== AUTH INTERCEPTOR DEBUG ===');
+    print('Request URL: ${options.baseUrl}${options.path}');
+    print('Token exists: ${token != null}');
+    print('Token length: ${token?.length ?? 0}');
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+      print('Authorization header added');
+    } else {
+      print('No token available - request without auth');
     }
+    print('================================');
     
     super.onRequest(options, handler);
   }

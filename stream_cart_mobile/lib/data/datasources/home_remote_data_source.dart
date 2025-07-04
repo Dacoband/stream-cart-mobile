@@ -18,13 +18,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<CategoryResponseModel> getCategories() async {
     final url = ApiUrlHelper.getFullUrl(ApiConstants.categoriesEndpoint);
+    print('🌐 DataSource: Calling categories API: $url');
     final response = await dio.get(url);
-    return CategoryResponseModel.fromJson(response.data);
+    print('📦 DataSource: Categories raw response: ${response.data}');
+    final result = CategoryResponseModel.fromJson(response.data);
+    print('✅ DataSource: Parsed categories - success: ${result.success}, count: ${result.data.length}');
+    return result;
   }
 
   @override
   Future<ProductResponseModel> getProducts({int page = 1, int limit = 20}) async {
     final url = ApiUrlHelper.getFullUrl(ApiConstants.productsEndpoint);
+    print('🌐 DataSource: Calling products API: $url (page: $page, limit: $limit)');
     final response = await dio.get(
       url,
       queryParameters: {
@@ -32,7 +37,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         'limit': limit,
       },
     );
-    return ProductResponseModel.fromJson(response.data);
+    print('🛍️ DataSource: Products raw response: ${response.data}');
+    final result = ProductResponseModel.fromJson(response.data);
+    print('✅ DataSource: Parsed products - success: ${result.success}, count: ${result.data.length}');
+    return result;
   }
 
   @override

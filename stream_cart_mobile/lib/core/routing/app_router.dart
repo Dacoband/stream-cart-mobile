@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../di/dependency_injection.dart';
 import '../../presentation/pages/auth/login_page.dart';
 import '../../presentation/pages/auth/register_page.dart';
 import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
+import '../../presentation/blocs/profile/profile_bloc.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -31,7 +34,12 @@ class AppRouter {
       case home:
         return MaterialPageRoute(builder: (_) => const HomePage());
       case profile:
-        return MaterialPageRoute(builder: (_) => const ProfilePage());
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ProfileBloc>(),
+            child: const ProfilePage(),
+          ),
+        );
       case cart:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

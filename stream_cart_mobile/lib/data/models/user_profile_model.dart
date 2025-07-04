@@ -104,4 +104,26 @@ class UserProfileModel {
       lastModifiedBy: lastModifiedBy,
     );
   }
+
+  factory UserProfileModel.fromEntity(UserProfileEntity entity) {
+    return UserProfileModel(
+      id: entity.id,
+      username: entity.username,
+      email: entity.email,
+      phoneNumber: entity.phoneNumber,
+      fullname: entity.fullname,
+      avatarURL: entity.avatarURL,
+      role: entity.role,
+      registrationDate: entity.registrationDate.toIso8601String(),
+      lastLoginDate: entity.lastLoginDate?.toIso8601String(),
+      isActive: entity.isActive,
+      isVerified: entity.isVerified,
+      completeRate: entity.completeRate,
+      shopId: entity.shopId,
+      createdAt: entity.createdAt.toIso8601String(),
+      createdBy: entity.createdBy,
+      lastModifiedAt: entity.lastModifiedAt?.toIso8601String(),
+      lastModifiedBy: entity.lastModifiedBy,
+    );
+  }
 }

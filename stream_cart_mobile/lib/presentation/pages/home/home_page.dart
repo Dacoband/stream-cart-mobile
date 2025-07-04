@@ -8,7 +8,7 @@ import '../../blocs/home/home_event.dart';
 import '../../blocs/home/home_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/banner_slider.dart';
-import '../../widgets/home/category_section.dart';
+import '../../widgets/home/category_section_fix.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  int _currentBottomNavIndex = 1; // Home is index 1
+  int _currentBottomNavIndex = 1; 
 
   @override
   void initState() {
@@ -46,8 +46,7 @@ class _HomePageState extends State<HomePage> {
       case 0: // Live
         Navigator.pushNamed(context, AppRouter.livestreamList);
         break;
-      case 1: // Home
-        // Already on home, do nothing
+      case 1: 
         break;
       case 2: // Profile
         Navigator.pushNamed(context, '/profile');
@@ -206,7 +205,7 @@ class _HomePageState extends State<HomePage> {
                     // Categories section - only show when not searching
                     if (state is HomeLoaded)
                       SliverToBoxAdapter(
-                        child: CategorySection(categories: state.categories),
+                        child: CategorySectionWidget(categories: state.categories),
                       ),
 
                     // Livestream section - only show when not searching

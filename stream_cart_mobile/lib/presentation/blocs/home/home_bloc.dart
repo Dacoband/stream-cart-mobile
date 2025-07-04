@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dartz/dartz.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/product_entity.dart';
 import '../../../domain/usecases/get_categories_usecase.dart';
 import '../../../domain/usecases/get_products_usecase.dart';
+import '../../../core/error/failures.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -26,26 +28,59 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(HomeLoading());
 
     try {
+      print('🏠 HomeBloc: Starting to load home data...');
+      
       // Load categories and products concurrently
-      final results = await Future.wait([
-        getCategoriesUseCase(),
-        getProductsUseCase(page: 1, limit: 20),
-      ]);
+      final categoriesResult = await getCategoriesUseCase();
+      print('📦 Categories result received');
+      
+      final productsResult = await getProductsUseCase(page: 1, limit: 20);
+      print('🛍️ Products result received');
 
-      final categoriesResult = results[0];
-      final productsResult = results[1];
+      // Check for errors
+      String? errorMessage;
+      
+      categoriesResult.fold(
+        (failure) {
+          print('❌ Categories error: ${failure.message}');
+          errorMessage = 'Categories: ${failure.message}';
+        },
+        (categories) {
+          print('✅ Categories loaded: ${categories.length} items');
+        },
+      );
+      
+      if (errorMessage == null) {
+        productsResult.fold(
+          (failure) {
+            print('❌ Products error: ${failure.message}');
+            errorMessage = 'Products: ${failure.message}';
+          },
+          (products) {
+            print('✅ Products loaded: ${products.length} items');
+          },
+        );
+      }
 
-      if (categoriesResult.isLeft() || productsResult.isLeft()) {
-        // Handle errors
-        final categoryError = categoriesResult.fold((failure) => failure.message, (_) => null);
-        final productError = productsResult.fold((failure) => failure.message, (_) => null);
-        
-        final errorMessage = categoryError ?? productError ?? 'Unknown error occurred';
-        emit(HomeError(errorMessage));
+      if (errorMessage != null) {
+        print('💥 Emitting error: $errorMessage');
+        emit(HomeError(errorMessage!));
         return;
-      }      final categories = categoriesResult.fold((_) => <CategoryEntity>[], (categories) => categories as List<CategoryEntity>);
-      final products = productsResult.fold((_) => <ProductEntity>[], (products) => products as List<ProductEntity>);
+      }
 
+      // Extract data if successful
+      final categories = categoriesResult.fold(
+        (_) => <CategoryEntity>[],
+        (categories) => categories,
+      );
+      
+      final products = productsResult.fold(
+        (_) => <ProductEntity>[],
+        (products) => products,
+      );
+
+      print('🎉 Emitting HomeLoaded with ${categories.length} categories and ${products.length} products');
+      
       emit(HomeLoaded(
         categories: categories,
         products: products,
@@ -53,6 +88,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         hasMoreProducts: products.length >= 20,
       ));
     } catch (e) {
+      print('💥 Unexpected error in HomeBloc: $e');
       emit(HomeError('Unexpected error occurred: $e'));
     }
   }

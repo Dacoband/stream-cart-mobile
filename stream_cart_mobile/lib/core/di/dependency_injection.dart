@@ -14,11 +14,16 @@ import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
+import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
+import '../../data/datasources/profile_remote_data_source.dart';
+import '../../data/repositories/profile_repository_impl.dart';
+import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
+import '../../presentation/blocs/profile/profile_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -78,6 +83,19 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductsUseCase(getIt()));
   getIt.registerLazySingleton(() => SearchProductsUseCase(getIt()));
   
+  // Profile dependencies
+  getIt.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: getIt(),
+    ),
+  );
+  
+  getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
+  
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
@@ -90,5 +108,9 @@ Future<void> setupDependencies() async {
     getCategoriesUseCase: getIt(),
     getProductsUseCase: getIt(),
     searchProductsUseCase: getIt(),
+  ));
+  
+  getIt.registerFactory(() => ProfileBloc(
+    getUserProfileUseCase: getIt(),
   ));
 }
