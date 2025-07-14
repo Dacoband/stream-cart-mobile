@@ -6,6 +6,7 @@ import '../../presentation/pages/auth/register_page.dart';
 import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
+import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 
 class AppRouter {
@@ -39,6 +40,11 @@ class AppRouter {
             create: (context) => getIt<ProfileBloc>(),
             child: const ProfilePage(),
           ),
+        );
+      case productDetails:
+        final String productId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => ProductDetailPage(productId: productId),
         );
       case cart:
         return MaterialPageRoute(

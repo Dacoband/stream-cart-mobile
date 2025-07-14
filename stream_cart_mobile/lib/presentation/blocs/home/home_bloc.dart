@@ -1,10 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dartz/dartz.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/product_entity.dart';
 import '../../../domain/usecases/get_categories_usecase.dart';
 import '../../../domain/usecases/get_products_usecase.dart';
-import '../../../core/error/failures.dart';
+import '../../../domain/usecases/get_product_primary_images_usecase.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -12,16 +11,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetProductsUseCase getProductsUseCase;
   final SearchProductsUseCase searchProductsUseCase;
+  final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
 
   HomeBloc({
     required this.getCategoriesUseCase,
     required this.getProductsUseCase,
     required this.searchProductsUseCase,
+    required this.getProductPrimaryImagesUseCase,
   }) : super(HomeInitial()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<RefreshHomeDataEvent>(_onRefreshHomeData);
     on<SearchProductsEvent>(_onSearchProducts);
     on<LoadMoreProductsEvent>(_onLoadMoreProducts);
+    on<LoadProductImagesEvent>(_onLoadProductImages);
   }
 
   Future<void> _onLoadHomeData(LoadHomeDataEvent event, Emitter<HomeState> emit) async {
@@ -87,6 +89,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         liveStreams: [], // TODO: Load livestreams when API is ready
         hasMoreProducts: products.length >= 20,
       ));
+
+      // Auto-load product images after products are loaded
+      if (products.isNotEmpty) {
+        final productIds = products.map((p) => p.id).toList();
+        add(LoadProductImagesEvent(productIds));
+      }
     } catch (e) {
       print('💥 Unexpected error in HomeBloc: $e');
       emit(HomeError('Unexpected error occurred: $e'));
@@ -137,6 +145,27 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       } catch (e) {
         emit(currentState.copyWith(isLoadingMore: false));
       }
+    }
+  }
+
+  Future<void> _onLoadProductImages(LoadProductImagesEvent event, Emitter<HomeState> emit) async {
+    if (state is HomeLoaded) {
+      final currentState = state as HomeLoaded;
+      
+      print('🖼️ HomeBloc: Loading images for ${event.productIds.length} products');
+      
+      final result = await getProductPrimaryImagesUseCase(event.productIds);
+      
+      result.fold(
+        (failure) {
+          print('❌ HomeBloc: Error loading product images: ${failure.message}');
+          // Don't change state on error, just log it
+        },
+        (primaryImages) {
+          print('✅ HomeBloc: Successfully loaded ${primaryImages.length} product images');
+          emit(currentState.copyWith(productImages: primaryImages));
+        },
+      );
     }
   }
 }
