@@ -22,6 +22,7 @@ class HomeLoaded extends HomeState {
   final UserProfileEntity? userProfile;
   final bool hasMoreProducts;
   final bool isLoadingMore;
+  final Map<String, String> productImages; // productId -> imageUrl
 
   const HomeLoaded({
     required this.categories,
@@ -30,6 +31,7 @@ class HomeLoaded extends HomeState {
     this.userProfile,
     this.hasMoreProducts = true,
     this.isLoadingMore = false,
+    this.productImages = const {},
   });
 
   @override
@@ -40,6 +42,7 @@ class HomeLoaded extends HomeState {
         userProfile,
         hasMoreProducts,
         isLoadingMore,
+        productImages,
       ];
 
   HomeLoaded copyWith({
@@ -49,6 +52,7 @@ class HomeLoaded extends HomeState {
     UserProfileEntity? userProfile,
     bool? hasMoreProducts,
     bool? isLoadingMore,
+    Map<String, String>? productImages,
   }) {
     return HomeLoaded(
       categories: categories ?? this.categories,
@@ -57,6 +61,7 @@ class HomeLoaded extends HomeState {
       userProfile: userProfile ?? this.userProfile,
       hasMoreProducts: hasMoreProducts ?? this.hasMoreProducts,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      productImages: productImages ?? this.productImages,
     );
   }
 }

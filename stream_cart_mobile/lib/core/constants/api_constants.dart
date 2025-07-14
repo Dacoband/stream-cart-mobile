@@ -28,7 +28,12 @@ class ApiConstants {
   // Product endpoints
   static const String productsEndpoint = '/api/products';
   static const String productDetailsEndpoint = '/api/products/{id}';
+  static const String productDetailEndpoint = '/api/products/{id}/detail';
   static const String searchProductsEndpoint = '/api/products/paged';
+  
+  // Product Image endpoints
+  static const String allProductImagesEndpoint = '/api/product-images';
+  static const String productImagesEndpoint = '/api/product-images/products/{productId}';
   
   // Other endpoints
   static const String categoriesEndpoint = '/api/categorys';

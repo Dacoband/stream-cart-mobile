@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/product_entity.dart';
+import '../../../core/routing/app_router.dart';
+import '../../blocs/home/home_bloc.dart';
+import '../../blocs/home/home_state.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<ProductEntity>? products;
@@ -81,40 +85,53 @@ class ProductGrid extends StatelessWidget {
   ];
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppConstants.defaultPadding,
-      ),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: products?.isNotEmpty == true 
-            ? products!.length 
-            : _mockProducts.length,
-        itemBuilder: (context, index) {
-          if (products?.isNotEmpty == true) {
-            final product = products![index];
-            return _buildProductFromEntity(context, product);
-          } else {
-            final product = _mockProducts[index];
-            return _buildProductFromMock(context, product);
-          }
-        },
-      ),
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        final Map<String, String> productImages = state is HomeLoaded 
+            ? state.productImages 
+            : {};
+            
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.defaultPadding,
+          ),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.7,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: products?.isNotEmpty == true 
+                ? products!.length 
+                : _mockProducts.length,
+            itemBuilder: (context, index) {
+              if (products?.isNotEmpty == true) {
+                final product = products![index];
+                final imageUrl = productImages[product.id];
+                return _buildProductFromEntity(context, product, imageUrl);
+              } else {
+                final product = _mockProducts[index];
+                return _buildProductFromMock(context, product);
+              }
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildProductFromEntity(BuildContext context, ProductEntity product) {
+  Widget _buildProductFromEntity(BuildContext context, ProductEntity product, String? imageUrl) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to product detail
-        print('Product tapped: ${product.productName}');
+        print('Product tapped: ${product.productName} - ID: ${product.id}');
+        Navigator.pushNamed(
+          context,
+          AppRouter.productDetails,
+          arguments: product.id,
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -146,13 +163,48 @@ class ProductGrid extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    Center(
-                      child: Icon(
-                        Icons.shopping_bag,
-                        size: 50,
-                        color: Colors.grey.shade400,
+                    // Product Image
+                    if (imageUrl != null && imageUrl.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
+                        child: Image.network(
+                          imageUrl,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 50,
+                                color: Colors.grey.shade400,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      Center(
+                        child: Icon(
+                          Icons.shopping_bag,
+                          size: 50,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
-                    ),
                     // Sale badge
                     if (product.discountPrice > 0 && product.discountPrice < product.basePrice)
                       Positioned(

@@ -15,6 +15,9 @@ import '../../domain/usecases/otp_usecases.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
+import '../../domain/usecases/get_product_detail_usecase.dart';
+import '../../domain/usecases/get_product_images_usecase.dart';
+import '../../domain/usecases/get_product_primary_images_usecase.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
@@ -24,6 +27,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
+import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -79,9 +83,12 @@ Future<void> setupDependencies() async {
       remoteDataSource: getIt(),
     ),
   );
-    getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsUseCase(getIt()));
   getIt.registerLazySingleton(() => SearchProductsUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
   
   // Profile dependencies
   getIt.registerLazySingleton<ProfileRemoteDataSource>(
@@ -108,9 +115,15 @@ Future<void> setupDependencies() async {
     getCategoriesUseCase: getIt(),
     getProductsUseCase: getIt(),
     searchProductsUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
   ));
   
   getIt.registerFactory(() => ProfileBloc(
     getUserProfileUseCase: getIt(),
+  ));
+  
+  getIt.registerFactory(() => ProductDetailBloc(
+    getProductDetailUseCase: getIt(),
+    getProductImagesUseCase: getIt(),
   ));
 }
