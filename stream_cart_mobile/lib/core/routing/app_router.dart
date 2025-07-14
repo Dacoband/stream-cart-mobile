@@ -7,6 +7,7 @@ import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
+import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 
 class AppRouter {
@@ -16,6 +17,7 @@ class AppRouter {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String productDetails = '/product-details';
+  static const String search = '/search';
   static const String livestreamList = '/livestream-list';
   static const String livestreamDetail = '/livestream-detail';
   static const String cart = '/cart';
@@ -45,6 +47,11 @@ class AppRouter {
         final String productId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (_) => ProductDetailPage(productId: productId),
+        );
+      case search:
+        final String? initialQuery = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (_) => SearchPage(initialQuery: initialQuery),
         );
       case cart:
         return MaterialPageRoute(

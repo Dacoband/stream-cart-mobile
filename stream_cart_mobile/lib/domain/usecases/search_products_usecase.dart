@@ -8,24 +8,15 @@ class SearchProductsUseCase {
 
   SearchProductsUseCase(this.repository);
 
-  Future<({List<ProductEntity> products, String? error})> call({
+  Future<Either<Failure, List<ProductEntity>>> call({
     required String query,
     int page = 1,
     int limit = 20,
   }) async {
-    try {
-      final result = await repository.searchProducts(
-        query: query,
-        page: page,
-        limit: limit,
-      );
-      
-      return result.fold(
-        (failure) => (products: <ProductEntity>[], error: failure.message),
-        (products) => (products: products, error: null),
-      );
-    } catch (e) {
-      return (products: <ProductEntity>[], error: e.toString());
-    }
+    return await repository.searchProducts(
+      query: query,
+      page: page,
+      limit: limit,
+    );
   }
 }
