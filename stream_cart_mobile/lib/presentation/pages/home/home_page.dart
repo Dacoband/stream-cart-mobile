@@ -53,16 +53,13 @@ class _HomePageState extends State<HomePage> {
         break;
     }
   }
-  void _onSearchChanged(String query) {
-    if (query.isNotEmpty) {
-      context.read<HomeBloc>().add(SearchProductsEvent(query));
-    } else {
-      context.read<HomeBloc>().add(LoadHomeDataEvent());
-    }
-  }
 
   void _onCartPressed() {
     Navigator.pushNamed(context, AppRouter.cart);
+  }
+
+  void _onSearchTapped() {
+    Navigator.pushNamed(context, AppRouter.search);
   }
   @override
   Widget build(BuildContext context) {
@@ -96,7 +93,8 @@ class _HomePageState extends State<HomePage> {
                             child: CustomSearchBar(
                               controller: _searchController,
                               hintText: 'Tìm kiếm sản phẩm...',
-                              onChanged: _onSearchChanged,
+                              readOnly: true,
+                              onTap: _onSearchTapped,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -196,23 +194,21 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),                  // Success state - show content
-                  if (state is HomeLoaded || state is ProductSearchLoaded) ...[
+                  if (state is HomeLoaded) ...[
                     // Banner/Advertisement section
                     const SliverToBoxAdapter(
                       child: BannerSlider(),
                     ),
 
-                    // Categories section - only show when not searching
-                    if (state is HomeLoaded)
-                      SliverToBoxAdapter(
-                        child: CategorySectionWidget(categories: state.categories),
-                      ),
+                    // Categories section
+                    SliverToBoxAdapter(
+                      child: CategorySectionWidget(categories: state.categories),
+                    ),
 
-                    // Livestream section - only show when not searching
-                    if (state is HomeLoaded)
-                      const SliverToBoxAdapter(
-                        child: LiveStreamSection(),
-                      ),
+                    // Livestream section
+                    const SliverToBoxAdapter(
+                      child: LiveStreamSection(),
+                    ),
 
                     // Products section header
                     SliverToBoxAdapter(
@@ -222,28 +218,25 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              state is ProductSearchLoaded
-                                  ? 'Kết quả tìm kiếm'
-                                  : 'Tất cả sản phẩm',
+                              'Tất cả sản phẩm',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
                             ),
-                            if (state is HomeLoaded)
-                              TextButton(
-                                onPressed: () {
-                                  // TODO: Navigate to all products page
-                                },
-                                child: const Text(
-                                  'Xem tất cả',
-                                  style: TextStyle(
-                                    color: Colors.deepPurple,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                            TextButton(
+                              onPressed: () {
+                                // TODO: Navigate to all products page
+                              },
+                              child: const Text(
+                                'Xem tất cả',
+                                style: TextStyle(
+                                  color: Colors.deepPurple,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -252,9 +245,7 @@ class _HomePageState extends State<HomePage> {
                     // Products grid
                     SliverToBoxAdapter(
                       child: ProductGrid(
-                        products: state is HomeLoaded
-                            ? state.products
-                            : (state as ProductSearchLoaded).searchResults,
+                        products: state.products,
                       ),
                     ),
                   ],

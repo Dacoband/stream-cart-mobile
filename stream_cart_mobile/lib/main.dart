@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/config/env.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
+import 'core/services/search_history_service.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 
 void main() async {
@@ -15,6 +16,9 @@ void main() async {
   }
   
   await setupDependencies();
+  
+  // Initialize search history service
+  await getIt.get<SearchHistoryService>().initializeHistory();
   
   runApp(const MyApp());
 }

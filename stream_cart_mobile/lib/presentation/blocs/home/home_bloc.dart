@@ -10,18 +10,15 @@ import 'home_state.dart';
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetProductsUseCase getProductsUseCase;
-  final SearchProductsUseCase searchProductsUseCase;
   final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
 
   HomeBloc({
     required this.getCategoriesUseCase,
     required this.getProductsUseCase,
-    required this.searchProductsUseCase,
     required this.getProductPrimaryImagesUseCase,
   }) : super(HomeInitial()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<RefreshHomeDataEvent>(_onRefreshHomeData);
-    on<SearchProductsEvent>(_onSearchProducts);
     on<LoadMoreProductsEvent>(_onLoadMoreProducts);
     on<LoadProductImagesEvent>(_onLoadProductImages);
   }
@@ -104,22 +101,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _onRefreshHomeData(RefreshHomeDataEvent event, Emitter<HomeState> emit) async {
     // Use the same logic as LoadHomeDataEvent
     add(const LoadHomeDataEvent());
-  }
-
-  Future<void> _onSearchProducts(SearchProductsEvent event, Emitter<HomeState> emit) async {
-    try {
-      final result = await searchProductsUseCase(query: event.query, page: 1, limit: 20);
-      
-      result.fold(
-        (failure) => emit(HomeError(failure.message)),
-        (products) => emit(ProductSearchLoaded(
-          searchResults: products,
-          query: event.query,
-        )),
-      );
-    } catch (e) {
-      emit(HomeError('Search failed: $e'));
-    }
   }
 
   Future<void> _onLoadMoreProducts(LoadMoreProductsEvent event, Emitter<HomeState> emit) async {

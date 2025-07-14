@@ -15,15 +15,6 @@ class RefreshHomeDataEvent extends HomeEvent {
   const RefreshHomeDataEvent();
 }
 
-class SearchProductsEvent extends HomeEvent {
-  final String query;
-
-  const SearchProductsEvent(this.query);
-
-  @override
-  List<Object?> get props => [query];
-}
-
 class LoadMoreProductsEvent extends HomeEvent {
   const LoadMoreProductsEvent();
 }

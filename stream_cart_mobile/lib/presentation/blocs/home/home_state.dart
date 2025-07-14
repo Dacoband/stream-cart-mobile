@@ -75,19 +75,6 @@ class HomeError extends HomeState {
   List<Object?> get props => [message];
 }
 
-class ProductSearchLoaded extends HomeState {
-  final List<ProductEntity> searchResults;
-  final String query;
-
-  const ProductSearchLoaded({
-    required this.searchResults,
-    required this.query,
-  });
-
-  @override
-  List<Object?> get props => [searchResults, query];
-}
-
 class UserProfileLoaded extends HomeState {
   final UserProfileEntity userProfile;
 

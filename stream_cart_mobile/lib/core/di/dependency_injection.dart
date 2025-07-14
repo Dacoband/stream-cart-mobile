@@ -5,6 +5,7 @@ import '../../core/network/network_config.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/services/http_service.dart';
+import '../../core/services/search_history_service.dart';
 import '../../data/datasources/auth_local_data_source.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -14,6 +15,7 @@ import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
+import '../../domain/usecases/search_products_usecase.dart' as search;
 import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/usecases/get_product_detail_usecase.dart';
 import '../../domain/usecases/get_product_images_usecase.dart';
@@ -28,6 +30,7 @@ import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
+import '../../presentation/blocs/search/search_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -85,10 +88,13 @@ Future<void> setupDependencies() async {
   );
   getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsUseCase(getIt()));
-  getIt.registerLazySingleton(() => SearchProductsUseCase(getIt()));
+  getIt.registerLazySingleton(() => search.SearchProductsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
+  
+  // Search service
+  getIt.registerLazySingleton(() => SearchHistoryService());
   
   // Profile dependencies
   getIt.registerLazySingleton<ProfileRemoteDataSource>(
@@ -114,8 +120,14 @@ Future<void> setupDependencies() async {
   getIt.registerFactory(() => HomeBloc(
     getCategoriesUseCase: getIt(),
     getProductsUseCase: getIt(),
-    searchProductsUseCase: getIt(),
     getProductPrimaryImagesUseCase: getIt(),
+  ));
+  
+  getIt.registerFactory(() => SearchBloc(
+    searchProductsUseCase: getIt(),
+    getCategoriesUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
+    searchHistoryService: getIt(),
   ));
   
   getIt.registerFactory(() => ProfileBloc(
