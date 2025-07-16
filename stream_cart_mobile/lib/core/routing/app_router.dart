@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../di/dependency_injection.dart';
-import '../../presentation/pages/auth/login_page.dart';
+import '../../presentation/pages/auth/login_page.dart' as auth;
 import '../../presentation/pages/auth/register_page.dart';
 import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
@@ -26,7 +26,7 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
-        return MaterialPageRoute(builder: (_) => const LoginPage());
+        return MaterialPageRoute(builder: (_) => const auth.LoginPage());
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       case otpVerification:
