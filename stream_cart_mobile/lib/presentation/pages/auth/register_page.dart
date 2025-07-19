@@ -165,7 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 10),
                     
                     Text(
-                      'Join ${AppConstants.appName}',
+                      'Join ${AppConstants.appJoinName}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
