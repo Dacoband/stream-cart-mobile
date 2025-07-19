@@ -7,8 +7,6 @@ import '../../blocs/home/home_bloc.dart';
 import '../../blocs/home/home_event.dart';
 import '../../blocs/home/home_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
-import '../../widgets/home/banner_slider.dart';
-import '../../widgets/home/category_section_fix.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
@@ -61,6 +59,337 @@ class _HomePageState extends State<HomePage> {
   void _onSearchTapped() {
     Navigator.pushNamed(context, AppRouter.search);
   }
+
+  Widget _buildCategoryItem(dynamic category) {
+    // Safe access to category properties
+    String categoryName;
+    String? iconUrl;
+    
+    // Handle different category data structures
+    if (category is Map<String, dynamic>) {
+      // Handle Map data (fallback case)
+      categoryName = category['categoryName'] ??  
+                    category['name'] ?? 
+                    category['title'] ?? 
+                    category['category_name'] ??
+                    category['label'] ??
+                    'Unknown';
+      iconUrl = category['iconURL'] ?? category['iconUrl'];
+      print('Category from Map: $category -> name: $categoryName');
+    } else if (category is String) {
+      // Handle simple string category
+      categoryName = category;
+      iconUrl = null;
+    } else {
+      // Handle entity objects (this should be the main case for API data)
+      try {
+        // Try to access properties that should exist on CategoryEntity
+        categoryName = category.categoryName ?? category.toString();
+        iconUrl = category.iconURL;
+        print('Category from Entity: ${category.runtimeType} -> name: $categoryName, iconURL: $iconUrl');
+      } catch (e) {
+        categoryName = category?.toString() ?? 'Unknown';
+        iconUrl = null;
+        print('Error accessing category entity: $e');
+      }
+    }
+    
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to category page
+        print('Tapped on category: $categoryName');
+      },
+      child: Container(
+        width: 80, // Increased width for better display in larger header
+        padding: const EdgeInsets.all(6), // Increased padding
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(10), // Slightly more rounded
+          // Removed border
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min, // Add this to prevent overflow
+          children: [
+            // Category icon
+            Container(
+              width: 32, // Larger icon container for bigger header
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(32), // Make it fully rounded (circular)
+              ),
+              child: iconUrl != null && iconUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: Image.network(
+                        iconUrl,
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to default icon if image fails to load
+                          return Icon(
+                            _getCategoryIcon(categoryName),
+                            color: const Color(0xFF4CAF50),
+                            size: 20, // Larger icon size for bigger container
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Icon(
+                            _getCategoryIcon(categoryName),
+                            color: const Color(0xFF4CAF50),
+                            size: 20, // Larger icon size for bigger container
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
+                      _getCategoryIcon(categoryName),
+                      color: const Color(0xFF4CAF50),
+                      size: 20, // Larger icon size for bigger container
+                    ),
+            ),
+            const SizedBox(height: 4), // Increased spacing between icon and text
+            // Category name
+            Flexible(
+              child: Text(
+                categoryName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11, // Larger font for better readability in bigger header
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2, // Allow 2 lines for longer names
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String categoryName) {
+    // Map category names to icons - matching API data
+    switch (categoryName.toLowerCase()) {
+      case 'giày':
+      case 'shoes':
+        return Icons.sports_basketball;
+      case 'thời trang nữ':
+      case 'fashion':
+        return Icons.checkroom;
+      case 'thiết bị điện tử': // Match API data exactly
+      case 'thiết bị điện':
+      case 'electronics':
+        return Icons.electrical_services;
+      case 'laptop': // For subcategory
+        return Icons.laptop;
+      case 'thể thao':
+      case 'sports':
+        return Icons.sports_soccer;
+      case 'sách':
+      case 'books':
+        return Icons.book;
+      case 'mỹ phẩm':
+      case 'cosmetics':
+        return Icons.face_retouching_natural;
+      default:
+        return Icons.category;
+    }
+  }
+
+  List<String> _getDefaultCategories() {
+    return [
+      'Thời trang nữ',
+      'Giày',
+      'Thiết bị điện',
+      'Thể thao',
+      'Sách',
+      'Mỹ phẩm',
+    ];
+  }
+
+  Widget _buildCartIcon() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: IconButton(
+        onPressed: _onCartPressed,
+        icon: Stack(
+          children: [
+            const Icon(
+              Icons.shopping_cart_outlined,
+              color: Colors.white,
+              size: 24,
+            ),
+            // Badge for cart count
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 1,
+                  ),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: const Text(
+                  '3', // TODO: Get cart count from BLoC
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryList(HomeState state) {
+    // Get categories from API first, fallback to default
+    List<dynamic> categoriesToShow = [];
+    
+    if (state is HomeLoaded && state.categories.isNotEmpty) {
+      categoriesToShow = state.categories;
+      print('Using API categories: ${state.categories.length} items');
+    } else {
+      categoriesToShow = _getDefaultCategories();
+      print('Using default categories: ${categoriesToShow.length} items');
+    }
+    
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 4), // Slightly increased padding
+      itemCount: categoriesToShow.length,
+      separatorBuilder: (context, index) => const SizedBox(width: 12), // Increased spacing between items
+      itemBuilder: (context, index) {
+        final category = categoriesToShow[index];
+        return _buildCategoryItem(category);
+      },
+    );
+  }
+
+  Widget _buildCompactBanner() {
+    final List<Map<String, String>> banners = [
+      {
+        'title': 'Flash Sale 50%',
+        'subtitle': 'Giảm giá sốc cho tất cả sản phẩm',
+        'color': 'purple',
+      },
+      {
+        'title': '20.7 DEAL ĐẸP GIỜ VÀNG',
+        'subtitle': 'ƯU NHẤT 7H - 24H NGÀY 20.7',
+        'color': 'orange',
+      },
+      {
+        'title': 'Miễn phí vận chuyển',
+        'subtitle': 'Cho đơn hàng từ 500k',
+        'color': 'green',
+      },
+    ];
+
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      child: PageView.builder(
+        itemCount: banners.length,
+        itemBuilder: (context, index) {
+          final banner = banners[index];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _getBannerBackgroundColor(banner['color']!),
+                  _getBannerBackgroundColor(banner['color']!).withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    banner['title']!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    banner['subtitle']!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Mua ngay',
+                      style: TextStyle(
+                        color: _getBannerBackgroundColor(banner['color']!),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Color _getBannerBackgroundColor(String colorName) {
+    switch (colorName) {
+      case 'purple':
+        return Colors.deepPurple.shade400;
+      case 'orange':
+        return Colors.orange.shade400;
+      case 'green':
+        return Colors.green.shade400;
+      case 'blue':
+        return Colors.blue.shade400;
+      default:
+        return Colors.deepPurple.shade400;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return BlocProvider<HomeBloc>(
@@ -73,96 +402,83 @@ class _HomePageState extends State<HomePage> {
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Header with search and cart
+                  // Header with search, cart and categories
                   SliverAppBar(
                     floating: true,
                     pinned: false,
                     snap: true,
                     backgroundColor: const Color(0xFF4CAF50),
                     elevation: 0,
-                    toolbarHeight: 80,
+                    toolbarHeight: 280, // Increase height significantly for full category display
                     automaticallyImplyLeading: false,
-                    flexibleSpace: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFF4CAF50),
-                            Color(0xFF66BB6A),
-                          ],
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.defaultPadding,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          // Search bar
-                          Expanded(
-                            child: CustomSearchBar(
-                              controller: _searchController,
-                              hintText: 'Tìm kiếm sản phẩm...',
-                              readOnly: true,
-                              onTap: _onSearchTapped,
+                    flexibleSpace: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Calculate available height and adjust category height dynamically
+                        final availableHeight = constraints.maxHeight;
+                        final searchBarHeight = 48.0; // Estimated search bar height
+                        final bannerHeight = 120.0; // Banner height
+                        final padding = 24.0; // Increased total vertical padding
+                        final spacing = 20.0; // Increased spacing between elements for better layout
+                        
+                        final categoryHeight = (availableHeight - searchBarHeight - bannerHeight - padding - spacing).clamp(60.0, 90.0); // Larger range for better category display
+                        
+                        return Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Color(0xFF4CAF50),
+                                Color(0xFF66BB6A),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(24),
+                              bottomRight: Radius.circular(24),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          // Cart icon
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: IconButton(
-                              onPressed: _onCartPressed,
-                              icon: Stack(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppConstants.defaultPadding,
+                            vertical: 12, // Increased vertical padding
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Search bar and cart row
+                              Row(
                                 children: [
-                                  const Icon(
-                                    Icons.shopping_cart_outlined,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                  // Badge for cart count
-                                  Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF2E7D32),
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Colors.white,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 16,
-                                        minHeight: 16,
-                                      ),
-                                      child: const Text(
-                                        '3', // TODO: Get cart count from BLoC
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
+                                  // Search bar
+                                  Expanded(
+                                    child: CustomSearchBar(
+                                      controller: _searchController,
+                                      hintText: 'Tìm kiếm sản phẩm...',
+                                      readOnly: true,
+                                      onTap: _onSearchTapped,
                                     ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  // Cart icon
+                                  _buildCartIcon(),
                                 ],
                               ),
-                            ),
+                              const SizedBox(height: 12), // Increased spacing after search bar
+                              // Banner section
+                              SizedBox(
+                                height: bannerHeight,
+                                child: _buildCompactBanner(),
+                              ),
+                              const SizedBox(height: 12), // Increased spacing before categories
+                              // Categories list with dynamic height
+                              Flexible(
+                                child: SizedBox(
+                                  height: categoryHeight,
+                                  child: _buildCategoryList(state),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
 
@@ -232,16 +548,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),                  // Success state - show content
                   if (state is HomeLoaded) ...[
-                    // Banner/Advertisement section
-                    const SliverToBoxAdapter(
-                      child: BannerSlider(),
-                    ),
-
-                    // Categories section
-                    SliverToBoxAdapter(
-                      child: CategorySectionWidget(categories: state.categories),
-                    ),
-
                     // Livestream section
                     const SliverToBoxAdapter(
                       child: LiveStreamSection(),
@@ -255,7 +561,7 @@ class _HomePageState extends State<HomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Tất cả sản phẩm',
+                              'Đề xuất cho bạn',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
