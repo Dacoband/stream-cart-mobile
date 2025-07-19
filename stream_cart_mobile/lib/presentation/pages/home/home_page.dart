@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage> {
     return BlocProvider<HomeBloc>(
       create: (context) => getIt<HomeBloc>()..add(LoadHomeDataEvent()),
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5), // Light background
         body: SafeArea(
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
@@ -77,11 +78,21 @@ class _HomePageState extends State<HomePage> {
                     floating: true,
                     pinned: false,
                     snap: true,
-                    backgroundColor: Colors.white,
-                    elevation: 1,
+                    backgroundColor: const Color(0xFF4CAF50),
+                    elevation: 0,
                     toolbarHeight: 80,
                     automaticallyImplyLeading: false,
                     flexibleSpace: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFF4CAF50),
+                            Color(0xFF66BB6A),
+                          ],
+                        ),
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.defaultPadding,
                         vertical: 8,
@@ -101,16 +112,20 @@ class _HomePageState extends State<HomePage> {
                           // Cart icon
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.deepPurple.shade50,
-                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
                             ),
                             child: IconButton(
                               onPressed: _onCartPressed,
                               icon: Stack(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.shopping_cart_outlined,
-                                    color: Colors.deepPurple,
+                                    color: Colors.white,
                                     size: 24,
                                   ),
                                   // Badge for cart count
@@ -120,8 +135,12 @@ class _HomePageState extends State<HomePage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(2),
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
+                                        color: const Color(0xFF2E7D32),
                                         borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 1,
+                                        ),
                                       ),
                                       constraints: const BoxConstraints(
                                         minWidth: 16,
@@ -165,14 +184,15 @@ class _HomePageState extends State<HomePage> {
                             Icon(
                               Icons.error_outline,
                               size: 64,
-                              color: Colors.red,
+                              color: const Color(0xFF2E7D32),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Có lỗi xảy ra',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                color: Color(0xFF2E7D32),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -188,7 +208,24 @@ class _HomePageState extends State<HomePage> {
                               onPressed: () {
                                 context.read<HomeBloc>().add(RefreshHomeDataEvent());
                               },
-                              child: const Text('Thử lại'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4CAF50),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: const Text(
+                                'Thử lại',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -222,7 +259,7 @@ class _HomePageState extends State<HomePage> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Color(0xFF2E7D32),
                               ),
                             ),
                             TextButton(
@@ -232,8 +269,8 @@ class _HomePageState extends State<HomePage> {
                               child: const Text(
                                 'Xem tất cả',
                                 style: TextStyle(
-                                  color: Colors.deepPurple,
-                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF4CAF50),
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
