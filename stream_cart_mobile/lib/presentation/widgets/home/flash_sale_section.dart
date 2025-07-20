@@ -24,13 +24,15 @@ class FlashSaleSection extends StatelessWidget {
             return _buildLoadingSection();
           }
 
-          if (state.flashSales.isEmpty) {
-            print('🔥 Flash sales empty - showing debug button');
-            return _buildDebugSection(context); // Show debug section when empty
+          if (state.flashSales.isNotEmpty) {
+            print('🔥 Showing flash sale section with ${state.flashSales.length} items');
+            return _buildFlashSaleSection(context, state);
           }
 
-          print('🔥 Showing flash sale section with ${state.flashSales.length} items');
-          return _buildFlashSaleSection(context, state);
+          // Nếu đã load xong nhưng không có data, hiển thị debug section
+          // Chỉ hiển thị debug khi chắc chắn đã load xong và không có data
+          print('🔥 Flash sales empty after loading - showing debug button');
+          return _buildDebugSection(context);
         }
 
         print('🔥 State is not HomeLoaded - hiding section');
@@ -184,7 +186,6 @@ class FlashSaleSection extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(BuildContext context, List<FlashSaleEntity> flashSales) {
-    // Find the flash sale with the earliest end time for countdown
     final activeFlashSales = flashSales.where((fs) => fs.isCurrentlyActive).toList();
     final earliestEndTime = activeFlashSales.isNotEmpty
         ? activeFlashSales

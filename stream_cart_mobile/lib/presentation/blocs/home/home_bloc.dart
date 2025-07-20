@@ -93,6 +93,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         products: products,
         liveStreams: [], // TODO: Load livestreams when API is ready
         hasMoreProducts: products.length >= 20,
+        isLoadingFlashSales: true, // Set loading state for flash sales
       ));
 
       // Auto-load flash sales and product images after initial load
@@ -156,6 +157,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final currentState = state as HomeLoaded;
       
       print('🖼️ HomeBloc: Loading images for ${event.productIds.length} products');
+      print('🖼️ Current state before loading images - flashSales: ${currentState.flashSales.length}, isLoadingFlashSales: ${currentState.isLoadingFlashSales}');
       
       final result = await getProductPrimaryImagesUseCase(event.productIds);
       
@@ -166,7 +168,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         },
         (primaryImages) {
           print('✅ HomeBloc: Successfully loaded ${primaryImages.length} product images');
-          emit(currentState.copyWith(productImages: primaryImages));
+          
+          // Get the current state again to ensure we have the latest flash sales data
+          final latestState = state as HomeLoaded;
+          print('🖼️ Latest state when emitting images - flashSales: ${latestState.flashSales.length}, isLoadingFlashSales: ${latestState.isLoadingFlashSales}');
+          
+          emit(latestState.copyWith(productImages: primaryImages));
         },
       );
     }
@@ -209,11 +216,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                 },
                 (flashSaleProducts) {
                   print('✅ HomeBloc: Successfully loaded ${flashSaleProducts.length} flash sale products');
+                  print('🔥 About to emit flash sales state - flashSales: ${flashSales.length}, flashSaleProducts: ${flashSaleProducts.length}');
                   emit(currentState.copyWith(
                     flashSales: flashSales,
                     flashSaleProducts: flashSaleProducts,
                     isLoadingFlashSales: false,
                   ));
+                  print('🔥 Flash sales state emitted successfully');
                 },
               );
             } else {
