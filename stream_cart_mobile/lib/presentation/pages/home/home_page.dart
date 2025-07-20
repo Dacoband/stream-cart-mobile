@@ -377,19 +377,22 @@ class _HomePageState extends State<HomePage> {
   Widget _buildCompactBanner() {
     final List<Map<String, String>> banners = [
       {
-        'title': 'Flash Sale 50%',
-        'subtitle': 'Giảm giá sốc cho tất cả sản phẩm',
-        'color': 'purple',
+        'title': 'TUỔI TRẺ KHỎE ĐẸP',
+        'subtitle': 'CÙNG STREAM CARD',
+        'image': 'assets/images/banner1.jpg',
+        'buttonText': 'ĐẶT THÔNG BÁO NGAY!',
       },
       {
-        'title': '20.7 DEAL ĐẸP GIỜ VÀNG',
-        'subtitle': 'ƯU NHẤT 7H - 24H NGÀY 20.7',
-        'color': 'orange',
+        'title': 'XEM LIVESTREAM',
+        'subtitle': 'SẴN SẮP SẴN',
+        'image': 'assets/images/banner2.jpg',
+        'buttonText': 'JOIN NOW',
       },
       {
-        'title': 'Miễn phí vận chuyển',
-        'subtitle': 'Cho đơn hàng từ 500k',
-        'color': 'green',
+        'title': 'MEGA LIVE BLACK FRIDAY',
+        'subtitle': 'STREAMCARD',
+        'image': 'assets/images/banner3.jpg',
+        'buttonText': 'KHÁM PHÁ NGAY',
       },
     ];
 
@@ -404,75 +407,103 @@ class _HomePageState extends State<HomePage> {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _getBannerBackgroundColor(banner['color']!),
-                  _getBannerBackgroundColor(banner['color']!).withOpacity(0.8),
-                ],
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    banner['title']!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(banner['image']!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  // Optional: Add a slight dark overlay for better text readability
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.black.withOpacity(0.2),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    banner['subtitle']!,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Mua ngay',
-                      style: TextStyle(
-                        color: _getBannerBackgroundColor(banner['color']!),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        banner['title']!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black45,
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        banner['subtitle']!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black45,
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          banner['buttonText']!,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           );
         },
       ),
     );
-  }
-
-  Color _getBannerBackgroundColor(String colorName) {
-    switch (colorName) {
-      case 'purple':
-        return Colors.deepPurple.shade400;
-      case 'orange':
-        return Colors.orange.shade400;
-      case 'green':
-        return Colors.green.shade400;
-      case 'blue':
-        return Colors.blue.shade400;
-      default:
-        return Colors.deepPurple.shade400;
-    }
   }
   @override
   Widget build(BuildContext context) {
