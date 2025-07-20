@@ -1,15 +1,19 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/usecases/get_user_profile_usecase.dart';
+import '../../../domain/usecases/update_user_profile.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserProfileUseCase getUserProfileUseCase;
+  final UpdateUserProfileUseCase updateUserProfileUseCase;
 
   ProfileBloc({
     required this.getUserProfileUseCase,
+    required this.updateUserProfileUseCase,
   }) : super(ProfileInitial()) {
     on<LoadUserProfileEvent>(_onLoadUserProfile);
+    on<UpdateUserProfileEvent>(_onUpdateUserProfile);
   }
 
   Future<void> _onLoadUserProfile(
@@ -34,6 +38,32 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       (profile) {
         print('[ProfileBloc] Successfully loaded profile: ${profile.fullname}');
         emit(ProfileLoaded(profile));
+      },
+    );
+  }
+
+  Future<void> _onUpdateUserProfile(
+    UpdateUserProfileEvent event,
+    Emitter<ProfileState> emit,
+  ) async {
+    print('[ProfileBloc] Updating user profile...');
+    emit(ProfileUpdateLoading());
+
+    final params = UpdateUserProfileParams(
+      userId: event.userId,
+      request: event.request,
+    );
+
+    final result = await updateUserProfileUseCase(params);
+    
+    result.fold(
+      (failure) {
+        print('[ProfileBloc] Error updating profile: ${failure.message}');
+        emit(ProfileUpdateError(failure.message));
+      },
+      (updatedProfile) {
+        print('[ProfileBloc] Successfully updated profile: ${updatedProfile.fullname}');
+        emit(ProfileUpdateSuccess(updatedProfile));
       },
     );
   }

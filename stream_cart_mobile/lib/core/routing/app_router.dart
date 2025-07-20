@@ -7,10 +7,12 @@ import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/profile/profile_detail_page.dart';
+import '../../presentation/pages/profile/edit_profile_page.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
+import '../../domain/entities/user_profile_entity.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -19,6 +21,7 @@ class AppRouter {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String profileDetail = '/profile-detail';
+  static const String editProfile = '/edit-profile';
   static const String productDetails = '/product-details';
   static const String search = '/search';
   static const String livestreamList = '/livestream-list';
@@ -51,6 +54,14 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (context) => getIt<ProfileBloc>()..add(LoadUserProfileEvent()),
             child: const ProfileDetailPage(),
+          ),
+        );
+      case editProfile:
+        final UserProfileEntity currentProfile = settings.arguments as UserProfileEntity;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ProfileBloc>(),
+            child: EditProfilePage(currentProfile: currentProfile),
           ),
         );
       case productDetails:

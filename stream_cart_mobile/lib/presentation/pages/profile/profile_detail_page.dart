@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/routing/app_router.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_state.dart';
+import '../../blocs/profile/profile_event.dart';
 
 class ProfileDetailPage extends StatelessWidget {
   const ProfileDetailPage({super.key});
@@ -34,28 +36,37 @@ class ProfileDetailPage extends StatelessWidget {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              onPressed: () {
-                // TODO: Navigate to edit profile
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tính năng chỉnh sửa thông tin đang phát triển'),
-                    duration: Duration(seconds: 2),
+          BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              return Container(
+                margin: const EdgeInsets.only(right: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  onPressed: state is ProfileLoaded
+                      ? () async {
+                          final result = await Navigator.pushNamed(
+                            context,
+                            AppRouter.editProfile,
+                            arguments: state.profile,
+                          );
+                          // If profile was updated, refresh the current page
+                          if (result != null) {
+                            // Trigger reload
+                            context.read<ProfileBloc>().add(LoadUserProfileEvent());
+                          }
+                        }
+                      : null,
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: Colors.white,
                   ),
-                );
-              },
-              icon: const Icon(
-                Icons.edit_outlined,
-                color: Colors.white,
-              ),
-              tooltip: 'Chỉnh sửa thông tin',
-            ),
+                  tooltip: 'Chỉnh sửa thông tin',
+                ),
+              );
+            },
           ),
         ],
       ),

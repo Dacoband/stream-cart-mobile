@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
-import '../models/user_profile_model.dart';
+import '../models/update_profile_model.dart';
 import '../datasources/profile_remote_data_source.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -26,13 +26,17 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Either<Failure, UserProfileEntity>> updateUserProfile(UserProfileEntity profile) async {
+  Future<Either<Failure, UserProfileEntity>> updateUserProfile(String userId, UpdateProfileRequestModel request) async {
     try {
       print('[ProfileRepository] Updating user profile...');
-      final profileModel = UserProfileModel.fromEntity(profile);
-      final result = await remoteDataSource.updateUserProfile(profileModel);
-      print('[ProfileRepository] Successfully updated user profile');
-      return Right(result.toEntity());
+      final result = await remoteDataSource.updateUserProfile(userId, request);
+      
+      if (result.success && result.data != null) {
+        print('[ProfileRepository] Successfully updated user profile');
+        return Right(result.data!.toEntity());
+      } else {
+        return Left(ServerFailure(result.message));
+      }
     } catch (e) {
       print('[ProfileRepository] Error updating user profile: $e');
       return Left(ServerFailure('Failed to update user profile: ${e.toString()}'));

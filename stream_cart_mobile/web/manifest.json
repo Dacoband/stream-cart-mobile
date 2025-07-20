@@ -1,6 +1,6 @@
 {
-    "name": "stream_cart_mobile",
-    "short_name": "stream_cart_mobile",
+    "name": "Stream Cart Mobile",
+    "short_name": "Stream Cart",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",

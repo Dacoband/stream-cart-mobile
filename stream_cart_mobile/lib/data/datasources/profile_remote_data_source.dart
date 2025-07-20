@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import '../models/user_profile_model.dart';
+import '../models/update_profile_model.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile();
-  Future<UserProfileModel> updateUserProfile(UserProfileModel profile);
+  Future<UpdateProfileResponseModel> updateUserProfile(String userId, UpdateProfileRequestModel updateRequest);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -32,13 +33,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<UserProfileModel> updateUserProfile(UserProfileModel profile) async {
+  Future<UpdateProfileResponseModel> updateUserProfile(String userId, UpdateProfileRequestModel updateRequest) async {
     try {
-      print('[ProfileRemoteDataSource] Updating user profile');
-      final response = await dio.put('/api/auth/me', data: profile.toJson());
+      print('[ProfileRemoteDataSource] Updating user profile for ID: $userId');
+      final response = await dio.put('/api/accounts/$userId', data: updateRequest.toJson());
       print('[ProfileRemoteDataSource] Update response: ${response.data}');
       
-      return UserProfileModel.fromJson(response.data);
+      return UpdateProfileResponseModel.fromJson(response.data);
     } catch (e) {
       print('[ProfileRemoteDataSource] Error updating user profile: $e');
       rethrow;

@@ -6,6 +6,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/services/http_service.dart';
 import '../../core/services/search_history_service.dart';
+import '../../core/services/image_upload_service.dart';
 import '../../data/datasources/auth_local_data_source.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -17,6 +18,7 @@ import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import '../../domain/usecases/search_products_usecase.dart' as search;
 import '../../domain/usecases/get_user_profile_usecase.dart';
+import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/get_product_detail_usecase.dart';
 import '../../domain/usecases/get_product_images_usecase.dart';
 import '../../domain/usecases/get_product_primary_images_usecase.dart';
@@ -114,6 +116,9 @@ Future<void> setupDependencies() async {
   // Search service
   getIt.registerLazySingleton(() => SearchHistoryService());
   
+  // Image upload service
+  getIt.registerLazySingleton(() => ImageUploadService(getIt()));
+  
   // Profile dependencies
   getIt.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(getIt()),
@@ -126,6 +131,7 @@ Future<void> setupDependencies() async {
   );
   
   getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
   
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
@@ -152,6 +158,7 @@ Future<void> setupDependencies() async {
   
   getIt.registerFactory(() => ProfileBloc(
     getUserProfileUseCase: getIt(),
+    updateUserProfileUseCase: getIt(),
   ));
   
   getIt.registerFactory(() => ProductDetailBloc(

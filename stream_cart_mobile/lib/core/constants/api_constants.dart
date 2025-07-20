@@ -1,7 +1,7 @@
 class ApiConstants {
   // Base paths
   static const String authBasePath = '/api/auth';
-  static const String userBasePath = '/api/user';
+  static const String userBasePath = '/api/account';
   static const String productBasePath = '/api/product';
   static const String imageBasePath = '/api/image';
     // Auth endpoints (matching .env file)
@@ -21,9 +21,8 @@ class ApiConstants {
   // Image endpoints
   static const String uploadImageEndpoint = '/api/image/upload';
   
-  // User endpoints
-  static const String profileEndpoint = '/api/user/profile';
-  static const String updateProfileEndpoint = '/api/user/profile';
+  // Account endpoints
+  static const String updateProfileEndpoint = '/api/account/{id}';
   
   // Product endpoints
   static const String productsEndpoint = '/api/products';
