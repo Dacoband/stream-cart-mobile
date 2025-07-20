@@ -6,23 +6,23 @@ class ApiUrlHelper {
   static String getAuthUrl(String endpoint) {
     switch (endpoint) {
       case ApiConstants.loginEndpoint:
-        return Env.loginUrl.isNotEmpty ? Env.loginUrl : '${Env.baseUrl}${endpoint}';
+        return Env.loginUrl.isNotEmpty ? Env.loginUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.refreshTokenEndpoint:
-        return Env.refreshTokenUrl.isNotEmpty ? Env.refreshTokenUrl : '${Env.baseUrl}${endpoint}';
+        return Env.refreshTokenUrl.isNotEmpty ? Env.refreshTokenUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.signupEndpoint:
-        return Env.registerUrl.isNotEmpty ? Env.registerUrl : '${Env.baseUrl}${endpoint}';
+        return Env.registerUrl.isNotEmpty ? Env.registerUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.verifyAccountEndpoint:
-        return Env.verifyAccountUrl.isNotEmpty ? Env.verifyAccountUrl : '${Env.baseUrl}${endpoint}';
+        return Env.verifyAccountUrl.isNotEmpty ? Env.verifyAccountUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.resetPasswordRequestEndpoint:
-        return Env.resetPasswordRequestUrl.isNotEmpty ? Env.resetPasswordRequestUrl : '${Env.baseUrl}${endpoint}';
+        return Env.resetPasswordRequestUrl.isNotEmpty ? Env.resetPasswordRequestUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.resetPasswordEndpoint:
-        return Env.resetPasswordUrl.isNotEmpty ? Env.resetPasswordUrl : '${Env.baseUrl}${endpoint}';
+        return Env.resetPasswordUrl.isNotEmpty ? Env.resetPasswordUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.changePasswordEndpoint:
-        return Env.changePasswordUrl.isNotEmpty ? Env.changePasswordUrl : '${Env.baseUrl}${endpoint}';
+        return Env.changePasswordUrl.isNotEmpty ? Env.changePasswordUrl : '${Env.baseUrl}$endpoint';
       case ApiConstants.getMeEndpoint:
-        return Env.getMeUrl.isNotEmpty ? Env.getMeUrl : '${Env.baseUrl}${endpoint}';
+        return Env.getMeUrl.isNotEmpty ? Env.getMeUrl : '${Env.baseUrl}$endpoint';
       default:
-        return '${Env.baseUrl}${endpoint}';
+        return '${Env.baseUrl}$endpoint';
     }
   }
   
@@ -30,9 +30,9 @@ class ApiUrlHelper {
   static String getImageUrl(String endpoint) {
     switch (endpoint) {
       case ApiConstants.uploadImageEndpoint:
-        return Env.uploadImageUrl.isNotEmpty ? Env.uploadImageUrl : '${Env.baseUrl}${endpoint}';
+        return Env.uploadImageUrl.isNotEmpty ? Env.uploadImageUrl : '${Env.baseUrl}$endpoint';
       default:
-        return '${Env.baseUrl}${endpoint}';
+        return '${Env.baseUrl}$endpoint';
     }
   }
   
@@ -43,7 +43,7 @@ class ApiUrlHelper {
     } else if (endpoint.startsWith('/api/image')) {
       return getImageUrl(endpoint);
     } else {
-      return '${Env.baseUrl}${endpoint}';
+      return '${Env.baseUrl}$endpoint';
     }
   }
   

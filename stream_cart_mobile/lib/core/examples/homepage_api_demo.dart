@@ -125,6 +125,7 @@
 /// - Smooth loading states
 /// - Error handling with retry
 /// - Search with real-time API calls
+library;
 
 void main() {
   print('HomePage API Integration Demo - Implementation Complete! ✅');

@@ -158,7 +158,7 @@ class CategorySection extends StatelessWidget {
                         },
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
-                          return Container(
+                          return SizedBox(
                             width: 32,
                             height: 32,
                             child: Center(

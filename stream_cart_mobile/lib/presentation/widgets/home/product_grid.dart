@@ -8,10 +8,12 @@ import '../../blocs/home/home_state.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<ProductEntity>? products;
+  final Map<String, String>? productImages;
   
   const ProductGrid({
     super.key,
     this.products,
+    this.productImages,
   });
 
   // Mock products data for fallback
@@ -85,22 +87,37 @@ class ProductGrid extends StatelessWidget {
   ];
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeBloc, HomeState>(
-      builder: (context, state) {
-        final Map<String, String> productImages = state is HomeLoaded 
-            ? state.productImages 
-            : {};
-            
-        return Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.defaultPadding,
-          ),
-          child: GridView.builder(
+    // Use productImages from parameter, fallback to empty map
+    final Map<String, String> imageMap = productImages ?? {};
+    
+    // Debug: Print productImages map
+    print('🖼️ ProductGrid - productImages map: ${imageMap.keys.toList()}');
+    print('🖼️ ProductGrid - productImages count: ${imageMap.length}');
+    if (products?.isNotEmpty == true) {
+      print('🖼️ ProductGrid - products count: ${products!.length}');
+      for (var product in products!) {
+        print('🖼️ Product ID: ${product.id} -> imageUrl: ${imageMap[product.id]}');
+      }
+    }
+        
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.defaultPadding,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate responsive grid based on screen width
+          final screenWidth = constraints.maxWidth;
+          final crossAxisCount = screenWidth > 600 ? 3 : 2; // 3 columns on tablets, 2 on phones
+          final itemWidth = (screenWidth - (12 * (crossAxisCount - 1))) / crossAxisCount;
+          final aspectRatio = itemWidth / (itemWidth * 1.35); // Dynamic aspect ratio
+          
+          return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: aspectRatio.clamp(0.65, 0.8), // Clamp aspect ratio for safety
               crossAxisSpacing: 12,
               mainAxisSpacing: 16,
             ),
@@ -110,20 +127,24 @@ class ProductGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               if (products?.isNotEmpty == true) {
                 final product = products![index];
-                final imageUrl = productImages[product.id];
+                // Lấy URL hình ảnh từ productImages map
+                final imageUrl = imageMap[product.id];
                 return _buildProductFromEntity(context, product, imageUrl);
               } else {
                 final product = _mockProducts[index];
                 return _buildProductFromMock(context, product);
               }
             },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
   Widget _buildProductFromEntity(BuildContext context, ProductEntity product, String? imageUrl) {
+    // Debug: Print image URL information
+    print('🖼️ Product ${product.productName} - ID: ${product.id}, imageUrl: $imageUrl');
+    
     return GestureDetector(
       onTap: () {
         print('Product tapped: ${product.productName} - ID: ${product.id}');
@@ -237,63 +258,75 @@ class ProductGrid extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8), // Reduced padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Product Name
-                    Text(
-                      product.productName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                    Flexible(
+                      child: Text(
+                        product.productName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13, // Slightly smaller font
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                          height: 1.2, // Reduced line height
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     // Price
-                    Row(
-                      children: [
-                        Text(
-                          _formatPrice(product.discountPrice > 0 && product.discountPrice < product.basePrice 
-                              ? product.discountPrice 
-                              : product.basePrice),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple,
-                          ),
-                        ),
-                        if (product.discountPrice > 0 && product.discountPrice < product.basePrice) ...[
-                          const SizedBox(width: 4),
-                          Expanded(
+                    Flexible(
+                      child: Row(
+                        children: [
+                          Flexible(
                             child: Text(
-                              _formatPrice(product.basePrice),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                                decoration: TextDecoration.lineThrough,
+                              _formatPrice(product.discountPrice > 0 && product.discountPrice < product.basePrice 
+                                  ? product.discountPrice 
+                                  : product.basePrice),
+                              style: const TextStyle(
+                                fontSize: 13, // Slightly smaller font
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (product.discountPrice > 0 && product.discountPrice < product.basePrice) ...[
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatPrice(product.basePrice),
+                                style: TextStyle(
+                                  fontSize: 11, // Smaller font for crossed price
+                                  color: Colors.grey.shade600,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     // Stock quantity
-                    Text(
-                      'Còn lại: ${product.stockQuantity}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: product.stockQuantity > 10 
-                            ? Colors.green 
-                            : product.stockQuantity > 0 
-                                ? Colors.orange 
-                                : Colors.red,
-                        fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Text(
+                        'Còn lại: ${product.stockQuantity}',
+                        style: TextStyle(
+                          fontSize: 11, // Smaller font for stock
+                          color: product.stockQuantity > 10 
+                              ? Colors.green 
+                              : product.stockQuantity > 0 
+                                  ? Colors.orange 
+                                  : Colors.red,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -381,61 +414,73 @@ class ProductGrid extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8), // Reduced padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Product Name
-                    Text(
-                      product['name'],
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                    Flexible(
+                      child: Text(
+                        product['name'],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13, // Slightly smaller font
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                          height: 1.2, // Reduced line height
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     // Price
-                    Row(
-                      children: [
-                        Text(
-                          _formatPrice(product['price'].toDouble()),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple,
-                          ),
-                        ),
-                        if (product['originalPrice'] != null) ...[
-                          const SizedBox(width: 4),
-                          Expanded(
+                    Flexible(
+                      child: Row(
+                        children: [
+                          Flexible(
                             child: Text(
-                              _formatPrice(product['originalPrice'].toDouble()),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                                decoration: TextDecoration.lineThrough,
+                              _formatPrice(product['price'].toDouble()),
+                              style: const TextStyle(
+                                fontSize: 13, // Slightly smaller font
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (product['originalPrice'] != null) ...[
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatPrice(product['originalPrice'].toDouble()),
+                                style: TextStyle(
+                                  fontSize: 11, // Smaller font for crossed price
+                                  color: Colors.grey.shade600,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     // Stock quantity
-                    Text(
-                      'Còn lại: ${product['stockQuantity']}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: product['stockQuantity'] > 10 
-                            ? Colors.green 
-                            : product['stockQuantity'] > 0 
-                                ? Colors.orange 
-                                : Colors.red,
-                        fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Text(
+                        'Còn lại: ${product['stockQuantity']}',
+                        style: TextStyle(
+                          fontSize: 11, // Smaller font for stock
+                          color: product['stockQuantity'] > 10 
+                              ? Colors.green 
+                              : product['stockQuantity'] > 0 
+                                  ? Colors.orange 
+                                  : Colors.red,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

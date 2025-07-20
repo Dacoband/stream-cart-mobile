@@ -68,7 +68,7 @@ class SecurityUtils {
   /// Sanitize input string
   static String sanitizeInput(String input) {
     return input.trim()
-        .replaceAll(RegExp(r'[<>"' + "']"), '')
+        .replaceAll(RegExp(r'[<>"' "']"), '')
         .replaceAll(RegExp(r'\s+'), ' ');
   }
 
@@ -97,12 +97,10 @@ class SecurityUtils {
     var domain = parts[1];
     
     if (username.length <= 2) {
-      return '*' * username.length + '@' + domain;
+      return '${'*' * username.length}@$domain';
     }
     
-    return username.substring(0, 2) + 
-           '*' * (username.length - 2) + 
-           '@' + domain;
+    return '${username.substring(0, 2)}${'*' * (username.length - 2)}@$domain';
   }
 
   /// Mask phone number for display

@@ -9,6 +9,7 @@ import '../../blocs/home/home_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
+import '../../widgets/home/flash_sale_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 
 class HomePage extends StatefulWidget {
@@ -54,6 +55,17 @@ class _HomePageState extends State<HomePage> {
 
   void _onCartPressed() {
     Navigator.pushNamed(context, AppRouter.cart);
+  }
+
+  void _onChatPressed() {
+    // TODO: Navigate to chat page when API is ready
+    print('Chat button pressed - API integration pending');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tính năng chat đang phát triển'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _onSearchTapped() {
@@ -213,54 +225,126 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCartIcon() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
+    return SizedBox(
+      width: 48, // Fixed width to prevent squashing
+      height: 48, // Fixed height to maintain aspect ratio
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onCartPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Colors.white,
+                  size: 22, // Slightly smaller to fit better
+                ),
+                // Badge for cart count
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '3', // TODO: Get cart count from BLoC
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      child: IconButton(
-        onPressed: _onCartPressed,
-        icon: Stack(
-          children: [
-            const Icon(
-              Icons.shopping_cart_outlined,
-              color: Colors.white,
-              size: 24,
-            ),
-            // Badge for cart count
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E7D32),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 1,
+    );
+  }
+
+  Widget _buildChatIcon() {
+    return SizedBox(
+      width: 48, // Fixed width to prevent squashing
+      height: 48, // Fixed height to maintain aspect ratio
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onChatPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline,
+                  color: Colors.white,
+                  size: 22, // Slightly smaller to fit better
+                ),
+                // Badge for unread messages
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF5722), // Orange color for notifications
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '5', // TODO: Get unread message count from API
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: const Text(
-                  '3', // TODO: Get cart count from BLoC
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -413,14 +497,19 @@ class _HomePageState extends State<HomePage> {
                     automaticallyImplyLeading: false,
                     flexibleSpace: LayoutBuilder(
                       builder: (context, constraints) {
+                        // Get screen width for responsive design
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final isSmallScreen = screenWidth < 360;
+                        
                         // Calculate available height and adjust category height dynamically
                         final availableHeight = constraints.maxHeight;
-                        final searchBarHeight = 48.0; // Estimated search bar height
-                        final bannerHeight = 120.0; // Banner height
-                        final padding = 24.0; // Increased total vertical padding
-                        final spacing = 20.0; // Increased spacing between elements for better layout
+                        final searchBarHeight = 48.0; // Fixed search bar height
+                        final bannerHeight = isSmallScreen ? 100.0 : 120.0; // Responsive banner height
+                        final padding = 24.0; // Total vertical padding
+                        final spacing = 20.0; // Total spacing between elements
                         
-                        final categoryHeight = (availableHeight - searchBarHeight - bannerHeight - padding - spacing).clamp(60.0, 90.0); // Larger range for better category display
+                        // Ensure minimum space for categories
+                        final categoryHeight = (availableHeight - searchBarHeight - bannerHeight - padding - spacing).clamp(60.0, 90.0);
                         
                         return Container(
                           decoration: const BoxDecoration(
@@ -444,7 +533,7 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Search bar and cart row
+                              // Search bar and action icons row
                               Row(
                                 children: [
                                   // Search bar
@@ -456,9 +545,18 @@ class _HomePageState extends State<HomePage> {
                                       onTap: _onSearchTapped,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Cart icon
-                                  _buildCartIcon(),
+                                  const SizedBox(width: 8),
+                                  // Action icons container
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Chat icon
+                                      _buildChatIcon(),
+                                      const SizedBox(width: 8),
+                                      // Cart icon
+                                      _buildCartIcon(),
+                                    ],
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 12), // Increased spacing after search bar
@@ -553,6 +651,11 @@ class _HomePageState extends State<HomePage> {
                       child: LiveStreamSection(),
                     ),
 
+                    // Flash Sale section
+                    const SliverToBoxAdapter(
+                      child: FlashSaleSection(),
+                    ),
+
                     // Products section header
                     SliverToBoxAdapter(
                       child: Padding(
@@ -587,8 +690,19 @@ class _HomePageState extends State<HomePage> {
 
                     // Products grid
                     SliverToBoxAdapter(
-                      child: ProductGrid(
-                        products: state.products,
+                      child: Builder(
+                        builder: (context) {
+                          // Debug: Print productImages being passed to ProductGrid
+                          print('🏠 HomePage - Passing productImages to ProductGrid: ${state.productImages.keys.toList()}');
+                          print('🏠 HomePage - productImages count: ${state.productImages.length}');
+                          print('🏠 HomePage - products count: ${state.products.length}');
+                          
+                          return ProductGrid(
+                            key: ValueKey('product_grid_${state.productImages.length}'),
+                            products: state.products,
+                            productImages: state.productImages,
+                          );
+                        },
                       ),
                     ),
                   ],

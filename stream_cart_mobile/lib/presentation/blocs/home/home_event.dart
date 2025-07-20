@@ -31,3 +31,11 @@ class LoadProductImagesEvent extends HomeEvent {
 class LoadUserProfileEvent extends HomeEvent {
   const LoadUserProfileEvent();
 }
+
+class LoadFlashSalesEvent extends HomeEvent {
+  const LoadFlashSalesEvent();
+}
+
+class RefreshFlashSalesEvent extends HomeEvent {
+  const RefreshFlashSalesEvent();
+}

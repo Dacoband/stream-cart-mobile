@@ -534,7 +534,6 @@ class ProductDetailPage extends StatelessWidget {
                             );
                           }
                         : null,
-                    child: const Text('Mua ngay'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: product.stockQuantity > 0 
                           ? Colors.red 
@@ -542,6 +541,7 @@ class ProductDetailPage extends StatelessWidget {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
+                    child: const Text('Mua ngay'),
                   ),
                 ),
               ],

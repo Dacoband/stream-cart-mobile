@@ -3,6 +3,7 @@ import '../../../domain/entities/product_entity.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/livestream_entity.dart';
 import '../../../domain/entities/user_profile_entity.dart';
+import '../../../domain/entities/flash_sale_entity.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();
@@ -19,18 +20,24 @@ class HomeLoaded extends HomeState {
   final List<CategoryEntity> categories;
   final List<ProductEntity> products;
   final List<LiveStreamEntity> liveStreams;
+  final List<FlashSaleEntity> flashSales;
+  final List<ProductEntity> flashSaleProducts;
   final UserProfileEntity? userProfile;
   final bool hasMoreProducts;
   final bool isLoadingMore;
+  final bool isLoadingFlashSales;
   final Map<String, String> productImages; // productId -> imageUrl
 
   const HomeLoaded({
     required this.categories,
     required this.products,
     required this.liveStreams,
+    this.flashSales = const [],
+    this.flashSaleProducts = const [],
     this.userProfile,
     this.hasMoreProducts = true,
     this.isLoadingMore = false,
+    this.isLoadingFlashSales = false,
     this.productImages = const {},
   });
 
@@ -39,9 +46,12 @@ class HomeLoaded extends HomeState {
         categories,
         products,
         liveStreams,
+        flashSales,
+        flashSaleProducts,
         userProfile,
         hasMoreProducts,
         isLoadingMore,
+        isLoadingFlashSales,
         productImages,
       ];
 
@@ -49,18 +59,24 @@ class HomeLoaded extends HomeState {
     List<CategoryEntity>? categories,
     List<ProductEntity>? products,
     List<LiveStreamEntity>? liveStreams,
+    List<FlashSaleEntity>? flashSales,
+    List<ProductEntity>? flashSaleProducts,
     UserProfileEntity? userProfile,
     bool? hasMoreProducts,
     bool? isLoadingMore,
+    bool? isLoadingFlashSales,
     Map<String, String>? productImages,
   }) {
     return HomeLoaded(
       categories: categories ?? this.categories,
       products: products ?? this.products,
       liveStreams: liveStreams ?? this.liveStreams,
+      flashSales: flashSales ?? this.flashSales,
+      flashSaleProducts: flashSaleProducts ?? this.flashSaleProducts,
       userProfile: userProfile ?? this.userProfile,
       hasMoreProducts: hasMoreProducts ?? this.hasMoreProducts,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isLoadingFlashSales: isLoadingFlashSales ?? this.isLoadingFlashSales,
       productImages: productImages ?? this.productImages,
     );
   }

@@ -20,9 +20,15 @@ import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/usecases/get_product_detail_usecase.dart';
 import '../../domain/usecases/get_product_images_usecase.dart';
 import '../../domain/usecases/get_product_primary_images_usecase.dart';
+import '../../domain/usecases/get_flash_sales.dart';
+import '../../domain/usecases/get_flash_sale_products.dart';
 import '../../data/datasources/home_remote_data_source.dart';
+import '../../data/datasources/flash_sale_remote_data_source.dart';
+import '../../data/datasources/flash_sale_remote_data_source_impl.dart';
 import '../../data/repositories/home_repository_impl.dart';
+import '../../data/repositories/flash_sale_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
+import '../../domain/repositories/flash_sale_repository.dart';
 import '../../data/datasources/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -93,6 +99,18 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
   
+  // Flash Sale dependencies
+  getIt.registerLazySingleton<FlashSaleRemoteDataSource>(
+    () => FlashSaleRemoteDataSourceImpl(dio: getIt()),
+  );
+  
+  getIt.registerLazySingleton<FlashSaleRepository>(
+    () => FlashSaleRepositoryImpl(remoteDataSource: getIt()),
+  );
+  
+  getIt.registerLazySingleton(() => GetFlashSalesUseCase(repository: getIt()));
+  getIt.registerLazySingleton(() => GetFlashSaleProductsUseCase(repository: getIt()));
+  
   // Search service
   getIt.registerLazySingleton(() => SearchHistoryService());
   
@@ -121,6 +139,8 @@ Future<void> setupDependencies() async {
     getCategoriesUseCase: getIt(),
     getProductsUseCase: getIt(),
     getProductPrimaryImagesUseCase: getIt(),
+    getFlashSalesUseCase: getIt(),
+    getFlashSaleProductsUseCase: getIt(),
   ));
   
   getIt.registerFactory(() => SearchBloc(

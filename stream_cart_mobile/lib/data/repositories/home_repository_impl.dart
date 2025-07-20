@@ -159,37 +159,42 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<Either<Failure, Map<String, String>>> getProductPrimaryImages(List<String> productIds) async {
     try {
       print('🖼️ Repository: Getting primary images for ${productIds.length} products');
-      final allImages = await remoteDataSource.getAllProductImages();
       
       // Create a map of productId -> primaryImageUrl
       final Map<String, String> primaryImages = {};
       
+      // Load images for each product individually using specific API endpoint
       for (final productId in productIds) {
-        // Filter images for this product
-        final productImages = allImages.where((img) => img.productId == productId).toList();
-        
-        if (productImages.isNotEmpty) {
-          // Sort by displayOrder and find primary image
-          productImages.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+        try {
+          print('🖼️ Repository: Loading images for product: $productId');
+          final productImages = await remoteDataSource.getProductImages(productId);
           
-          // Try to find primary image first, otherwise use first image
-          final primaryImage = productImages.firstWhere(
-            (img) => img.isPrimary,
-            orElse: () => productImages.first,
-          );
-          
-          primaryImages[productId] = primaryImage.imageUrl;
+          if (productImages.isNotEmpty) {
+            // Sort by displayOrder and find primary image
+            productImages.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+            
+            // Try to find primary image first, otherwise use first image
+            final primaryImage = productImages.firstWhere(
+              (img) => img.isPrimary,
+              orElse: () => productImages.first,
+            );
+            
+            primaryImages[productId] = primaryImage.imageUrl;
+            print('✅ Repository: Found primary image for $productId: ${primaryImage.imageUrl}');
+          } else {
+            print('⚠️ Repository: No images found for product: $productId');
+          }
+        } catch (e) {
+          print('❌ Repository: Error loading images for product $productId: $e');
+          // Continue with other products even if one fails
         }
       }
       
       print('✅ Repository: Found ${primaryImages.length} primary images');
       return Right(primaryImages);
-    } on DioException catch (e) {
-      print('🚫 Repository: DioException in getProductPrimaryImages: ${e.message}');
-      return Left(NetworkFailure('Network error occurred'));
     } catch (e) {
       print('💥 Repository: Unexpected error in getProductPrimaryImages: $e');
-      return Left(ServerFailure('Failed to get primary images: ${e.toString()}'));
+      return Left(ServerFailure('Failed to get product primary images: $e'));
     }
   }
 }

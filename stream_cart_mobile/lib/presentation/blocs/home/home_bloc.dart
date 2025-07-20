@@ -4,6 +4,8 @@ import '../../../domain/entities/product_entity.dart';
 import '../../../domain/usecases/get_categories_usecase.dart';
 import '../../../domain/usecases/get_products_usecase.dart';
 import '../../../domain/usecases/get_product_primary_images_usecase.dart';
+import '../../../domain/usecases/get_flash_sales.dart';
+import '../../../domain/usecases/get_flash_sale_products.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -11,16 +13,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetProductsUseCase getProductsUseCase;
   final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
+  final GetFlashSalesUseCase getFlashSalesUseCase;
+  final GetFlashSaleProductsUseCase getFlashSaleProductsUseCase;
 
   HomeBloc({
     required this.getCategoriesUseCase,
     required this.getProductsUseCase,
     required this.getProductPrimaryImagesUseCase,
+    required this.getFlashSalesUseCase,
+    required this.getFlashSaleProductsUseCase,
   }) : super(HomeInitial()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<RefreshHomeDataEvent>(_onRefreshHomeData);
     on<LoadMoreProductsEvent>(_onLoadMoreProducts);
     on<LoadProductImagesEvent>(_onLoadProductImages);
+    on<LoadFlashSalesEvent>(_onLoadFlashSales);
+    on<RefreshFlashSalesEvent>(_onRefreshFlashSales);
   }
 
   Future<void> _onLoadHomeData(LoadHomeDataEvent event, Emitter<HomeState> emit) async {
@@ -87,11 +95,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         hasMoreProducts: products.length >= 20,
       ));
 
-      // Auto-load product images after products are loaded
+      // Auto-load flash sales and product images after initial load
       if (products.isNotEmpty) {
         final productIds = products.map((p) => p.id).toList();
+        print('🖼️ Auto-loading product images for ${productIds.length} products');
         add(LoadProductImagesEvent(productIds));
       }
+      
+      // Load flash sales automatically
+      print('🔥 Auto-loading flash sales...');
+      add(const LoadFlashSalesEvent());
     } catch (e) {
       print('💥 Unexpected error in HomeBloc: $e');
       emit(HomeError('Unexpected error occurred: $e'));
@@ -99,6 +112,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onRefreshHomeData(RefreshHomeDataEvent event, Emitter<HomeState> emit) async {
+    print('🔄 RefreshHomeData event triggered');
+    
+    // Also refresh flash sales when refreshing home data
+    final currentState = state;
+    if (currentState is HomeLoaded) {
+      print('🔥 Refreshing flash sales during home data refresh...');
+      add(const LoadFlashSalesEvent());
+    }
+    
     // Use the same logic as LoadHomeDataEvent
     add(const LoadHomeDataEvent());
   }
@@ -148,5 +170,68 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         },
       );
     }
+  }
+
+  Future<void> _onLoadFlashSales(LoadFlashSalesEvent event, Emitter<HomeState> emit) async {
+    final currentState = state;
+    if (currentState is HomeLoaded) {
+      emit(currentState.copyWith(isLoadingFlashSales: true));
+
+      try {
+        print('🔥 HomeBloc: Loading flash sales...');
+        
+        final flashSalesResult = await getFlashSalesUseCase();
+        
+        await flashSalesResult.fold(
+          (failure) async {
+            print('❌ HomeBloc: Error loading flash sales: ${failure.message}');
+            emit(currentState.copyWith(isLoadingFlashSales: false));
+          },
+          (flashSales) async {
+            print('✅ HomeBloc: Successfully loaded ${flashSales.length} flash sales');
+            
+            // Extract product IDs from flash sales
+            final productIds = flashSales
+                .map((flashSale) => flashSale.productId)
+                .toSet()
+                .toList();
+
+            if (productIds.isNotEmpty) {
+              final productsResult = await getFlashSaleProductsUseCase(productIds);
+              
+              productsResult.fold(
+                (failure) {
+                  print('❌ HomeBloc: Error loading flash sale products: ${failure.message}');
+                  emit(currentState.copyWith(
+                    flashSales: flashSales,
+                    isLoadingFlashSales: false,
+                  ));
+                },
+                (flashSaleProducts) {
+                  print('✅ HomeBloc: Successfully loaded ${flashSaleProducts.length} flash sale products');
+                  emit(currentState.copyWith(
+                    flashSales: flashSales,
+                    flashSaleProducts: flashSaleProducts,
+                    isLoadingFlashSales: false,
+                  ));
+                },
+              );
+            } else {
+              emit(currentState.copyWith(
+                flashSales: flashSales,
+                isLoadingFlashSales: false,
+              ));
+            }
+          },
+        );
+      } catch (e) {
+        print('💥 Unexpected error loading flash sales: $e');
+        emit(currentState.copyWith(isLoadingFlashSales: false));
+      }
+    }
+  }
+
+  Future<void> _onRefreshFlashSales(RefreshFlashSalesEvent event, Emitter<HomeState> emit) async {
+    add(const LoadFlashSalesEvent());
   }
 }

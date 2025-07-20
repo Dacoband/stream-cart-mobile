@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../lib/presentation/widgets/home/category_section.dart';
+import 'package:stream_cart_mobile/presentation/widgets/home/category_section.dart';
 
 void main() {
   // Test basic import
