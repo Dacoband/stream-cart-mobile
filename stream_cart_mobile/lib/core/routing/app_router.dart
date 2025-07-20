@@ -6,9 +6,11 @@ import '../../presentation/pages/auth/register_page.dart';
 import '../../presentation/pages/auth/otp_verification_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
+import '../../presentation/pages/profile/profile_detail_page.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
+import '../../presentation/blocs/profile/profile_event.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -16,6 +18,7 @@ class AppRouter {
   static const String otpVerification = '/otp-verification';
   static const String home = '/home';
   static const String profile = '/profile';
+  static const String profileDetail = '/profile-detail';
   static const String productDetails = '/product-details';
   static const String search = '/search';
   static const String livestreamList = '/livestream-list';
@@ -41,6 +44,13 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (context) => getIt<ProfileBloc>(),
             child: const ProfilePage(),
+          ),
+        );
+      case profileDetail:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ProfileBloc>()..add(LoadUserProfileEvent()),
+            child: const ProfileDetailPage(),
           ),
         );
       case productDetails:

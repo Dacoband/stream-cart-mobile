@@ -173,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icons.person_outline,
                     title: 'Thông tin cá nhân',
                     onTap: () {
-                      // TODO: Navigate to edit profile
+                      Navigator.pushNamed(context, AppRouter.profileDetail);
                     },
                   ),
                   _buildMenuItem(
