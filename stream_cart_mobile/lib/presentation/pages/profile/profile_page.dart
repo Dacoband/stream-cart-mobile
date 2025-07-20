@@ -11,6 +11,7 @@ import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
+import '../../widgets/common/auth_guard.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -29,18 +30,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _checkAndLoadProfile() async {
-    final storageService = getIt<StorageService>();
-    final token = await storageService.getAccessToken();
-    
-    print('=== PROFILE PAGE DEBUG ===');
-    print('Access token exists: ${token != null}');
-    print('Token length: ${token?.length ?? 0}');
-    if (token != null) {
-      print('Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...');
+    // Chỉ load profile khi user đã đăng nhập
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      final storageService = getIt<StorageService>();
+      final token = await storageService.getAccessToken();
+      
+      print('=== PROFILE PAGE DEBUG ===');
+      print('Access token exists: ${token != null}');
+      print('Token length: ${token?.length ?? 0}');
+      if (token != null) {
+        print('Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...');
+      }
+      print('========================');
+      
+      context.read<ProfileBloc>().add(LoadUserProfileEvent());
     }
-    print('========================');
-    
-    context.read<ProfileBloc>().add(LoadUserProfileEvent());
   }
 
   void _onBottomNavTap(int index) {
@@ -57,6 +62,15 @@ class _ProfilePageState extends State<ProfilePage> {
         break;
       case 2: // Profile
         break;
+    }
+  }
+
+  void _checkAuthAndNavigate(BuildContext context, VoidCallback onAuthorized, String message) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      onAuthorized();
+    } else {
+      showLoginRequiredDialog(context, message: message);
     }
   }
 
@@ -90,11 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               Navigator.pop(context);
               context.read<AuthBloc>().add(LogoutEvent());
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRouter.login,
-                (route) => false,
-              );
+              // Stay on current page, don't navigate away
             },
             child: const Text(
               'Đăng xuất',
@@ -173,35 +183,45 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icons.person_outline,
                     title: 'Thông tin cá nhân',
                     onTap: () {
-                      Navigator.pushNamed(context, AppRouter.profileDetail);
+                      _checkAuthAndNavigate(context, () {
+                        Navigator.pushNamed(context, AppRouter.profileDetail);
+                      }, 'Bạn cần đăng nhập để xem thông tin cá nhân');
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.shopping_bag_outlined,
                     title: 'Đơn hàng của tôi',
                     onTap: () {
-                      Navigator.pushNamed(context, AppRouter.orders);
+                      _checkAuthAndNavigate(context, () {
+                        Navigator.pushNamed(context, AppRouter.orders);
+                      }, 'Bạn cần đăng nhập để xem đơn hàng');
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.favorite_outline,
                     title: 'Sản phẩm yêu thích',
                     onTap: () {
-                      // TODO: Navigate to favorites
+                      _checkAuthAndNavigate(context, () {
+                        // TODO: Navigate to favorites
+                      }, 'Bạn cần đăng nhập để xem sản phẩm yêu thích');
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.location_on_outlined,
                     title: 'Địa chỉ giao hàng',
                     onTap: () {
-                      // TODO: Navigate to addresses
+                      _checkAuthAndNavigate(context, () {
+                        // TODO: Navigate to addresses
+                      }, 'Bạn cần đăng nhập để quản lý địa chỉ giao hàng');
                     },
                   ),
                   _buildMenuItem(
                     icon: Icons.payment_outlined,
                     title: 'Phương thức thanh toán',
                     onTap: () {
-                      // TODO: Navigate to payment methods
+                      _checkAuthAndNavigate(context, () {
+                        // TODO: Navigate to payment methods
+                      }, 'Bạn cần đăng nhập để quản lý phương thức thanh toán');
                     },
                   ),
                   _buildMenuItem(
@@ -220,43 +240,86 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 24),
                   
-                  // Logout button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _logout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF2E7D32),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: const BorderSide(
-                            color: Color(0xFF2E7D32),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.logout,
-                            color: Color(0xFF2E7D32),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Đăng xuất',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF2E7D32),
+                  // Logout button - only show when logged in
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, authState) {
+                      if (authState is AuthSuccess || authState is AuthAuthenticated) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _logout,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF2E7D32),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(
+                                  color: Color(0xFF2E7D32),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.logout,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Đăng xuất',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        );
+                      } else {
+                        // Show login button when not logged in
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRouter.login);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.login,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Đăng nhập',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -273,8 +336,102 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileHeader() {
-    return BlocBuilder<ProfileBloc, ProfileState>(
-      builder: (context, state) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        // Nếu chưa đăng nhập, hiển thị UI cho chưa đăng nhập
+        if (authState is! AuthSuccess && authState is! AuthAuthenticated) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF4CAF50).withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Icon(
+                        Icons.person_outline,
+                        color: Color(0xFF4CAF50),
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Chưa đăng nhập',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2E7D32),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Vui lòng đăng nhập để xem thông tin',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRouter.login);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Đăng nhập',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Nếu đã đăng nhập, hiển thị profile từ ProfileBloc
+        return BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (context, state) {
         if (state is ProfileLoading) {
           return Container(
             padding: const EdgeInsets.all(20),
@@ -645,6 +802,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
           ),
+        );
+          },
         );
       },
     );

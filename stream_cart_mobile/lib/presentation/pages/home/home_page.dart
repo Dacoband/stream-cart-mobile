@@ -6,11 +6,14 @@ import '../../../core/di/dependency_injection.dart';
 import '../../blocs/home/home_bloc.dart';
 import '../../blocs/home/home_event.dart';
 import '../../blocs/home/home_state.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/home/flash_sale_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
+import '../../widgets/common/auth_guard.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -54,7 +57,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onCartPressed() {
-    Navigator.pushNamed(context, AppRouter.cart);
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      Navigator.pushNamed(context, AppRouter.cart);
+    } else {
+      showLoginRequiredDialog(context, message: 'Bạn cần đăng nhập để xem giỏ hàng');
+    }
   }
 
   void _onChatPressed() {

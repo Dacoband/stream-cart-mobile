@@ -137,18 +137,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final token = await authRepository.getStoredToken();
-      final email = await authRepository.getStoredUserEmail();
+      final refreshToken = await authRepository.getStoredRefreshToken();
 
       if (token != null && token.isNotEmpty) {
-        if (email != null && email.isNotEmpty) {
-          emit(AuthNeedsVerification(email: email));
+        // Try to refresh token to check if it's still valid
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          final refreshResult = await authRepository.refreshToken(refreshToken);
+          refreshResult.fold(
+            (failure) {
+              // Refresh failed, user needs to login again
+              emit(AuthUnauthenticated());
+            },
+            (loginResponse) {
+              // Refresh successful, user is authenticated
+              emit(AuthSuccess(loginResponse));
+            },
+          );
         } else {
+          // No refresh token, assume user is authenticated but may need verification
           emit(AuthAuthenticated(isVerified: true));
         }
       } else {
+        // No token found, user is not authenticated
         emit(AuthUnauthenticated());
       }
     } catch (e) {
+      print('CheckAuthStatus error: $e');
       emit(AuthUnauthenticated());
     }
   }

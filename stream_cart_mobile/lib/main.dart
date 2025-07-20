@@ -5,6 +5,7 @@ import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/search_history_service.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/pages/auth/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        initialRoute: AppRouter.login,
+        home: const AuthWrapper(),
         onGenerateRoute: AppRouter.generateRoute,
         debugShowCheckedModeBanner: false,
       ),
