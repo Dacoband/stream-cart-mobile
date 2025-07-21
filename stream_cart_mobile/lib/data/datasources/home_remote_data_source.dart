@@ -22,9 +22,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<CategoryResponseModel> getCategories() async {
-    final url = ApiUrlHelper.getFullUrl(ApiConstants.categoriesEndpoint);
-    print('🌐 DataSource: Calling categories API: $url');
-    final response = await dio.get(url);
+    final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.categoriesEndpoint);
+    print('🌐 DataSource: Calling categories API: $endpoint');
+    final response = await dio.get(endpoint);
     print('📦 DataSource: Categories raw response: ${response.data}');
     final result = CategoryResponseModel.fromJson(response.data);
     print('✅ DataSource: Parsed categories - success: ${result.success}, count: ${result.data.length}');
@@ -33,10 +33,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<ProductResponseModel> getProducts({int page = 1, int limit = 20}) async {
-    final url = ApiUrlHelper.getFullUrl(ApiConstants.productsEndpoint);
-    print('🌐 DataSource: Calling products API: $url (page: $page, limit: $limit)');
+    final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.productsEndpoint);
+    print('🌐 DataSource: Calling products API: $endpoint (page: $page, limit: $limit)');
     final response = await dio.get(
-      url,
+      endpoint,
       queryParameters: {
         'page': page,
         'limit': limit,
@@ -50,16 +50,40 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
   @override
   Future<ProductResponseModel> searchProducts({required String query, int page = 1, int limit = 20}) async {
-    final url = ApiUrlHelper.getFullUrl(ApiConstants.searchProductsEndpoint);
+    final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.searchProductsEndpoint);
     final response = await dio.get(
-      url,
+      endpoint,
       queryParameters: {
-        'query': query,
-        'page': page,
-        'limit': limit,
+        'SearchTerm': query,
+        'PageNumber': page,
+        'PageSize': limit,
       },
     );
-    return ProductResponseModel.fromJson(response.data);
+    
+    // Parse the advanced search response and convert to ProductResponseModel
+    final searchResponse = response.data;
+    if (searchResponse['success'] == true && searchResponse['data'] != null) {
+      final data = searchResponse['data'];
+      final products = data['products'];
+      
+      // Convert to ProductResponseModel format
+      final productResponseData = {
+        'success': true,
+        'message': searchResponse['message'],
+        'data': products['items'], // Extract items from the products object
+        'errors': searchResponse['errors'] ?? []
+      };
+      
+      return ProductResponseModel.fromJson(productResponseData);
+    } else {
+      // Handle error case
+      return ProductResponseModel.fromJson({
+        'success': false,
+        'message': searchResponse['message'] ?? 'Search failed',
+        'data': [],
+        'errors': searchResponse['errors'] ?? ['Search failed']
+      });
+    }
   }
 
   @override

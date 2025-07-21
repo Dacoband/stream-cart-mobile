@@ -27,7 +27,7 @@ class SearchResults extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search summary
+          // Search summary with blue theme
           _buildSearchSummary(context),
           const SizedBox(height: 16),
           
@@ -37,7 +37,7 @@ class SearchResults extends StatelessWidget {
             const SizedBox(height: 24),
           ],
           
-          // Products section
+          // Products section with responsive grid
           if (products.isNotEmpty) ...[
             _buildProductsSection(context),
           ],
@@ -54,22 +54,33 @@ class SearchResults extends StatelessWidget {
   Widget _buildSearchSummary(BuildContext context) {
     final totalResults = products.length + categories.length;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade200),
+        gradient: LinearGradient(
+          colors: [const Color.fromARGB(255, 30, 229, 80), const Color.fromARGB(255, 25, 210, 56)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.shade200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(Icons.search, color: Colors.blue.shade600, size: 20),
-          const SizedBox(width: 8),
+          Icon(Icons.search, color: Colors.white, size: 22),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Tìm thấy $totalResults kết quả cho "$query"',
-              style: TextStyle(
-                color: Colors.blue.shade800,
-                fontWeight: FontWeight.w500,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
               ),
             ),
           ),
@@ -84,13 +95,14 @@ class SearchResults extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.category, color: Colors.orange.shade600, size: 20),
+            Icon(Icons.category, color: const Color.fromARGB(255, 42, 196, 22), size: 20),
             const SizedBox(width: 8),
             Text(
               'Danh mục (${categories.length})',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: const Color.fromARGB(255, 22, 207, 22),
               ),
             ),
           ],
@@ -124,12 +136,12 @@ class SearchResults extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
+                    color: Colors.blue.shade100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.category_outlined,
-                    color: Colors.orange.shade600,
+                    color: const Color(0xFF4CAF50),
                     size: 24,
                   ),
                 ),
@@ -174,18 +186,24 @@ class SearchResults extends StatelessWidget {
   }
 
   Widget _buildProductsSection(BuildContext context) {
+    // Get screen width to calculate responsive grid
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth > 600 ? 3 : 2; // 3 columns on tablet, 2 on phone
+    final childAspectRatio = screenWidth > 600 ? 0.75 : 0.65; // Adjust aspect ratio
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.shopping_bag, color: Colors.blue.shade600, size: 20),
+            Icon(Icons.shopping_bag, color: const Color(0xFF4CAF50), size: 20),
             const SizedBox(width: 8),
             Text(
               'Sản phẩm (${products.length})',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFF4CAF50),
               ),
             ),
             if (hasMoreProducts) ...[
@@ -194,6 +212,9 @@ class SearchResults extends StatelessWidget {
                 onPressed: () {
                   // TODO: Load more products
                 },
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color.fromARGB(255, 30, 229, 113),
+                ),
                 child: const Text('Xem thêm'),
               ),
             ],
@@ -203,9 +224,9 @@ class SearchResults extends StatelessWidget {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.7,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,
           ),
@@ -235,12 +256,16 @@ class SearchResults extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.blue.withOpacity(0.08),
               spreadRadius: 1,
-              blurRadius: 6,
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
+          border: Border.all(
+            color: const Color.fromARGB(255, 30, 229, 106).withOpacity(0.1),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +276,7 @@ class SearchResults extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.grey.shade50,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
@@ -273,13 +298,17 @@ class SearchResults extends StatelessWidget {
                           fit: BoxFit.cover,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return const Center(child: CircularProgressIndicator());
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.blue.shade600,
+                              ),
+                            );
                           },
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
                               child: Icon(
                                 Icons.broken_image,
-                                size: 50,
+                                size: 40,
                                 color: Colors.grey.shade400,
                               ),
                             );
@@ -290,8 +319,8 @@ class SearchResults extends StatelessWidget {
                       Center(
                         child: Icon(
                           Icons.shopping_bag,
-                          size: 50,
-                          color: Colors.grey.shade400,
+                          size: 40,
+                          color: Colors.blue.shade300,
                         ),
                       ),
                     // Sale badge
@@ -305,7 +334,7 @@ class SearchResults extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: Colors.red.shade600,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
@@ -326,48 +355,58 @@ class SearchResults extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Product Name
-                    Text(
-                      product.productName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    Expanded(
+                      child: Text(
+                        product.productName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          height: 1.2,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 4),
                     // Price
-                    if (product.isOnSale) ...[
-                      Text(
-                        '${product.basePrice.toStringAsFixed(0)}₫',
-                        style: const TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        '${product.finalPrice.toStringAsFixed(0)}₫',
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        '${product.finalPrice.toStringAsFixed(0)}₫',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (product.isOnSale) ...[
+                          Text(
+                            '${product.basePrice.toStringAsFixed(0)}₫',
+                            style: TextStyle(
+                              decoration: TextDecoration.lineThrough,
+                              color: Colors.grey.shade500,
+                              fontSize: 11,
+                            ),
+                          ),
+                          Text(
+                            '${product.finalPrice.toStringAsFixed(0)}₫',
+                            style: TextStyle(
+                              color: Colors.red.shade600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ] else ...[
+                          Text(
+                            '${product.finalPrice.toStringAsFixed(0)}₫',
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 30, 229, 106),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),

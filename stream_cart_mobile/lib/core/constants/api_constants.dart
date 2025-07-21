@@ -28,7 +28,7 @@ class ApiConstants {
   static const String productsEndpoint = '/api/products';
   static const String productDetailsEndpoint = '/api/products/{id}';
   static const String productDetailEndpoint = '/api/products/{id}/detail';
-  static const String searchProductsEndpoint = '/api/products/paged';
+  static const String searchProductsEndpoint = '/api/products/search';
   
   // Flash Sale endpoints
   static const String flashSalesEndpoint = '/api/flashsales';

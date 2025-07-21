@@ -36,6 +36,12 @@ class ApiUrlHelper {
     }
   }
   
+  /// Get endpoint path only (for use with Dio that already has baseUrl)
+  static String getEndpoint(String endpoint) {
+    // Return just the endpoint path, not full URL
+    return endpoint;
+  }
+  
   /// Get full URL for any endpoint
   static String getFullUrl(String endpoint) {
     if (endpoint.startsWith('/api/auth')) {

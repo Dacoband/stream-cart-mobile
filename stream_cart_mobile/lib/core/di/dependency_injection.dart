@@ -9,14 +9,18 @@ import '../../core/services/search_history_service.dart';
 import '../../core/services/image_upload_service.dart';
 import '../../data/datasources/auth_local_data_source.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
+import '../../data/datasources/search_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/search_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/search_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import '../../domain/usecases/search_products_usecase.dart' as search;
+import '../../domain/usecases/search_products_advanced_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/usecases/update_user_profile.dart';
 import '../../domain/usecases/get_product_detail_usecase.dart';
@@ -39,6 +43,7 @@ import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
+import '../../presentation/blocs/search/advanced_search_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -101,6 +106,17 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
   
+  // Advanced Search dependencies
+  getIt.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSourceImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton<SearchRepository>(
+    () => SearchRepositoryImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton(() => SearchProductsAdvancedUseCase(getIt()));
+  
   // Flash Sale dependencies
   getIt.registerLazySingleton<FlashSaleRemoteDataSource>(
     () => FlashSaleRemoteDataSourceImpl(dio: getIt()),
@@ -154,6 +170,10 @@ Future<void> setupDependencies() async {
     getCategoriesUseCase: getIt(),
     getProductPrimaryImagesUseCase: getIt(),
     searchHistoryService: getIt(),
+  ));
+  
+  getIt.registerFactory(() => AdvancedSearchBloc(
+    searchProductsAdvancedUseCase: getIt(),
   ));
   
   getIt.registerFactory(() => ProfileBloc(

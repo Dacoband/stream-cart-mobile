@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/dependency_injection.dart';
+import '../../../core/routing/app_router.dart';
 import '../../blocs/search/search_bloc.dart';
 import '../../blocs/search/search_event.dart';
 import '../../blocs/search/search_state.dart';
@@ -49,12 +50,12 @@ class _SearchPageState extends State<SearchPage> {
     return BlocProvider<SearchBloc>(
       create: (context) => _searchBloc,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFF4CAF50),
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           title: BlocBuilder<SearchBloc, SearchState>(
@@ -75,11 +76,23 @@ class _SearchPageState extends State<SearchPage> {
             },
           ),
           actions: [
+            // Advanced Search Button
+            IconButton(
+              icon: const Icon(Icons.tune, color: Colors.white),
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.advancedSearch,
+                  arguments: _searchController.text,
+                );
+              },
+              tooltip: 'Tìm kiếm nâng cao',
+            ),
             BlocBuilder<SearchBloc, SearchState>(
               builder: (context, state) {
                 if (_searchController.text.isNotEmpty) {
                   return IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.black87),
+                    icon: const Icon(Icons.clear, color: Colors.white),
                     onPressed: () {
                       _searchController.clear();
                       context.read<SearchBloc>().add(const ClearSearchEvent());
