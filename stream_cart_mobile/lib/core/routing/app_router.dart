@@ -11,7 +11,6 @@ import '../../presentation/pages/profile/edit_profile_page.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
-import '../../presentation/pages/demo/search_demo_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -29,7 +28,6 @@ class AppRouter {
   static const String productDetails = '/product-details';
   static const String search = '/search';
   static const String advancedSearch = '/advanced-search';
-  static const String searchDemo = '/search-demo';
   static const String livestreamList = '/livestream-list';
   static const String livestreamDetail = '/livestream-detail';
   static const String cart = '/cart';
@@ -94,10 +92,6 @@ class AppRouter {
             ],
             child: AdvancedSearchPage(initialQuery: initialQuery),
           ),
-        );
-      case searchDemo:
-        return MaterialPageRoute(
-          builder: (_) => const SearchDemoPage(),
         );
       case cart:
         return MaterialPageRoute(
