@@ -71,10 +71,48 @@ class CartItemEntity extends Equatable {
   ];
 }
 
+class CartShopEntity extends Equatable {
+  final String shopId;
+  final String shopName;
+  final List<CartItemEntity> products;
+  final int numberOfProduct;
+  final double totalPriceInShop;
+
+  const CartShopEntity({
+    required this.shopId,
+    required this.shopName,
+    required this.products,
+    required this.numberOfProduct,
+    required this.totalPriceInShop,
+  });
+
+  @override
+  List<Object?> get props => [shopId, shopName, products, numberOfProduct, totalPriceInShop];
+}
+
+class CartSummaryEntity extends Equatable {
+  final int totalItem;
+  final double subTotal;
+  final double discount;
+  final double totalAmount;
+  final List<CartShopEntity> listCartItem;
+
+  const CartSummaryEntity({
+    required this.totalItem,
+    required this.subTotal,
+    required this.discount,
+    required this.totalAmount,
+    required this.listCartItem,
+  });
+
+  @override
+  List<Object?> get props => [totalItem, subTotal, discount, totalAmount, listCartItem];
+}
+
 class CartResponseEntity extends Equatable {
   final bool success;
   final String message;
-  final CartItemEntity? data;
+  final dynamic data; // Can be different types based on operation
   final List<String> errors;
 
   const CartResponseEntity({

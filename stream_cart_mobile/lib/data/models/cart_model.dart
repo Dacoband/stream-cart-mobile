@@ -117,6 +117,105 @@ class CartItemModel {
 }
 
 @JsonSerializable()
+class CartShopModel {
+  @JsonKey(name: 'shopId')
+  final String? shopId;
+  
+  @JsonKey(name: 'shopName')
+  final String? shopName;
+  
+  @JsonKey(name: 'products')
+  final List<CartItemModel> products;
+  
+  @JsonKey(name: 'numberOfProduct')
+  final int? numberOfProduct;
+  
+  @JsonKey(name: 'totalPriceInShop')
+  final double? totalPriceInShop;
+
+  const CartShopModel({
+    this.shopId,
+    this.shopName,
+    required this.products,
+    this.numberOfProduct,
+    this.totalPriceInShop,
+  });
+
+  factory CartShopModel.fromJson(Map<String, dynamic> json) => _$CartShopModelFromJson(json);
+  Map<String, dynamic> toJson() => _$CartShopModelToJson(this);
+
+  CartShopEntity toEntity() {
+    return CartShopEntity(
+      shopId: shopId ?? '',
+      shopName: shopName ?? '',
+      products: products.map((product) => product.toEntity()).toList(),
+      numberOfProduct: numberOfProduct ?? 0,
+      totalPriceInShop: totalPriceInShop ?? 0,
+    );
+  }
+}
+
+@JsonSerializable()
+class CartSummaryModel {
+  @JsonKey(name: 'totalItem')
+  final int? totalItem;
+  
+  @JsonKey(name: 'subTotal')
+  final double? subTotal;
+  
+  @JsonKey(name: 'discount')
+  final double? discount;
+  
+  @JsonKey(name: 'totalAmount')
+  final double? totalAmount;
+  
+  @JsonKey(name: 'listCartItem')
+  final List<CartShopModel>? listCartItem;
+
+  const CartSummaryModel({
+    this.totalItem,
+    this.subTotal,
+    this.discount,
+    this.totalAmount,
+    this.listCartItem,
+  });
+
+  factory CartSummaryModel.fromJson(Map<String, dynamic> json) => _$CartSummaryModelFromJson(json);
+  Map<String, dynamic> toJson() => _$CartSummaryModelToJson(this);
+
+  CartSummaryEntity toEntity() {
+    return CartSummaryEntity(
+      totalItem: totalItem ?? 0,
+      subTotal: subTotal ?? 0,
+      discount: discount ?? 0,
+      totalAmount: totalAmount ?? 0,
+      listCartItem: listCartItem?.map((shop) => shop.toEntity()).toList() ?? [],
+    );
+  }
+}
+
+@JsonSerializable()
+class CartUpdateResponseModel {
+  @JsonKey(name: 'cartItem')
+  final String? cartItem;
+  
+  @JsonKey(name: 'variantId')
+  final String? variantId;
+  
+  @JsonKey(name: 'quantity')
+  final int? quantity;
+
+  const CartUpdateResponseModel({
+    this.cartItem,
+    this.variantId,
+    this.quantity,
+  });
+
+  factory CartUpdateResponseModel.fromJson(Map<String, dynamic> json) => _$CartUpdateResponseModelFromJson(json);
+  Map<String, dynamic> toJson() => _$CartUpdateResponseModelToJson(this);
+}
+
+@JsonSerializable()
 class CartResponseModel {
   @JsonKey(name: 'success')
   final bool success;
@@ -125,7 +224,7 @@ class CartResponseModel {
   final String message;
   
   @JsonKey(name: 'data')
-  final CartItemModel? data;
+  final dynamic data; // Can be CartSummaryModel or CartUpdateResponseModel or CartItemModel
   
   @JsonKey(name: 'errors')
   final List<String> errors;
@@ -144,7 +243,7 @@ class CartResponseModel {
     return CartResponseEntity(
       success: success,
       message: message,
-      data: data?.toEntity(),
+      data: null, // We'll handle data differently for different operations
       errors: errors,
     );
   }

@@ -39,9 +39,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     result.fold(
       (failure) => emit(CartError(failure.message)),
       (cartItems) {
+        // Calculate total amount from cart items
         double totalAmount = 0;
-        // Note: We'll need product prices to calculate total amount
-        // For now, we'll set it to 0 and update when we have product details
+        for (var item in cartItems) {
+          totalAmount += (item.currentPrice * item.quantity);
+        }
         emit(CartLoaded(items: cartItems, totalAmount: totalAmount));
       },
     );
@@ -72,7 +74,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onUpdateCartItem(UpdateCartItemEvent event, Emitter<CartState> emit) async {
-    emit(CartLoading());
+    // Don't show loading for update operations to maintain UI responsiveness
     
     final params = UpdateCartItemParams(
       productId: event.productId,
@@ -85,8 +87,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       (failure) => emit(CartError(failure.message)),
       (response) {
         if (response.success) {
+          // Update successful, reload cart to get fresh data
           emit(CartItemUpdated(response.message));
-          // Reload cart after updating item
           add(LoadCartEvent());
         } else {
           emit(CartError(response.errors.isNotEmpty ? response.errors.first : 'Lỗi không xác định'));

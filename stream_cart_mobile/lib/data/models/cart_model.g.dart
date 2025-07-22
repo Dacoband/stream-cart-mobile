@@ -48,13 +48,67 @@ Map<String, dynamic> _$CartItemModelToJson(CartItemModel instance) =>
       'productStatus': instance.productStatus,
     };
 
+CartShopModel _$CartShopModelFromJson(Map<String, dynamic> json) =>
+    CartShopModel(
+      shopId: json['shopId'] as String?,
+      shopName: json['shopName'] as String?,
+      products: (json['products'] as List<dynamic>)
+          .map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      numberOfProduct: (json['numberOfProduct'] as num?)?.toInt(),
+      totalPriceInShop: (json['totalPriceInShop'] as num?)?.toDouble(),
+    );
+
+Map<String, dynamic> _$CartShopModelToJson(CartShopModel instance) =>
+    <String, dynamic>{
+      'shopId': instance.shopId,
+      'shopName': instance.shopName,
+      'products': instance.products,
+      'numberOfProduct': instance.numberOfProduct,
+      'totalPriceInShop': instance.totalPriceInShop,
+    };
+
+CartSummaryModel _$CartSummaryModelFromJson(Map<String, dynamic> json) =>
+    CartSummaryModel(
+      totalItem: (json['totalItem'] as num?)?.toInt(),
+      subTotal: (json['subTotal'] as num?)?.toDouble(),
+      discount: (json['discount'] as num?)?.toDouble(),
+      totalAmount: (json['totalAmount'] as num?)?.toDouble(),
+      listCartItem: (json['listCartItem'] as List<dynamic>?)
+          ?.map((e) => CartShopModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$CartSummaryModelToJson(CartSummaryModel instance) =>
+    <String, dynamic>{
+      'totalItem': instance.totalItem,
+      'subTotal': instance.subTotal,
+      'discount': instance.discount,
+      'totalAmount': instance.totalAmount,
+      'listCartItem': instance.listCartItem,
+    };
+
+CartUpdateResponseModel _$CartUpdateResponseModelFromJson(
+        Map<String, dynamic> json) =>
+    CartUpdateResponseModel(
+      cartItem: json['cartItem'] as String?,
+      variantId: json['variantId'] as String?,
+      quantity: (json['quantity'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$CartUpdateResponseModelToJson(
+        CartUpdateResponseModel instance) =>
+    <String, dynamic>{
+      'cartItem': instance.cartItem,
+      'variantId': instance.variantId,
+      'quantity': instance.quantity,
+    };
+
 CartResponseModel _$CartResponseModelFromJson(Map<String, dynamic> json) =>
     CartResponseModel(
       success: json['success'] as bool,
       message: json['message'] as String,
-      data: json['data'] == null
-          ? null
-          : CartItemModel.fromJson(json['data'] as Map<String, dynamic>),
+      data: json['data'],
       errors:
           (json['errors'] as List<dynamic>).map((e) => e as String).toList(),
     );

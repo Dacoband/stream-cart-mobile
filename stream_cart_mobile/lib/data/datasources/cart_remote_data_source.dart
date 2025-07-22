@@ -94,10 +94,12 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
       }
       
-      // Thử sử dụng endpoint với cartItemId
-      final url = ApiUrlHelper.getFullUrl('/api/carts/${targetItem.cartItemId}');
+      // Sử dụng PUT endpoint theo API spec
+      final url = ApiUrlHelper.getFullUrl('/api/carts');
       
       final data = {
+        'cartItem': targetItem.cartItemId,
+        'variantId': variantId ?? targetItem.variantId,
         'quantity': quantity,
       };
       
@@ -110,15 +112,19 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       print('   URL: $url');
       print('   Full data: $data');
       
-      final response = await dio.patch(url, data: data);
+      final response = await dio.put(url, data: data);
       return CartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Vui lòng đăng nhập để cập nhật giỏ hàng');
+      } else if (e.response?.statusCode == 400) {
         final responseData = e.response?.data;
         if (responseData != null && responseData['message'] != null) {
           throw Exception(responseData['message']);
         }
         throw Exception('Không thể cập nhật sản phẩm trong giỏ hàng');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
       }
       throw Exception('Lỗi kết nối: ${e.message}');
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../domain/entities/cart_entity.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../datasources/cart_remote_data_source.dart';
@@ -55,8 +56,20 @@ class CartRepositoryImpl implements CartRepository {
       return Right(result.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để cập nhật giỏ hàng'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Không thể cập nhật sản phẩm trong giỏ hàng';
+        return Left(ServerFailure(message));
+      } else if (e.response?.statusCode == 404) {
+        return Left(ServerFailure('Không tìm thấy sản phẩm trong giỏ hàng'));
+      } else {
+        return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      }
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
 

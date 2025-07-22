@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../domain/entities/cart_entity.dart';
 
 class CartItemWidget extends StatelessWidget {
@@ -12,6 +13,15 @@ class CartItemWidget extends StatelessWidget {
     this.onRemove,
     this.onQuantityChanged,
   });
+
+  String _formatPrice(double price) {
+    final formatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    return formatter.format(price);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,20 +54,59 @@ class CartItemWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Product ID: ${item.productId}',
+                    item.productName.isNotEmpty ? item.productName : 'Tên sản phẩm',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Variant: ${item.variantId}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                  
+                  // Price display
+                  Row(
+                    children: [
+                      Text(
+                        _formatPrice(item.currentPrice),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      if (item.originalPrice > item.currentPrice) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatPrice(item.originalPrice),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  
+                  // Stock status
+                  if (item.stockQuantity > 0)
+                    Text(
+                      'Còn lại: ${item.stockQuantity}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: item.stockQuantity > 10 ? Colors.green : Colors.orange,
+                      ),
+                    )
+                  else
+                    Text(
+                      'Hết hàng',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.red,
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   
                   // Quantity Controls

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../domain/entities/cart_entity.dart';
 
 class CartSummaryWidget extends StatelessWidget {
@@ -12,6 +13,15 @@ class CartSummaryWidget extends StatelessWidget {
     required this.totalAmount,
     this.onCheckout,
   });
+
+  String _formatPrice(double price) {
+    final formatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    return formatter.format(price);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +75,7 @@ class CartSummaryWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${totalAmount.toStringAsFixed(0)} ₫',
+                  _formatPrice(totalAmount),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
