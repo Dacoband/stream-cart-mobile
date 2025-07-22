@@ -46,7 +46,7 @@ class CartItemWidget extends StatelessWidget {
                     print('Checkbox clicked: $value for item: ${item.cartItemId}');
                     onSelectionChanged?.call(value ?? false);
                   },
-                  activeColor: Theme.of(context).primaryColor,
+                  activeColor: Color(0xFF4CAF50),
                 ),
                 
                 // Product Image
@@ -102,7 +102,7 @@ class CartItemWidget extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: Color.fromARGB(255, 255, 102, 0),
                         ),
                       ),
                       if (item.originalPrice > item.currentPrice)
@@ -122,7 +122,7 @@ class CartItemWidget extends StatelessWidget {
                           'Còn lại: ${item.stockQuantity}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: item.stockQuantity > 10 ? Colors.green : Colors.orange,
+                            color: item.stockQuantity > 10 ? const Color.fromARGB(255, 76, 175, 167) : Colors.orange,
                           ),
                         )
                       else

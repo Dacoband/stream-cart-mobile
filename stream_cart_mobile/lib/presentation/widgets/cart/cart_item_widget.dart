@@ -40,7 +40,6 @@ class CartItemWidget extends StatelessWidget {
             Checkbox(
               value: isSelected,
               onChanged: (value) {
-                print('Checkbox clicked: $value for item: ${item.cartItemId}'); // Debug log
                 onSelectionChanged?.call(value ?? false);
               },
               activeColor: Theme.of(context).primaryColor,
@@ -80,14 +79,14 @@ class CartItemWidget extends StatelessWidget {
             
             // Product Details
             Expanded(
-              flex: 3, // Tăng flex để có nhiều không gian hơn
+              flex: 3, 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.productName.isNotEmpty ? item.productName : 'Tên sản phẩm',
                     style: const TextStyle(
-                      fontSize: 14, // Giảm font size
+                      fontSize: 14, 
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 2,
@@ -96,14 +95,14 @@ class CartItemWidget extends StatelessWidget {
                   const SizedBox(height: 4),
                   
                   // Price display
-                  Wrap( // Sử dụng Wrap thay vì Row để tránh overflow
+                  Wrap( 
                     children: [
                       Text(
                         _formatPrice(item.currentPrice),
                         style: const TextStyle(
-                          fontSize: 14, // Giảm font size
+                          fontSize: 14, 
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: Color(0xFF4CAF50),
                         ),
                       ),
                       if (item.originalPrice > item.currentPrice) ...[
@@ -111,7 +110,7 @@ class CartItemWidget extends StatelessWidget {
                         Text(
                           _formatPrice(item.originalPrice),
                           style: TextStyle(
-                            fontSize: 12, // Giảm font size
+                            fontSize: 12,
                             color: Colors.grey[600],
                             decoration: TextDecoration.lineThrough,
                           ),

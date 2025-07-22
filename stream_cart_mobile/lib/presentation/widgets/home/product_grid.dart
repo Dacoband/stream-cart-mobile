@@ -444,7 +444,7 @@ class ProductGrid extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 13, // Slightly smaller font
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4CAF50),
+                                color: Color.fromARGB(255, 245, 104, 38),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),

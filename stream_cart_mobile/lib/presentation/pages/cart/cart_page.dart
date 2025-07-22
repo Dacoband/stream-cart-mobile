@@ -18,11 +18,8 @@ class _CartPageState extends State<CartPage> {
   @override
   void initState() {
     super.initState();
-    // Load cart data once when the page is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cartBloc = context.read<CartBloc>();
-      print('CartBloc instance: ${cartBloc.hashCode}'); // Debug log
-      print('CartBloc current state: ${cartBloc.state.runtimeType}'); // Debug log
       cartBloc.add(LoadCartEvent());
     });
   }
@@ -41,7 +38,7 @@ class CartView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Giỏ hàng'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Color(0xFF4CAF50),
         foregroundColor: Colors.white,
         actions: [
           BlocBuilder<CartBloc, CartState>(
@@ -131,7 +128,7 @@ class CartView extends StatelessWidget {
               children: [
                 // Select All Header
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     children: [
                       Checkbox(
@@ -143,32 +140,54 @@ class CartView extends StatelessWidget {
                             context.read<CartBloc>().add(UnselectAllCartItemsEvent());
                           }
                         },
-                        activeColor: Theme.of(context).primaryColor,
+                        activeColor: Color(0xFF4CAF50),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      Text(
-                        'Chọn tất cả (${state.items.length} sản phẩm)',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Text(
+                          'Chọn tất cả (${state.items.length} sản phẩm)',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       if (state.hasSelectedItems) ...[
                         TextButton(
                           onPressed: () {
                             _showRemoveSelectedItemsDialog(context, state.selectedCartItemIds.toList());
                           },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: const Text(
-                            'Xóa đã chọn',
-                            style: TextStyle(color: Colors.red),
+                            'Xóa',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         TextButton(
                           onPressed: () {
                             context.read<CartBloc>().add(UnselectAllCartItemsEvent());
                           },
-                          child: const Text('Bỏ chọn'),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Bỏ chọn',
+                            style: TextStyle(
+                              color: Colors.blueAccent,
+                              fontSize: 12
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -294,12 +313,18 @@ class CartView extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Xóa sản phẩm đã chọn'),
+          title: const Text(
+            'Xóa sản phẩm đã chọn',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
           content: Text('Bạn có muốn xóa ${selectedCartItemIds.length} sản phẩm đã chọn khỏi giỏ hàng?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Hủy'),
+              child: const Text(
+                'Hủy',
+                style: TextStyle(color: Color.fromARGB(255, 110, 110, 110)),
+              ),
             ),
             TextButton(
               onPressed: () {

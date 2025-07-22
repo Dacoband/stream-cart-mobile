@@ -37,7 +37,7 @@ class CartSummaryWidget extends StatelessWidget {
     final itemCount = displayItems.fold<int>(0, (sum, item) => sum + item.quantity);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -55,26 +55,29 @@ class CartSummaryWidget extends StatelessWidget {
           children: [
             if (hasSelectedItems)
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Color(0xFF4CAF50).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.check_circle,
-                      color: Theme.of(context).primaryColor,
-                      size: 16,
+                      color: Color(0xFF4CAF50),
+                      size: 14,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Đã chọn ${selectedItems.length} sản phẩm',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(context).primaryColor,
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Đã chọn ${selectedItems.length} sản phẩm',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF4CAF50),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -83,45 +86,47 @@ class CartSummaryWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  hasSelectedItems ? 'Sản phẩm đã chọn:' : 'Tổng số sản phẩm:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                Expanded(
+                  child: Text(
+                    hasSelectedItems ? 'Sản phẩm đã chọn:' : 'Tổng số sản phẩm:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(
                   '$itemCount sản phẩm',
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Tổng tiền:',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     color: Colors.grey[600],
                   ),
                 ),
                 Text(
-                  _formatPrice(hasSelectedItems ? selectedTotalAmount : 0), // Hiển thị 0 nếu không có item nào được chọn
+                  _formatPrice(hasSelectedItems ? selectedTotalAmount : 0),
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.red,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Preview Order button - only show when items are selected
+            const SizedBox(height: 12),
             if (hasSelectedItems && displayItems.isNotEmpty)
               SizedBox(
                 width: double.infinity,
@@ -129,33 +134,34 @@ class CartSummaryWidget extends StatelessWidget {
                   onPressed: onPreviewOrder,
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Theme.of(context).primaryColor),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
                   child: Text(
                     'Xem trước đơn hàng (${selectedItems.length})',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).primaryColor,
+                      color: Color(0xFF4CAF50),
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
             if (hasSelectedItems && displayItems.isNotEmpty)
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: hasSelectedItems && displayItems.isNotEmpty ? onCheckout : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
                 child: Text(
@@ -165,9 +171,10 @@ class CartSummaryWidget extends StatelessWidget {
                           ? 'Chọn sản phẩm để mua'
                           : 'Giỏ hàng trống',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

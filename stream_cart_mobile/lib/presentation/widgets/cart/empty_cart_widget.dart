@@ -43,7 +43,7 @@ class EmptyCartWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: onContinueShopping,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: Color(0xFF4CAF50),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,

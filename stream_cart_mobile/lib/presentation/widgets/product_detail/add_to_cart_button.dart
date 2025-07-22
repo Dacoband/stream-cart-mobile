@@ -48,7 +48,6 @@ class _AddToCartButtonState extends State<AddToCartButton> {
       child: SafeArea(
         child: Row(
           children: [
-            // Quantity Selector - made more compact
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey[300]!),
@@ -101,7 +100,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             
             // Add to Cart Button
             Expanded(
-              flex: 3, // Give more space to add to cart
+              flex: 3, 
               child: BlocBuilder<ProductDetailBloc, ProductDetailState>(
                 builder: (context, state) {
                   bool isLoading = false;
@@ -165,10 +164,9 @@ class _AddToCartButtonState extends State<AddToCartButton> {
             
             // Buy Now Button
             Expanded(
-              flex: 2, // Less space for buy now
+              flex: 2, 
               child: ElevatedButton(
                 onPressed: () {
-                  // First add to cart, then navigate to cart or checkout
                   context.read<ProductDetailBloc>().add(
                     AddToCartEvent(
                       productId: widget.product.productId,
@@ -177,7 +175,6 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                     ),
                   );
                   
-                  // Navigate to cart after a short delay
                   Future.delayed(const Duration(milliseconds: 500), () {
                     Navigator.pushNamed(context, '/cart');
                   });

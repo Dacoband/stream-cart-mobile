@@ -45,8 +45,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
           productDetail: productDetail,
           selectedVariantId: productDetail.variants.isNotEmpty ? productDetail.variants.first.variantId : null,
         ));
-        
-        // Automatically load product images after product detail is loaded
         add(LoadProductImagesEvent(event.productId));
       },
     );
@@ -58,7 +56,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   ) async {
     print('[ProductDetailBloc] Adding to cart: ${event.productId}');
     
-    // Only proceed if we have a loaded state
     if (state is! ProductDetailLoaded) {
       emit(const AddToCartError('Không thể thêm vào giỏ hàng. Vui lòng thử lại.'));
       return;
@@ -66,7 +63,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
     
     final currentState = state as ProductDetailLoaded;
     
-    // Emit loading state while keeping product detail
     emit(currentState.copyWith(isAddingToCart: true, addToCartMessage: null));
     
     // Kiểm tra xem sản phẩm có variant không
@@ -74,7 +70,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
     String variantId = event.variantId ?? '';
     
     if (hasVariant) {
-      // Sản phẩm có variant - cần chọn variant
       if (variantId.isEmpty) {
         variantId = currentState.selectedVariantId ?? '';
       }
@@ -102,7 +97,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
     
     result.fold(
       (failure) {
-        print('[ProductDetailBloc] Error adding to cart: ${failure.message}');
         emit(currentState.copyWith(
           isAddingToCart: false,
           addToCartMessage: failure.message,
@@ -111,9 +105,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
       },
       (response) {
         if (response.success) {
-          print('[ProductDetailBloc] Successfully added to cart');
-          
-          // Refresh the cart to update the badge count
           cartBloc.add(cart_events.LoadCartEvent());
           
           emit(currentState.copyWith(
@@ -133,7 +124,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
           final errorMessage = response.errors.isNotEmpty 
             ? response.errors.first 
             : 'Lỗi không xác định khi thêm vào giỏ hàng';
-          print('[ProductDetailBloc] Error from API: $errorMessage');
           emit(currentState.copyWith(
             isAddingToCart: false,
             addToCartMessage: errorMessage,
@@ -170,7 +160,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
       result.fold(
         (failure) {
           print('[ProductDetailBloc] Error loading product images: ${failure.message}');
-          // Keep current state, just log the error
         },
         (images) {
           print('[ProductDetailBloc] Successfully loaded ${images.length} product images');
