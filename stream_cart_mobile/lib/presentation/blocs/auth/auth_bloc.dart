@@ -6,6 +6,7 @@ import '../../../domain/usecases/login_usecase.dart';
 import '../../../domain/usecases/register_usecase.dart';
 import '../../../domain/usecases/otp_usecases.dart';
 import '../../../domain/repositories/auth_repository.dart';
+import '../../../core/error/failures.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -173,17 +174,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onRefreshToken(RefreshTokenEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    
     try {
+      print('=== MANUAL TOKEN REFRESH ===');
       final result = await authRepository.refreshToken(event.refreshToken);
+      
       result.fold(
         (failure) {
-          emit(AuthUnauthenticated());
+          print('Manual refresh failed: ${failure.message}');
+          if (failure is UnauthorizedFailure) {
+            emit(AuthUnauthenticated());
+          } else {
+            emit(AuthFailure(failure.message));
+          }
         },
         (loginResponse) {
+          print('Manual refresh successful');
           emit(AuthSuccess(loginResponse));
         },
       );
     } catch (e) {
+      print('Manual refresh error: $e');
       emit(AuthUnauthenticated());
     }
   }

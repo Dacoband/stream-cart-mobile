@@ -7,6 +7,8 @@ import '../../domain/entities/register_response_entity.dart';
 import '../../domain/entities/otp_entities.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../core/error/failures.dart';
+import '../../core/utils/api_url_helper.dart';
+import '../../core/constants/api_constants.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../models/login_request_model.dart';
@@ -81,24 +83,45 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, LoginResponseEntity>> refreshToken(String refreshToken) async {
     try {
+      print('=== REFRESH TOKEN REQUEST ===');
+      print('Refresh Token Length: ${refreshToken.length}');
+      print('Endpoint: ${ApiUrlHelper.getAuthUrl(ApiConstants.refreshTokenEndpoint)}');
+      
       final response = await remoteDataSource.refreshToken({'refreshToken': refreshToken});
-        if (response.success && response.data != null) {
+      
+      print('Refresh Response Success: ${response.success}');
+      print('Response Message: ${response.message}');
+      
+      if (response.success && response.data != null) {
+        // Save new tokens
         await localDataSource.saveToken(response.data!.token);
         await localDataSource.saveRefreshToken(response.data!.refreshToken);
         
+        print('New tokens saved successfully');
         return Right(response.data!.toEntity());
       } else {
+        print('Refresh failed: ${response.message}');
         return Left(ServerFailure(response.message));
       }
     } on DioException catch (e) {
+      print('Refresh DioException: ${e.response?.statusCode} - ${e.message}');
+      
       if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Refresh token expired'));
+        // Refresh token is expired or invalid
+        await localDataSource.clearTokens();
+        return Left(UnauthorizedFailure('Refresh token expired or invalid'));
+      } else if (e.response?.statusCode == 403) {
+        // Refresh token is forbidden
+        await localDataSource.clearTokens();
+        return Left(UnauthorizedFailure('Refresh token forbidden'));
       } else {
-        return Left(NetworkFailure('Network error occurred'));
+        return Left(NetworkFailure('Network error during token refresh'));
       }
     } catch (e) {
-      return Left(ServerFailure('Unexpected error occurred'));
-    }  }
+      print('Refresh unexpected error: $e');
+      return Left(ServerFailure('Unexpected error during token refresh: $e'));
+    }
+  }
 
   @override
   Future<Either<Failure, RegisterResponseEntity>> register(RegisterRequestEntity request) async {
