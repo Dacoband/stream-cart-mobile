@@ -78,18 +78,54 @@ class _EditProfilePageState extends State<EditProfilePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Chọn nguồn ảnh'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Chọn nguồn ảnh',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4CAF50),
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.camera_alt),
-                  title: const Text('Chụp ảnh'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50).withAlpha(77),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Color(0xFF4CAF50),
+                    ),
+                  ),
+                  title: const Text(
+                    'Chụp ảnh',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                   onTap: () => Navigator.of(context).pop(ImageSource.camera),
                 ),
+                const SizedBox(height: 8),
                 ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Thư viện ảnh'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.photo_library,
+                      color: Color(0xFF4CAF50),
+                    ),
+                  ),
+                  title: const Text(
+                    'Thư viện ảnh',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                   onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                 ),
               ],
@@ -125,9 +161,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
           });
           
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tải ảnh thành công!'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: const Text(
+                'Tải ảnh thành công!',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              backgroundColor: const Color(0xFF4CAF50),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
           
@@ -165,13 +208,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
+            color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF4CAF50),
+                Color(0xFF66BB6A),
+              ],
+            ),
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -181,7 +235,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Cập nhật thông tin thành công!'),
-                backgroundColor: Colors.green,
+                backgroundColor: Color(0xFF4CAF50),
               ),
             );
             Navigator.pop(context, state.updatedProfile);
@@ -196,80 +250,123 @@ class _EditProfilePageState extends State<EditProfilePage> {
         },
         child: BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            return Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFF8F9FA),
+                    Color(0xFFFFFFFF),
+                  ],
+                ),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                       // Avatar section
                       Center(
                         child: Column(
                           children: [
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: 50,
-                                  backgroundColor: Colors.grey[300],
-                                  backgroundImage: (_selectedImageUrl ?? widget.currentProfile.avatarURL) != null && 
-                                                  (_selectedImageUrl ?? widget.currentProfile.avatarURL)!.isNotEmpty
-                                      ? NetworkImage(_selectedImageUrl ?? widget.currentProfile.avatarURL!)
-                                      : null,
-                                  child: (_selectedImageUrl ?? widget.currentProfile.avatarURL) == null || 
-                                         (_selectedImageUrl ?? widget.currentProfile.avatarURL)!.isEmpty
-                                      ? Icon(
-                                          Icons.person,
-                                          size: 50,
-                                          color: Colors.grey[600],
-                                        )
-                                      : null,
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF66BB6A),
+                                  ],
                                 ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: _isUploadingImage ? null : _selectAndUploadImage,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: _isUploadingImage 
-                                            ? Colors.grey 
-                                            : Theme.of(context).primaryColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: _isUploadingImage
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : const Icon(
-                                              Icons.camera_alt,
-                                              size: 20,
-                                              color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: Colors.grey[100],
+                                    backgroundImage: (_selectedImageUrl ?? widget.currentProfile.avatarURL) != null && 
+                                                    (_selectedImageUrl ?? widget.currentProfile.avatarURL)!.isNotEmpty
+                                        ? NetworkImage(_selectedImageUrl ?? widget.currentProfile.avatarURL!)
+                                        : null,
+                                    child: (_selectedImageUrl ?? widget.currentProfile.avatarURL) == null || 
+                                           (_selectedImageUrl ?? widget.currentProfile.avatarURL)!.isEmpty
+                                        ? Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.grey[400],
+                                          )
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    bottom: 4,
+                                    right: 4,
+                                    child: GestureDetector(
+                                      onTap: _isUploadingImage ? null : _selectAndUploadImage,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: _isUploadingImage 
+                                              ? Colors.grey[400] 
+                                              : const Color(0xFF4CAF50),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withAlpha(26),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
                                             ),
+                                          ],
+                                        ),
+                                        child: _isUploadingImage
+                                            ? const SizedBox(
+                                                width: 16,
+                                                height: 16,
+                                                child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : const Icon(
+                                                Icons.camera_alt,
+                                                size: 18,
+                                                color: Colors.white,
+                                              ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             Text(
                               _isUploadingImage 
                                   ? 'Đang tải ảnh...' 
                                   : 'Thay đổi ảnh đại diện',
                               style: TextStyle(
-                                color: _isUploadingImage ? Colors.grey : Colors.blue,
-                                fontSize: 14,
+                                color: _isUploadingImage ? Colors.grey[500] : const Color(0xFF4CAF50),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      ),                    const SizedBox(height: 32),
+                      ),
+                      const SizedBox(height: 32),
 
                     // Form fields
                     _buildTextField(
@@ -293,42 +390,79 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       keyboardType: TextInputType.phone,
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 40),
 
                     // Save button
-                    SizedBox(
-                      height: 50,
+                    Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: state is ProfileUpdateLoading 
+                            ? null
+                            : const LinearGradient(
+                                colors: [
+                                  Color(0xFF4CAF50),
+                                  Color(0xFF66BB6A),
+                                ],
+                              ),
+                        boxShadow: state is ProfileUpdateLoading 
+                            ? null
+                            : [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withAlpha(77),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                      ),
                       child: ElevatedButton(
                         onPressed: state is ProfileUpdateLoading ? null : _updateProfile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).primaryColor,
-                          foregroundColor: Colors.white,
+                          backgroundColor: state is ProfileUpdateLoading 
+                              ? Colors.grey[300]
+                              : Colors.transparent,
+                          shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         child: state is ProfileUpdateLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF4CAF50),
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Đang lưu...',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               )
                             : const Text(
                                 'Lưu thay đổi',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
-                              ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            );
+            ));
           },
         ),
       ),
@@ -345,30 +479,67 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bool readOnly = false,
     VoidCallback? onTap,
   }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      keyboardType: keyboardType,
-      maxLines: maxLines ?? 1,
-      readOnly: readOnly,
-      onTap: onTap,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha(26),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        keyboardType: keyboardType,
+        maxLines: maxLines ?? 1,
+        readOnly: readOnly,
+        onTap: onTap,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(
+            color: Color(0xFF4CAF50),
+            fontWeight: FontWeight.w500,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF4CAF50),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(
+              color: Color(0xFF4CAF50),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(
+              color: Colors.red,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
       ),
     );
   }

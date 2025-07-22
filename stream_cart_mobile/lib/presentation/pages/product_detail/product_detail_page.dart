@@ -50,7 +50,7 @@ class ProductDetailPage extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Colors.green,
+                  backgroundColor: Color(0xFF4CAF50),
                 ),
               );
             } else if (state is AddToCartError) {

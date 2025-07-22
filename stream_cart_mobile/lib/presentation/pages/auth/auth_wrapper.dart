@@ -16,7 +16,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Kiểm tra trạng thái đăng nhập khi khởi động app
     context.read<AuthBloc>().add(CheckAuthStatusEvent());
   }
 
@@ -24,15 +23,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        // Không cần điều hướng ở đây vì chúng ta sẽ hiển thị trực tiếp
       },
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthLoading) {
             return const SplashScreen();
           }
-          
-          // Luôn hiển thị HomePage, AuthBloc sẽ xử lý việc yêu cầu đăng nhập khi cần
+
           return const HomePage();
         },
       ),
