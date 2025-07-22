@@ -17,29 +17,44 @@ class ProductDetailLoaded extends ProductDetailState {
   final ProductDetailEntity productDetail;
   final String? selectedVariantId;
   final List<ProductImageEntity>? productImages;
+  final bool isAddingToCart;
+  final String? addToCartMessage;
+  final bool addToCartSuccess;
 
   const ProductDetailLoaded({
     required this.productDetail,
     this.selectedVariantId,
     this.productImages,
+    this.isAddingToCart = false,
+    this.addToCartMessage,
+    this.addToCartSuccess = false,
   });
 
   @override
   List<Object> get props => [
     productDetail, 
     selectedVariantId ?? '', 
-    productImages ?? []
+    productImages ?? [],
+    isAddingToCart,
+    addToCartMessage ?? '',
+    addToCartSuccess,
   ];
 
   ProductDetailLoaded copyWith({
     ProductDetailEntity? productDetail,
     String? selectedVariantId,
     List<ProductImageEntity>? productImages,
+    bool? isAddingToCart,
+    String? addToCartMessage,
+    bool? addToCartSuccess,
   }) {
     return ProductDetailLoaded(
       productDetail: productDetail ?? this.productDetail,
       selectedVariantId: selectedVariantId ?? this.selectedVariantId,
       productImages: productImages ?? this.productImages,
+      isAddingToCart: isAddingToCart ?? this.isAddingToCart,
+      addToCartMessage: addToCartMessage,
+      addToCartSuccess: addToCartSuccess ?? this.addToCartSuccess,
     );
   }
 }

@@ -47,18 +47,84 @@ class ProductDetailPage extends StatelessWidget {
         ),
         body: BlocConsumer<ProductDetailBloc, ProductDetailState>(
           listener: (context, state) {
+            if (state is ProductDetailLoaded && state.addToCartMessage != null) {
+              if (state.addToCartSuccess) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(state.addToCartMessage!),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF4CAF50),
+                    duration: const Duration(milliseconds: 1500),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(
+                          Icons.error,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(state.addToCartMessage!)),
+                      ],
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(milliseconds: 2000),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+            
             if (state is AddToCartSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Color(0xFF4CAF50),
+                  content: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(state.message),
+                    ],
+                  ),
+                  backgroundColor: const Color(0xFF4CAF50),
+                  duration: const Duration(milliseconds: 1200),
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             } else if (state is AddToCartError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Row(
+                    children: [
+                      const Icon(
+                        Icons.error,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(state.message)),
+                    ],
+                  ),
                   backgroundColor: Colors.red,
+                  duration: const Duration(milliseconds: 1800),
+                  behavior: SnackBarBehavior.floating,
                 ),
               );
             }
@@ -102,11 +168,10 @@ class ProductDetailPage extends StatelessWidget {
                 ),
               );
             }
-
             if (state is ProductDetailLoaded) {
               return _buildProductDetail(context, state.productDetail);
             }
-
+            
             return const SizedBox.shrink();
           },
         ),
@@ -114,7 +179,7 @@ class ProductDetailPage extends StatelessWidget {
           builder: (context, state) {
             if (state is ProductDetailLoaded) {
               return Container(
-                height: 80, // Giới hạn chiều cao
+                height: 70, // Reduced height to match new compact design
                 child: AddToCartButton(
                   product: state.productDetail,
                   selectedVariantId: state.selectedVariantId,

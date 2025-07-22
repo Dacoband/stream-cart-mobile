@@ -33,7 +33,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -48,11 +48,11 @@ class _AddToCartButtonState extends State<AddToCartButton> {
       child: SafeArea(
         child: Row(
           children: [
-            // Quantity Selector
+            // Quantity Selector - made more compact
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -63,19 +63,20 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                         _quantity--;
                       });
                     } : null,
-                    icon: const Icon(Icons.remove),
+                    icon: const Icon(Icons.remove, size: 18),
                     constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
+                      minWidth: 36,
+                      minHeight: 36,
                     ),
+                    padding: EdgeInsets.zero,
                   ),
                   Container(
-                    width: 50,
+                    width: 40,
                     alignment: Alignment.center,
                     child: Text(
                       '$_quantity',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -86,22 +87,30 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                         _quantity++;
                       });
                     },
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add, size: 18),
                     constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
+                      minWidth: 36,
+                      minHeight: 36,
                     ),
+                    padding: EdgeInsets.zero,
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             
             // Add to Cart Button
             Expanded(
+              flex: 3, // Give more space to add to cart
               child: BlocBuilder<ProductDetailBloc, ProductDetailState>(
                 builder: (context, state) {
-                  bool isLoading = state is AddToCartLoading;
+                  bool isLoading = false;
+                  
+                  if (state is AddToCartLoading) {
+                    isLoading = true;
+                  } else if (state is ProductDetailLoaded && state.isAddingToCart) {
+                    isLoading = true;
+                  }
                   
                   return ElevatedButton(
                     onPressed: isLoading ? null : () {
@@ -116,30 +125,34 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                     ),
                     child: isLoading 
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
+                          height: 18,
+                          width: 18,
                           child: CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 2,
                           ),
                         )
-                      : const Row(
+                      : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.shopping_cart),
-                            SizedBox(width: 8),
-                            Text(
-                              'Thêm vào giỏ hàng',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            const Icon(Icons.shopping_cart, size: 18),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Thêm vào giỏ',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -148,10 +161,11 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                 },
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 8),
             
             // Buy Now Button
             Expanded(
+              flex: 2, // Less space for buy now
               child: ElevatedButton(
                 onPressed: () {
                   // First add to cart, then navigate to cart or checkout
@@ -171,17 +185,18 @@ class _AddToCartButtonState extends State<AddToCartButton> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ),
                 child: const Text(
                   'Mua ngay',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

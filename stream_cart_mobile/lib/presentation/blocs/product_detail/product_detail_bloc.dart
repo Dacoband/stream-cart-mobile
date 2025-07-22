@@ -58,30 +58,38 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   ) async {
     print('[ProductDetailBloc] Adding to cart: ${event.productId}');
     
-    emit(AddToCartLoading());
+    // Only proceed if we have a loaded state
+    if (state is! ProductDetailLoaded) {
+      emit(const AddToCartError('Không thể thêm vào giỏ hàng. Vui lòng thử lại.'));
+      return;
+    }
+    
+    final currentState = state as ProductDetailLoaded;
+    
+    // Emit loading state while keeping product detail
+    emit(currentState.copyWith(isAddingToCart: true, addToCartMessage: null));
     
     // Kiểm tra xem sản phẩm có variant không
-    bool hasVariant = false;
+    bool hasVariant = currentState.productDetail.variants.isNotEmpty;
     String variantId = event.variantId ?? '';
     
-    if (state is ProductDetailLoaded) {
-      final currentState = state as ProductDetailLoaded;
-      hasVariant = currentState.productDetail.variants.isNotEmpty;
-      
-      if (hasVariant) {
-        // Sản phẩm có variant - cần chọn variant
-        if (variantId.isEmpty) {
-          variantId = currentState.selectedVariantId ?? '';
-        }
-        
-        if (variantId.isEmpty) {
-          emit(const AddToCartError('Vui lòng chọn phiên bản sản phẩm'));
-          return;
-        }
-      } else {
-        // Sản phẩm không có variant - có thể để variantId rỗng hoặc null
-        variantId = '';
+    if (hasVariant) {
+      // Sản phẩm có variant - cần chọn variant
+      if (variantId.isEmpty) {
+        variantId = currentState.selectedVariantId ?? '';
       }
+      
+      if (variantId.isEmpty) {
+        emit(currentState.copyWith(
+          isAddingToCart: false,
+          addToCartMessage: 'Vui lòng chọn phiên bản sản phẩm',
+          addToCartSuccess: false,
+        ));
+        return;
+      }
+    } else {
+      // Sản phẩm không có variant - có thể để variantId rỗng hoặc null
+      variantId = '';
     }
     
     final params = AddToCartParams(
@@ -95,34 +103,45 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
     result.fold(
       (failure) {
         print('[ProductDetailBloc] Error adding to cart: ${failure.message}');
-        emit(AddToCartError(failure.message));
+        emit(currentState.copyWith(
+          isAddingToCart: false,
+          addToCartMessage: failure.message,
+          addToCartSuccess: false,
+        ));
       },
       (response) {
         if (response.success) {
           print('[ProductDetailBloc] Successfully added to cart');
-          emit(AddToCartSuccess(response.message));
           
           // Refresh the cart to update the badge count
           cartBloc.add(cart_events.LoadCartEvent());
+          
+          emit(currentState.copyWith(
+            isAddingToCart: false,
+            addToCartMessage: response.message,
+            addToCartSuccess: true,
+          ));
+          
+          // Clear the message after 2 seconds
+          Future.delayed(const Duration(seconds: 2), () {
+            if (!isClosed && state is ProductDetailLoaded) {
+              final latestState = state as ProductDetailLoaded;
+              emit(latestState.copyWith(addToCartMessage: null));
+            }
+          });
         } else {
           final errorMessage = response.errors.isNotEmpty 
             ? response.errors.first 
             : 'Lỗi không xác định khi thêm vào giỏ hàng';
           print('[ProductDetailBloc] Error from API: $errorMessage');
-          emit(AddToCartError(errorMessage));
+          emit(currentState.copyWith(
+            isAddingToCart: false,
+            addToCartMessage: errorMessage,
+            addToCartSuccess: false,
+          ));
         }
       },
     );
-    
-    // Return to previous state after 2 seconds
-    await Future.delayed(const Duration(seconds: 2));
-    if (state is ProductDetailLoaded) {
-      // Keep the current loaded state
-      return;
-    } else {
-      // If we're still in success/error state, reload the product detail
-      add(LoadProductDetailEvent(event.productId));
-    }
   }
 
   void _onSelectVariant(
