@@ -5,6 +5,7 @@ import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/search_history_service.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/pages/auth/auth_wrapper.dart';
 
 void main() async {
@@ -29,8 +30,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<AuthBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => getIt<AuthBloc>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<CartBloc>(),
+        ),
+      ],
       child: MaterialApp(
         title: 'Stream Cart Mobile',
         theme: ThemeData(

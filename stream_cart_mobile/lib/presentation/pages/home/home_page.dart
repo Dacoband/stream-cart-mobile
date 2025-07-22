@@ -14,6 +14,7 @@ import '../../widgets/home/product_grid.dart';
 import '../../widgets/home/flash_sale_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
+import '../../widgets/common/cart_icon_badge.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -245,51 +246,10 @@ class _HomePageState extends State<HomePage> {
             width: 1,
           ),
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _onCartPressed,
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(
-                  Icons.shopping_cart_outlined,
-                  color: Colors.white,
-                  size: 22, // Slightly smaller to fit better
-                ),
-                // Badge for cart count
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1,
-                      ),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: const Text(
-                      '3', // TODO: Get cart count from BLoC
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        child: CartIconBadge(
+          onTap: _onCartPressed,
+          iconColor: Colors.white,
+          badgeColor: const Color(0xFF2E7D32),
         ),
       ),
     );

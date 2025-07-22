@@ -132,7 +132,7 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
       appBar: AppBar(
         title: const Text('Tìm kiếm nâng cao', style: TextStyle(color: Colors.white)),
         elevation: 0,
-        backgroundColor: Colors.blue.shade600,
+        backgroundColor: Color(0xFF4CAF50),
         foregroundColor: Colors.white,
       ),
       body: Column(

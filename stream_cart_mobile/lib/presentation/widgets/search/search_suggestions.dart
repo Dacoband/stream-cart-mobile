@@ -132,7 +132,7 @@ class CategorySearchSuggestions extends StatelessWidget {
             Icon(
               Icons.category,
               size: 20,
-              color: Colors.blue.shade600,
+              color: Color(0xFF4CAF50),
             ),
             const SizedBox(width: 8),
             Text(

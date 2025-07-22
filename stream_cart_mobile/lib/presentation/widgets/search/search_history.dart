@@ -49,7 +49,7 @@ class SearchHistory extends StatelessWidget {
                 child: Text(
                   'Xóa tất cả',
                   style: TextStyle(
-                    color: Colors.deepPurple,
+                    color: Color(0xFF4CAF50),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),

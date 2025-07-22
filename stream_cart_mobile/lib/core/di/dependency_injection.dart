@@ -10,10 +10,13 @@ import '../../core/services/image_upload_service.dart';
 import '../../data/datasources/auth_local_data_source.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/datasources/search_remote_data_source.dart';
+import '../../data/datasources/cart_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/search_repository_impl.dart';
+import '../../data/repositories/cart_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/search_repository.dart';
+import '../../domain/repositories/cart_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
@@ -28,6 +31,12 @@ import '../../domain/usecases/get_product_images_usecase.dart';
 import '../../domain/usecases/get_product_primary_images_usecase.dart';
 import '../../domain/usecases/get_flash_sales.dart';
 import '../../domain/usecases/get_flash_sale_products.dart';
+import '../../domain/usecases/add_to_cart_usecase.dart';
+import '../../domain/usecases/get_cart_items_usecase.dart';
+import '../../domain/usecases/update_cart_item_usecase.dart';
+import '../../domain/usecases/remove_from_cart_usecase.dart';
+import '../../domain/usecases/clear_cart_usecase.dart';
+import '../../domain/usecases/get_cart_preview_usecase.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source_impl.dart';
@@ -44,6 +53,7 @@ import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
+import '../../presentation/blocs/cart/cart_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -149,6 +159,22 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
   
+  // Cart dependencies
+  getIt.registerLazySingleton<CartRemoteDataSource>(
+    () => CartRemoteDataSourceImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton<CartRepository>(
+    () => CartRepositoryImpl(getIt()),
+  );
+  
+  getIt.registerLazySingleton(() => AddToCartUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCartItemsUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateCartItemUseCase(getIt()));
+  getIt.registerLazySingleton(() => RemoveFromCartUseCase(getIt()));
+  getIt.registerLazySingleton(() => ClearCartUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
+  
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
@@ -184,5 +210,17 @@ Future<void> setupDependencies() async {
   getIt.registerFactory(() => ProductDetailBloc(
     getProductDetailUseCase: getIt(),
     getProductImagesUseCase: getIt(),
+    addToCartUseCase: getIt(),
+    cartBloc: getIt(),
+  ));
+  
+  // Register CartBloc as singleton so all parts of the app share the same instance
+  getIt.registerLazySingleton(() => CartBloc(
+    addToCartUseCase: getIt(),
+    getCartItemsUseCase: getIt(),
+    updateCartItemUseCase: getIt(),
+    removeFromCartUseCase: getIt(),
+    clearCartUseCase: getIt(),
+    getCartPreviewUseCase: getIt(),
   ));
 }

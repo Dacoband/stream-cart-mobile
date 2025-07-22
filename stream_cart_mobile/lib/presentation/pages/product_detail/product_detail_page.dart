@@ -8,6 +8,7 @@ import '../../blocs/product_detail/product_detail_state.dart';
 import '../../widgets/product_detail/image_carousel.dart';
 import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
+import '../../widgets/product_detail/add_to_cart_button.dart';
 import '../../../domain/entities/product_detail_entity.dart';
 
 class ProductDetailPage extends StatelessWidget {
@@ -112,7 +113,13 @@ class ProductDetailPage extends StatelessWidget {
         bottomNavigationBar: BlocBuilder<ProductDetailBloc, ProductDetailState>(
           builder: (context, state) {
             if (state is ProductDetailLoaded) {
-              return _buildBottomActions(context, state.productDetail);
+              return Container(
+                height: 80, // Giới hạn chiều cao
+                child: AddToCartButton(
+                  product: state.productDetail,
+                  selectedVariantId: state.selectedVariantId,
+                ),
+              );
             }
             return const SizedBox.shrink();
           },
@@ -185,6 +192,9 @@ class ProductDetailPage extends StatelessWidget {
                 
                 // Product Details
                 _buildProductDetails(product),
+                
+                // Bottom padding để tránh bị che bởi bottom navigation
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -449,106 +459,6 @@ class ProductDetailPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomActions(BuildContext context, ProductDetailEntity product) {
-    return BlocBuilder<ProductDetailBloc, ProductDetailState>(
-      builder: (context, state) {
-        final selectedVariantId = state is ProductDetailLoaded 
-            ? state.selectedVariantId 
-            : null;
-        
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade300,
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                // Chat button
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // TODO: Open chat with shop
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tính năng chat đang phát triển')),
-                      );
-                    },
-                    icon: const Icon(Icons.chat_outlined),
-                    label: const Text('Chat'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                
-                // Add to cart button
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: product.stockQuantity > 0
-                        ? () {
-                            context.read<ProductDetailBloc>().add(
-                              AddToCartEvent(
-                                productId: product.productId,
-                                variantId: selectedVariantId,
-                                quantity: 1,
-                              ),
-                            );
-                          }
-                        : null,
-                    icon: const Icon(Icons.shopping_cart_outlined),
-                    label: Text(
-                      product.stockQuantity > 0 ? 'Thêm vào giỏ' : 'Hết hàng',
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: product.stockQuantity > 0 
-                          ? Colors.orange 
-                          : Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                
-                // Buy now button
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: product.stockQuantity > 0
-                        ? () {
-                            // TODO: Buy now functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Tính năng mua ngay đang phát triển')),
-                            );
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: product.stockQuantity > 0 
-                          ? Colors.red 
-                          : Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('Mua ngay'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

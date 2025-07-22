@@ -11,6 +11,7 @@ import '../../presentation/pages/profile/edit_profile_page.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
+import '../../presentation/pages/cart/cart_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -95,12 +96,7 @@ class AppRouter {
         );
       case cart:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Giỏ hàng')),
-            body: const Center(
-              child: Text('Trang giỏ hàng đang phát triển'),
-            ),
-          ),
+          builder: (_) => const CartPage(),
         );
       case orders:
         return MaterialPageRoute(

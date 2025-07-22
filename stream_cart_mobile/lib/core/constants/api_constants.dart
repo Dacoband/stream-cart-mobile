@@ -39,7 +39,8 @@ class ApiConstants {
   
   // Other endpoints
   static const String categoriesEndpoint = '/api/categorys';
-  static const String cartEndpoint = '/api/cart';
+  static const String cartEndpoint = '/api/carts';
+  static const String cartPreviewEndpoint = '/api/carts/PreviewOrder';
   static const String ordersEndpoint = '/api/orders';
   
   // HTTP Status codes

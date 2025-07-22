@@ -90,13 +90,13 @@ class AdvancedSearchResults extends StatelessWidget {
                 Icon(
                   Icons.filter_list,
                   size: 16,
-                  color: Colors.blue.shade600,
+                  color: Color(0xFF4CAF50),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${filters.activeFiltersCount} bộ lọc đang áp dụng',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.blue.shade600,
+                    color: Color(0xFF4CAF50),
                   ),
                 ),
               ],
