@@ -96,7 +96,7 @@ class AppRouter {
         );
       case cart:
         return MaterialPageRoute(
-          builder: (_) => const CartPage(),
+          builder: (_) => const CartPage(), // Sử dụng instance từ MultiBlocProvider trong main.dart
         );
       case orders:
         return MaterialPageRoute(

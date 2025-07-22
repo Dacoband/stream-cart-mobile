@@ -15,23 +15,42 @@ class CartLoading extends CartState {}
 class CartLoaded extends CartState {
   final List<CartItemEntity> items;
   final double totalAmount;
+  final Set<String> selectedCartItemIds; // Track selected items
 
   const CartLoaded({
     required this.items,
     required this.totalAmount,
+    this.selectedCartItemIds = const {},
   });
 
   @override
-  List<Object?> get props => [items, totalAmount];
+  List<Object?> get props => [items, totalAmount, selectedCartItemIds];
 
   CartLoaded copyWith({
     List<CartItemEntity>? items,
     double? totalAmount,
+    Set<String>? selectedCartItemIds,
   }) {
     return CartLoaded(
       items: items ?? this.items,
       totalAmount: totalAmount ?? this.totalAmount,
+      selectedCartItemIds: selectedCartItemIds ?? this.selectedCartItemIds,
     );
+  }
+
+  // Helper methods
+  bool get hasSelectedItems => selectedCartItemIds.isNotEmpty;
+  bool get isAllSelected => items.isNotEmpty && selectedCartItemIds.length == items.length;
+  
+  List<CartItemEntity> get selectedItems => 
+      items.where((item) => selectedCartItemIds.contains(item.cartItemId)).toList();
+  
+  double get selectedTotalAmount {
+    double total = 0;
+    for (var item in selectedItems) {
+      total += (item.currentPrice * item.quantity);
+    }
+    return total;
   }
 }
 

@@ -358,7 +358,7 @@ class ProductGrid extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple,
+                            color: Color(0xFF4CAF50),
                           ),
                         ),
                         if (product['originalPrice'] != null) ...[

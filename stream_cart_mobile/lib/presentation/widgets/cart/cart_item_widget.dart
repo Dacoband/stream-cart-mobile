@@ -6,12 +6,16 @@ class CartItemWidget extends StatelessWidget {
   final CartItemEntity item;
   final VoidCallback? onRemove;
   final ValueChanged<int>? onQuantityChanged;
+  final bool isSelected;
+  final ValueChanged<bool>? onSelectionChanged;
 
   const CartItemWidget({
     super.key,
     required this.item,
     this.onRemove,
     this.onQuantityChanged,
+    this.isSelected = false,
+    this.onSelectionChanged,
   });
 
   String _formatPrice(double price) {
@@ -32,6 +36,17 @@ class CartItemWidget extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Checkbox
+            Checkbox(
+              value: isSelected,
+              onChanged: (value) {
+                print('Checkbox clicked: $value for item: ${item.cartItemId}'); // Debug log
+                onSelectionChanged?.call(value ?? false);
+              },
+              activeColor: Theme.of(context).primaryColor,
+            ),
+            const SizedBox(width: 8),
+            
             // Product Image Placeholder
             Container(
               width: 80,
@@ -40,23 +55,39 @@ class CartItemWidget extends StatelessWidget {
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.image,
-                size: 40,
-                color: Colors.grey,
-              ),
+              child: item.primaryImage.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        item.primaryImage,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.image,
+                            size: 40,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
+                    )
+                  : const Icon(
+                      Icons.image,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
             ),
             const SizedBox(width: 16),
             
             // Product Details
             Expanded(
+              flex: 3, // Tăng flex để có nhiều không gian hơn
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.productName.isNotEmpty ? item.productName : 'Tên sản phẩm',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14, // Giảm font size
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 2,
@@ -65,12 +96,12 @@ class CartItemWidget extends StatelessWidget {
                   const SizedBox(height: 4),
                   
                   // Price display
-                  Row(
+                  Wrap( // Sử dụng Wrap thay vì Row để tránh overflow
                     children: [
                       Text(
                         _formatPrice(item.currentPrice),
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14, // Giảm font size
                           fontWeight: FontWeight.bold,
                           color: Colors.deepPurple,
                         ),
@@ -80,7 +111,7 @@ class CartItemWidget extends StatelessWidget {
                         Text(
                           _formatPrice(item.originalPrice),
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12, // Giảm font size
                             color: Colors.grey[600],
                             decoration: TextDecoration.lineThrough,
                           ),
@@ -107,43 +138,55 @@ class CartItemWidget extends StatelessWidget {
                         color: Colors.red,
                       ),
                     ),
-                  const SizedBox(height: 8),
-                  
-                  // Quantity Controls
+                ],
+              ),
+            ),
+            
+            // Quantity Controls - Compact version
+            Flexible(
+              flex: 2,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        onPressed: item.quantity > 1 
+                      InkWell(
+                        onTap: item.quantity > 1 
                           ? () => onQuantityChanged?.call(item.quantity - 1)
                           : null,
-                        icon: const Icon(Icons.remove),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Icon(Icons.remove, size: 16),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                        width: 40,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           '${item.quantity}',
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => onQuantityChanged?.call(item.quantity + 1),
-                        icon: const Icon(Icons.add),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
+                      InkWell(
+                        onTap: () => onQuantityChanged?.call(item.quantity + 1),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Icon(Icons.add, size: 16),
                         ),
                       ),
                     ],
@@ -155,8 +198,13 @@ class CartItemWidget extends StatelessWidget {
             // Remove Button
             IconButton(
               onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(Icons.delete_outline, size: 20),
               color: Colors.red,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 32,
+                minHeight: 32,
+              ),
             ),
           ],
         ),

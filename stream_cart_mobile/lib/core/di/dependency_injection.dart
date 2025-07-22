@@ -37,6 +37,7 @@ import '../../domain/usecases/update_cart_item_usecase.dart';
 import '../../domain/usecases/remove_from_cart_usecase.dart';
 import '../../domain/usecases/clear_cart_usecase.dart';
 import '../../domain/usecases/get_cart_preview_usecase.dart';
+import '../../domain/usecases/get_preview_order_usecase.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source_impl.dart';
@@ -174,6 +175,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => RemoveFromCartUseCase(getIt()));
   getIt.registerLazySingleton(() => ClearCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt()));
   
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
@@ -215,12 +217,18 @@ Future<void> setupDependencies() async {
   ));
   
   // Register CartBloc as singleton so all parts of the app share the same instance
-  getIt.registerLazySingleton(() => CartBloc(
-    addToCartUseCase: getIt(),
-    getCartItemsUseCase: getIt(),
-    updateCartItemUseCase: getIt(),
-    removeFromCartUseCase: getIt(),
-    clearCartUseCase: getIt(),
-    getCartPreviewUseCase: getIt(),
-  ));
+  getIt.registerLazySingleton(() {
+    print('Creating CartBloc singleton in DI');
+    final cartBloc = CartBloc(
+      addToCartUseCase: getIt(),
+      getCartItemsUseCase: getIt(),
+      updateCartItemUseCase: getIt(),
+      removeFromCartUseCase: getIt(),
+      clearCartUseCase: getIt(),
+      getCartPreviewUseCase: getIt(),
+      getPreviewOrderUseCase: getIt(),
+    );
+    print('CartBloc singleton created: ${cartBloc.hashCode}');
+    return cartBloc;
+  });
 }

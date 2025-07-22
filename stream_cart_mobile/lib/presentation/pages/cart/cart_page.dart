@@ -3,17 +3,32 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_event.dart';
 import '../../blocs/cart/cart_state.dart';
-import '../../widgets/cart/cart_item_widget.dart';
+import '../../widgets/cart/cart_item_widget_new.dart' as cart_widget;
 import '../../widgets/cart/cart_summary_widget.dart';
 import '../../widgets/cart/empty_cart_widget.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
   @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Load cart data once when the page is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cartBloc = context.read<CartBloc>();
+      print('CartBloc instance: ${cartBloc.hashCode}'); // Debug log
+      print('CartBloc current state: ${cartBloc.state.runtimeType}'); // Debug log
+      cartBloc.add(LoadCartEvent());
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Use the global CartBloc from context and load cart data
-    context.read<CartBloc>().add(LoadCartEvent());
     return const CartView();
   }
 }
@@ -114,13 +129,58 @@ class CartView extends StatelessWidget {
 
             return Column(
               children: [
+                // Select All Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: state.isAllSelected,
+                        onChanged: (value) {
+                          if (value == true) {
+                            context.read<CartBloc>().add(SelectAllCartItemsEvent());
+                          } else {
+                            context.read<CartBloc>().add(UnselectAllCartItemsEvent());
+                          }
+                        },
+                        activeColor: Theme.of(context).primaryColor,
+                      ),
+                      Text(
+                        'Chọn tất cả (${state.items.length} sản phẩm)',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (state.hasSelectedItems)
+                        TextButton(
+                          onPressed: () {
+                            context.read<CartBloc>().add(UnselectAllCartItemsEvent());
+                          },
+                          child: const Text('Bỏ chọn'),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                
                 Expanded(
                   child: ListView.builder(
                     itemCount: state.items.length,
                     itemBuilder: (context, index) {
                       final item = state.items[index];
-                      return CartItemWidget(
+                      return cart_widget.CartItemWidget(
                         item: item,
+                        isSelected: state.selectedCartItemIds.contains(item.cartItemId),
+                        onSelectionChanged: (selected) {
+                          final cartBloc = context.read<CartBloc>();
+                          print('CartBloc instance in selection: ${cartBloc.hashCode}'); // Debug log
+                          print('Triggering selection for: ${item.cartItemId}, selected: $selected'); // Debug log
+                          cartBloc.add(
+                            ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
+                          );
+                        },
                         onQuantityChanged: (newQuantity) {
                           context.read<CartBloc>().add(
                             UpdateCartItemEvent(
@@ -141,8 +201,14 @@ class CartView extends StatelessWidget {
                 CartSummaryWidget(
                   items: state.items,
                   totalAmount: state.totalAmount,
+                  selectedItems: state.selectedItems,
+                  selectedTotalAmount: state.selectedTotalAmount,
+                  hasSelectedItems: state.hasSelectedItems,
                   onCheckout: () {
-                    _handleCheckout(context);
+                    _handleCheckout(context, state);
+                  },
+                  onPreviewOrder: () {
+                    _handlePreviewOrder(context, state);
                   },
                 ),
               ],
@@ -273,12 +339,57 @@ class CartView extends StatelessWidget {
     );
   }
 
-  void _handleCheckout(BuildContext context) {
-    // Navigate to checkout page or show checkout dialog
+  void _handleCheckout(BuildContext context, CartLoaded state) {
+    if (!state.hasSelectedItems) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn ít nhất một sản phẩm để thanh toán'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Call PreviewOrder API with selected items
+    final selectedCartItemIds = state.selectedCartItemIds.toList();
+    context.read<CartBloc>().add(
+      GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
+    );
+
+    // Show preview dialog or navigate to checkout
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng thanh toán đang được phát triển'),
+      SnackBar(
+        content: Text(
+          'Đang xử lý ${state.selectedItems.length} sản phẩm được chọn...',
+        ),
         backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  void _handlePreviewOrder(BuildContext context, CartLoaded state) {
+    if (!state.hasSelectedItems) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn ít nhất một sản phẩm để xem trước'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Call PreviewOrder API with selected items
+    final selectedCartItemIds = state.selectedCartItemIds.toList();
+    context.read<CartBloc>().add(
+      GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Đang lấy thông tin xem trước cho ${state.selectedItems.length} sản phẩm...',
+        ),
+        backgroundColor: Colors.green,
       ),
     );
   }

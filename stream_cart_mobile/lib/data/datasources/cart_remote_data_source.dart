@@ -9,6 +9,7 @@ abstract class CartRemoteDataSource {
   Future<void> removeFromCart(String productId, String? variantId);
   Future<void> clearCart();
   Future<CartModel> getCartPreview();
+  Future<CartSummaryModel> getPreviewOrder(List<String> cartItemIds);
 }
 
 class CartRemoteDataSourceImpl implements CartRemoteDataSource {
@@ -167,5 +168,25 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     final url = ApiUrlHelper.getFullUrl('/api/carts/PreviewOrder');
     final response = await dio.get(url);
     return CartModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<CartSummaryModel> getPreviewOrder(List<String> cartItemIds) async {
+    final url = ApiUrlHelper.getFullUrl('/api/carts/PreviewOrder');
+    final data = {
+      'cartItemId': cartItemIds,
+    };
+    
+    print('🔍 PreviewOrder Request:');
+    print('   URL: $url');
+    print('   CartItemIds: $cartItemIds');
+    
+    final response = await dio.get(url, queryParameters: data);
+    
+    print('🔍 PreviewOrder Response:');
+    print('   Status: ${response.statusCode}');
+    print('   Data: ${response.data}');
+    
+    return CartSummaryModel.fromJson(response.data['data']);
   }
 }

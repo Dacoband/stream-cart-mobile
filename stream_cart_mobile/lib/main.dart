@@ -33,10 +33,13 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => getIt<AuthBloc>(),
+          create: (context) {
+            print('Creating AuthBloc from main.dart');
+            return getIt<AuthBloc>();
+          },
         ),
-        BlocProvider(
-          create: (context) => getIt<CartBloc>(),
+        BlocProvider.value(
+          value: getIt<CartBloc>(),
         ),
       ],
       child: MaterialApp(

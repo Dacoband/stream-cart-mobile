@@ -111,4 +111,26 @@ class CartRepositoryImpl implements CartRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, CartSummaryEntity>> getPreviewOrder(List<String> cartItemIds) async {
+    try {
+      final cartSummary = await remoteDataSource.getPreviewOrder(cartItemIds);
+      return Right(cartSummary.toEntity());
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem đơn hàng'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
+        return Left(ServerFailure(message));
+      } else {
+        return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
 }

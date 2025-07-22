@@ -25,4 +25,6 @@ abstract class CartRepository {
   Future<Either<Failure, void>> clearCart();
   
   Future<Either<Failure, CartEntity>> getCartPreview();
+  
+  Future<Either<Failure, CartSummaryEntity>> getPreviewOrder(List<String> cartItemIds);
 }
