@@ -7,6 +7,7 @@ abstract class CartRemoteDataSource {
   Future<List<CartItemModel>> getCartItems();
   Future<CartResponseModel> updateCartItem(String productId, String? variantId, int quantity);
   Future<void> removeFromCart(String productId, String? variantId);
+  Future<void> removeCartItem(String cartItemId);
   Future<void> clearCart();
   Future<CartModel> getCartPreview();
   Future<CartSummaryModel> getPreviewOrder(List<String> cartItemIds);
@@ -153,6 +154,38 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       }
       throw Exception('Lỗi kết nối: ${e.message}');
     } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  @override
+  Future<void> removeCartItem(String cartItemId) async {
+    try {
+      final url = ApiUrlHelper.getFullUrl('/api/carts');
+      
+      print('🗑️ RemoveCartItem Request:');
+      print('   URL: $url');
+      print('   CartItemId: $cartItemId');
+      
+      await dio.delete(url, queryParameters: {
+        'id': cartItemId,
+      });
+      
+      print('✅ Cart item removed successfully');
+    } on DioException catch (e) {
+      print('❌ RemoveCartItem Error: ${e.response?.statusCode} - ${e.message}');
+      if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        if (responseData != null && responseData['message'] != null) {
+          throw Exception(responseData['message']);
+        }
+        throw Exception('Không thể xóa sản phẩm khỏi giỏ hàng');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
+      }
+      throw Exception('Lỗi kết nối: ${e.message}');
+    } catch (e) {
+      print('❌ RemoveCartItem Unexpected Error: $e');
       throw Exception('Lỗi không xác định: $e');
     }
   }

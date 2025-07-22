@@ -21,6 +21,10 @@ abstract class CartRepository {
     String productId,
     String? variantId,
   );
+
+  Future<Either<Failure, void>> removeCartItem(String cartItemId);
+  
+  Future<Either<Failure, void>> removeMultipleCartItems(List<String> cartItemIds);
   
   Future<Either<Failure, void>> clearCart();
   

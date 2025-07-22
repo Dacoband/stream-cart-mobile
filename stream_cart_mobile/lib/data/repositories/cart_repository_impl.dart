@@ -101,6 +101,57 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
+  Future<Either<Failure, void>> removeCartItem(String cartItemId) async {
+    try {
+      await remoteDataSource.removeCartItem(cartItemId);
+      return const Right(null);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xóa sản phẩm'));
+      } else if (e.response?.statusCode == 404) {
+        return Left(ServerFailure('Không tìm thấy sản phẩm trong giỏ hàng'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Không thể xóa sản phẩm khỏi giỏ hàng';
+        return Left(ServerFailure(message));
+      } else {
+        return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeMultipleCartItems(List<String> cartItemIds) async {
+    try {
+      // Remove items one by one (could be optimized with batch API if available)
+      for (String cartItemId in cartItemIds) {
+        await remoteDataSource.removeCartItem(cartItemId);
+      }
+      return const Right(null);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xóa sản phẩm'));
+      } else if (e.response?.statusCode == 404) {
+        return Left(ServerFailure('Một số sản phẩm không tìm thấy trong giỏ hàng'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Không thể xóa sản phẩm khỏi giỏ hàng';
+        return Left(ServerFailure(message));
+      } else {
+        return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
   Future<Either<Failure, CartEntity>> getCartPreview() async {
     try {
       final cart = await remoteDataSource.getCartPreview();

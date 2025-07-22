@@ -56,6 +56,28 @@ class RemoveFromCartEvent extends CartEvent {
 
 class ClearCartEvent extends CartEvent {}
 
+class RemoveCartItemEvent extends CartEvent {
+  final String cartItemId;
+
+  const RemoveCartItemEvent({
+    required this.cartItemId,
+  });
+
+  @override
+  List<Object?> get props => [cartItemId];
+}
+
+class RemoveSelectedCartItemsEvent extends CartEvent {
+  final List<String> cartItemIds;
+
+  const RemoveSelectedCartItemsEvent({
+    required this.cartItemIds,
+  });
+
+  @override
+  List<Object?> get props => [cartItemIds];
+}
+
 class GetCartPreviewEvent extends CartEvent {}
 
 class ToggleCartItemSelectionEvent extends CartEvent {

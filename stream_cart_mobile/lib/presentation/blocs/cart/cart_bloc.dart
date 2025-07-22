@@ -3,6 +3,8 @@ import '../../../domain/usecases/add_to_cart_usecase.dart';
 import '../../../domain/usecases/get_cart_items_usecase.dart';
 import '../../../domain/usecases/update_cart_item_usecase.dart';
 import '../../../domain/usecases/remove_from_cart_usecase.dart';
+import '../../../domain/usecases/remove_cart_item_usecase.dart';
+import '../../../domain/usecases/remove_multiple_cart_items_usecase.dart';
 import '../../../domain/usecases/clear_cart_usecase.dart';
 import '../../../domain/usecases/get_cart_preview_usecase.dart';
 import '../../../domain/usecases/get_preview_order_usecase.dart';
@@ -14,6 +16,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   final GetCartItemsUseCase getCartItemsUseCase;
   final UpdateCartItemUseCase updateCartItemUseCase;
   final RemoveFromCartUseCase removeFromCartUseCase;
+  final RemoveCartItemUseCase removeCartItemUseCase;
+  final RemoveMultipleCartItemsUseCase removeMultipleCartItemsUseCase;
   final ClearCartUseCase clearCartUseCase;
   final GetCartPreviewUseCase getCartPreviewUseCase;
   final GetPreviewOrderUseCase getPreviewOrderUseCase;
@@ -23,22 +27,24 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     required this.getCartItemsUseCase,
     required this.updateCartItemUseCase,
     required this.removeFromCartUseCase,
+    required this.removeCartItemUseCase,
+    required this.removeMultipleCartItemsUseCase,
     required this.clearCartUseCase,
     required this.getCartPreviewUseCase,
     required this.getPreviewOrderUseCase,
   }) : super(CartInitial()) {
-    print('Creating CartBloc instance: ${hashCode}'); // Debug log
     on<LoadCartEvent>(_onLoadCart);
     on<AddToCartEvent>(_onAddToCart);
     on<UpdateCartItemEvent>(_onUpdateCartItem);
     on<RemoveFromCartEvent>(_onRemoveFromCart);
+    on<RemoveCartItemEvent>(_onRemoveCartItem);
+    on<RemoveSelectedCartItemsEvent>(_onRemoveSelectedCartItems);
     on<ClearCartEvent>(_onClearCart);
     on<GetCartPreviewEvent>(_onGetCartPreview);
     on<ToggleCartItemSelectionEvent>(_onToggleCartItemSelection);
     on<SelectAllCartItemsEvent>(_onSelectAllCartItems);
     on<UnselectAllCartItemsEvent>(_onUnselectAllCartItems);
     on<GetSelectedItemsPreviewEvent>(_onGetSelectedItemsPreview);
-    print('CartBloc ${hashCode} event handlers registered'); // Debug log
   }
 
   Future<void> _onLoadCart(LoadCartEvent event, Emitter<CartState> emit) async {
@@ -56,7 +62,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(CartLoaded(
           items: cartItems, 
           totalAmount: totalAmount,
-          selectedCartItemIds: const {}, // Khởi tạo với set rỗng
+          selectedCartItemIds: const {},
         ));
       },
     );
@@ -90,7 +96,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     // Get current state để update ngay lập tức
     final currentState = state;
     if (currentState is! CartLoaded) {
-      // If not loaded, do full reload
       emit(CartLoading());
       add(LoadCartEvent());
       return;
@@ -113,7 +118,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     // Emit updated state immediately
     emit(CartLoaded(items: updatedItems, totalAmount: newTotalAmount));
 
-    // Call API in background
     final params = UpdateCartItemParams(
       productId: event.productId,
       variantId: event.variantId,
@@ -123,17 +127,14 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final result = await updateCartItemUseCase(params);
     result.fold(
       (failure) {
-        // If API fails, revert to original state and show error
         emit(currentState);
         emit(CartError(failure.message));
       },
       (response) {
         if (!response.success) {
-          // If API returns error, revert and show error
           emit(currentState);
           emit(CartError(response.errors.isNotEmpty ? response.errors.first : 'Cập nhật không thành công'));
         }
-        // If success, keep the updated state (already emitted above)
       },
     );
   }
@@ -183,23 +184,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
   // Selection handlers
   void _onToggleCartItemSelection(ToggleCartItemSelectionEvent event, Emitter<CartState> emit) {
-    print('_onToggleCartItemSelection called for: ${event.cartItemId}'); // Debug log
     final currentState = state;
     if (currentState is! CartLoaded) {
-      print('Current state is not CartLoaded: ${currentState.runtimeType}'); // Debug log
+      print('Current state is not CartLoaded: ${currentState.runtimeType}');
       return;
     }
 
     final newSelectedItems = Set<String>.from(currentState.selectedCartItemIds);
     if (newSelectedItems.contains(event.cartItemId)) {
       newSelectedItems.remove(event.cartItemId);
-      print('Removed item from selection: ${event.cartItemId}'); // Debug log
     } else {
       newSelectedItems.add(event.cartItemId);
-      print('Added item to selection: ${event.cartItemId}'); // Debug log
     }
-
-    print('New selected items: $newSelectedItems'); // Debug log
     emit(currentState.copyWith(selectedCartItemIds: newSelectedItems));
   }
 
@@ -238,6 +234,64 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         ));
       },
     );
+  }
+
+  Future<void> _onRemoveCartItem(RemoveCartItemEvent event, Emitter<CartState> emit) async {
+ 
+    final currentState = state;
+    if (currentState is CartLoaded) {
+      // Optimistic update - remove item from state immediately
+      final updatedItems = currentState.items.where((item) => item.cartItemId != event.cartItemId).toList();
+      final updatedSelections = Set<String>.from(currentState.selectedCartItemIds);
+      updatedSelections.remove(event.cartItemId);
+      
+      // Calculate updated total amount
+      final updatedTotalAmount = updatedItems.fold<double>(
+        0.0,
+        (sum, item) => sum + item.currentPrice * item.quantity,
+      );
+      
+      emit(CartLoaded(
+        items: updatedItems,
+        totalAmount: updatedTotalAmount,
+        selectedCartItemIds: updatedSelections,
+      ));
+
+      // Then make the API call
+      final result = await removeCartItemUseCase(event.cartItemId);
+      result.fold(
+        (failure) {
+          // If API call fails, reload cart to restore correct state
+          add(LoadCartEvent());
+          emit(CartError(failure.message));
+        },
+        (_) {
+          // Reload cart to ensure sync with server
+          add(LoadCartEvent());
+          emit(CartItemUpdated('Đã xóa sản phẩm khỏi giỏ hàng'));
+        },
+      );
+    }
+  }
+
+  Future<void> _onRemoveSelectedCartItems(RemoveSelectedCartItemsEvent event, Emitter<CartState> emit) async {
+    print('🗑️ _onRemoveSelectedCartItems called for ${event.cartItemIds.length} items');
+    print('🗑️ CartBloc instance: $hashCode');
+    
+    final currentState = state;
+    if (currentState is CartLoaded) {
+      emit(CartLoading());
+
+      final result = await removeMultipleCartItemsUseCase(event.cartItemIds);
+      result.fold(
+        (failure) => emit(CartError(failure.message)),
+        (_) {
+          // Reload cart after successful removal
+          add(LoadCartEvent());
+          emit(CartItemUpdated('Đã xóa ${event.cartItemIds.length} sản phẩm khỏi giỏ hàng'));
+        },
+      );
+    }
   }
 
   String _formatPrice(double price) {

@@ -153,13 +153,24 @@ class CartView extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      if (state.hasSelectedItems)
+                      if (state.hasSelectedItems) ...[
+                        TextButton(
+                          onPressed: () {
+                            _showRemoveSelectedItemsDialog(context, state.selectedCartItemIds.toList());
+                          },
+                          child: const Text(
+                            'Xóa đã chọn',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         TextButton(
                           onPressed: () {
                             context.read<CartBloc>().add(UnselectAllCartItemsEvent());
                           },
                           child: const Text('Bỏ chọn'),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -278,6 +289,38 @@ class CartView extends StatelessWidget {
     );
   }
 
+  void _showRemoveSelectedItemsDialog(BuildContext context, List<String> selectedCartItemIds) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Xóa sản phẩm đã chọn'),
+          content: Text('Bạn có muốn xóa ${selectedCartItemIds.length} sản phẩm đã chọn khỏi giỏ hàng?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<CartBloc>().add(
+                  RemoveSelectedCartItemsEvent(
+                    cartItemIds: selectedCartItemIds,
+                  ),
+                );
+              },
+              child: const Text(
+                'Xóa',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showRemoveItemDialog(BuildContext context, item) {
     showDialog(
       context: context,
@@ -294,9 +337,8 @@ class CartView extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
                 context.read<CartBloc>().add(
-                  RemoveFromCartEvent(
-                    productId: item.productId,
-                    variantId: item.variantId,
+                  RemoveCartItemEvent(
+                    cartItemId: item.cartItemId,
                   ),
                 );
               },

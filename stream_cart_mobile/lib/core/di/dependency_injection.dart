@@ -35,6 +35,8 @@ import '../../domain/usecases/add_to_cart_usecase.dart';
 import '../../domain/usecases/get_cart_items_usecase.dart';
 import '../../domain/usecases/update_cart_item_usecase.dart';
 import '../../domain/usecases/remove_from_cart_usecase.dart';
+import '../../domain/usecases/remove_cart_item_usecase.dart';
+import '../../domain/usecases/remove_multiple_cart_items_usecase.dart';
 import '../../domain/usecases/clear_cart_usecase.dart';
 import '../../domain/usecases/get_cart_preview_usecase.dart';
 import '../../domain/usecases/get_preview_order_usecase.dart';
@@ -173,6 +175,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetCartItemsUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateCartItemUseCase(getIt()));
   getIt.registerLazySingleton(() => RemoveFromCartUseCase(getIt()));
+  getIt.registerLazySingleton(() => RemoveCartItemUseCase(getIt()));
+  getIt.registerLazySingleton(() => RemoveMultipleCartItemsUseCase(getIt()));
   getIt.registerLazySingleton(() => ClearCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
   getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt()));
@@ -224,6 +228,8 @@ Future<void> setupDependencies() async {
       getCartItemsUseCase: getIt(),
       updateCartItemUseCase: getIt(),
       removeFromCartUseCase: getIt(),
+      removeCartItemUseCase: getIt(),
+      removeMultipleCartItemsUseCase: getIt(),
       clearCartUseCase: getIt(),
       getCartPreviewUseCase: getIt(),
       getPreviewOrderUseCase: getIt(),
