@@ -47,7 +47,7 @@ class AppConstants {
   static const String apiDateTimeFormat = 'yyyy-MM-ddTHH:mm:ss.SSSZ';
   
   // File upload
-  static const int maxFileSize = 10 * 1024 * 1024; // 10MB
+  static const int maxFileSize = 10 * 1024 * 1024; 
   static const List<String> allowedImageTypes = ['jpg', 'jpeg', 'png', 'gif'];
   static const List<String> allowedDocumentTypes = ['pdf', 'doc', 'docx', 'txt'];
   
@@ -64,8 +64,8 @@ class AppConstants {
   static const String profileUpdateSuccessMessage = 'Profile updated successfully!';
   
   // Social login
-  static const String googleClientId = ''; // To be filled with actual Google Client ID
-  static const String facebookAppId = ''; // To be filled with actual Facebook App ID
+  static const String googleClientId = ''; 
+  static const String facebookAppId = ''; 
   
   // Deep linking
   static const String appScheme = 'streamcart';

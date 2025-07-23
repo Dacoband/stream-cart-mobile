@@ -20,6 +20,8 @@ import '../../domain/repositories/cart_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
+import '../../domain/usecases/get_category_detail_usecase.dart';
+import '../../domain/usecases/get_products_by_category_usecase.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_products_usecase.dart';
 import '../../domain/usecases/search_products_usecase.dart' as search;
@@ -57,6 +59,7 @@ import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
 import '../../presentation/blocs/cart/cart_bloc.dart';
+import '../../presentation/blocs/category_detail/category_detail_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -113,6 +116,8 @@ Future<void> setupDependencies() async {
     ),
   );
   getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCategoryDetailUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductsByCategoryUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsUseCase(getIt()));
   getIt.registerLazySingleton(() => search.SearchProductsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
@@ -218,6 +223,12 @@ Future<void> setupDependencies() async {
     getProductImagesUseCase: getIt(),
     addToCartUseCase: getIt(),
     cartBloc: getIt(),
+  ));
+
+  getIt.registerFactory(() => CategoryDetailBloc(
+    getCategoryDetailUseCase: getIt(),
+    getProductsByCategoryUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
   ));
   
   // Register CartBloc as singleton so all parts of the app share the same instance

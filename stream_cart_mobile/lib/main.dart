@@ -34,7 +34,6 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (context) {
-            print('Creating AuthBloc from main.dart');
             return getIt<AuthBloc>();
           },
         ),

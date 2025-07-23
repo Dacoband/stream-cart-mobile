@@ -12,6 +12,7 @@ import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
+import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -29,6 +30,7 @@ class AppRouter {
   static const String productDetails = '/product-details';
   static const String search = '/search';
   static const String advancedSearch = '/advanced-search';
+  static const String categoryDetail = '/category-detail';
   static const String livestreamList = '/livestream-list';
   static const String livestreamDetail = '/livestream-detail';
   static const String cart = '/cart';
@@ -96,7 +98,17 @@ class AppRouter {
         );
       case cart:
         return MaterialPageRoute(
-          builder: (_) => const CartPage(), // Sử dụng instance từ MultiBlocProvider trong main.dart
+          builder: (_) => const CartPage(), 
+        );
+      case categoryDetail:
+        final Map<String, dynamic> args = settings.arguments as Map<String, dynamic>;
+        final String categoryId = args['categoryId'] as String;
+        final String? categoryName = args['categoryName'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => CategoryDetailPage(
+            categoryId: categoryId,
+            categoryName: categoryName,
+          ),
         );
       case orders:
         return MaterialPageRoute(

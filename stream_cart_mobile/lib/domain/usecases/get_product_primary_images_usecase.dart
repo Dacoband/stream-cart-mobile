@@ -7,18 +7,13 @@ class GetProductPrimaryImagesUseCase {
 
   GetProductPrimaryImagesUseCase(this.repository);
 
-  Future<Either<Failure, Map<String, String>>> call(List<String> productIds) async {
-    print('[GetProductPrimaryImagesUseCase] Fetching primary images for ${productIds.length} products');
-    
-    final result = await repository.getProductPrimaryImages(productIds);
-    
+  Future<Either<Failure, Map<String, String>>> call(List<String> productIds) async {   
+    final result = await repository.getProductPrimaryImages(productIds);   
     return result.fold(
       (failure) {
-        print('[GetProductPrimaryImagesUseCase] Error: ${failure.message}');
         return Left(failure);
       },
       (primaryImages) {
-        print('[GetProductPrimaryImagesUseCase] Successfully fetched ${primaryImages.length} primary images');
         return Right(primaryImages);
       },
     );

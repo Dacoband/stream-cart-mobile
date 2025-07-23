@@ -117,8 +117,42 @@ class _HomePageState extends State<HomePage> {
     
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to category page
         print('Tapped on category: $categoryName');
+        
+        // Navigate to category detail page
+        // We need categoryId from the category object
+        if (category != null) {
+          String? categoryId;
+          
+          // Extract categoryId based on the category type
+          if (category is Map<String, dynamic>) {
+            categoryId = category['categoryId'] ?? category['id'];
+          } else {
+            // For entity objects
+            try {
+              categoryId = category.categoryId;
+            } catch (e) {
+              print('Error getting categoryId: $e');
+            }
+          }
+          
+          if (categoryId != null && categoryId.isNotEmpty) {
+            print('🚀 Navigating to category detail with ID: $categoryId');
+            Navigator.of(context).pushNamed(
+              AppRouter.categoryDetail,
+              arguments: {
+                'categoryId': categoryId,
+                'categoryName': categoryName,
+              },
+            ).then((result) {
+              print('✅ Navigation completed');
+            }).catchError((error) {
+              print('❌ Navigation error: $error');
+            });
+          } else {
+            print('❌ Cannot navigate: categoryId is null or empty');
+          }
+        }
       },
       child: Container(
         width: 80, // Increased width for better display in larger header

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../models/category_model.dart';
+import '../models/category_detail_model.dart';
 import '../models/product_model.dart';
 import '../models/product_detail_model.dart';
 import '../models/product_image_model.dart';
@@ -8,6 +9,8 @@ import '../../core/utils/api_url_helper.dart';
 
 abstract class HomeRemoteDataSource {
   Future<CategoryResponseModel> getCategories();
+  Future<CategoryDetailResponseModel> getCategoryDetail(String categoryId);
+  Future<ProductResponseModel> getProductsByCategory(String categoryId);
   Future<ProductResponseModel> getProducts({int page = 1, int limit = 20});
   Future<ProductResponseModel> searchProducts({required String query, int page = 1, int limit = 20});
   Future<ProductDetailModel> getProductDetail(String productId);
@@ -23,18 +26,42 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<CategoryResponseModel> getCategories() async {
     final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.categoriesEndpoint);
-    print('🌐 DataSource: Calling categories API: $endpoint');
     final response = await dio.get(endpoint);
-    print('📦 DataSource: Categories raw response: ${response.data}');
     final result = CategoryResponseModel.fromJson(response.data);
-    print('✅ DataSource: Parsed categories - success: ${result.success}, count: ${result.data.length}');
     return result;
+  }
+
+  @override
+  Future<CategoryDetailResponseModel> getCategoryDetail(String categoryId) async {
+    try {
+      final url = ApiConstants.categoryDetailEndpoint.replaceAll('{id}', categoryId);
+      final endpoint = ApiUrlHelper.getEndpoint(url);      
+      final response = await dio.get(endpoint); 
+      final result = CategoryDetailResponseModel.fromJson(response.data);
+      return result;
+    } catch (e) {
+      print('❌ DataSource: Error getting category detail: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ProductResponseModel> getProductsByCategory(String categoryId) async {
+    try {
+      final url = ApiConstants.productsByCategoryEndpoint.replaceAll('{id}', categoryId);
+      final endpoint = ApiUrlHelper.getEndpoint(url); 
+      final response = await dio.get(endpoint);    
+      final result = ProductResponseModel.fromJson(response.data);
+      return result;
+    } catch (e) {
+      print('❌ DataSource: Error getting products by category: $e');
+      rethrow;
+    }
   }
 
   @override
   Future<ProductResponseModel> getProducts({int page = 1, int limit = 20}) async {
     final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.productsEndpoint);
-    print('🌐 DataSource: Calling products API: $endpoint (page: $page, limit: $limit)');
     final response = await dio.get(
       endpoint,
       queryParameters: {
@@ -42,9 +69,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         'limit': limit,
       },
     );
-    print('🛍️ DataSource: Products raw response: ${response.data}');
     final result = ProductResponseModel.fromJson(response.data);
-    print('✅ DataSource: Parsed products - success: ${result.success}, count: ${result.data.length}');
     return result;
   }
 
@@ -60,23 +85,20 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       },
     );
     
-    // Parse the advanced search response and convert to ProductResponseModel
     final searchResponse = response.data;
     if (searchResponse['success'] == true && searchResponse['data'] != null) {
       final data = searchResponse['data'];
       final products = data['products'];
       
-      // Convert to ProductResponseModel format
       final productResponseData = {
         'success': true,
         'message': searchResponse['message'],
-        'data': products['items'], // Extract items from the products object
+        'data': products['items'], 
         'errors': searchResponse['errors'] ?? []
       };
       
       return ProductResponseModel.fromJson(productResponseData);
     } else {
-      // Handle error case
       return ProductResponseModel.fromJson({
         'success': false,
         'message': searchResponse['message'] ?? 'Search failed',
@@ -89,20 +111,12 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<ProductDetailModel> getProductDetail(String productId) async {
     try {
-      print('🛍️ DataSource: Calling product detail API for ID: $productId');
       final url = ApiConstants.productDetailEndpoint.replaceAll('{id}', productId);
-      print('🛍️ DataSource: Product detail URL: $url');
-      
       final response = await dio.get(url);
-      print('🛍️ DataSource: Product detail response: ${response.data}');
-      
-      // Parse response - API trả về có wrapper {success, message, data, errors}
       final responseData = response.data;
       if (responseData['success'] == true && responseData['data'] != null) {
-        print('✅ DataSource: Parsed product detail successfully');
         return ProductDetailModel.fromJson(responseData['data']);
       } else {
-        print('❌ DataSource: Invalid product detail response format');
         throw Exception('Invalid response format or failed response');
       }
     } catch (e) {
@@ -116,25 +130,18 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     try {
       final url = ApiUrlHelper.getFullUrl(
         ApiConstants.productImagesEndpoint.replaceAll('{productId}', productId),
-      );
-      print('🖼️ DataSource: Calling product images API: $url');
-      
-      final response = await dio.get(url);
-      print('📸 DataSource: Product images response: ${response.data}');
-      
+      );    
+      final response = await dio.get(url);    
       // Parse response - API trả về có wrapper {success, message, data, errors}
       final responseData = response.data;
       if (responseData['success'] == true && responseData['data'] != null) {
         final List<dynamic> imagesData = responseData['data'] as List<dynamic>;
-        final images = imagesData.map((json) => ProductImageModel.fromJson(json)).toList();
-        
+        final images = imagesData.map((json) => ProductImageModel.fromJson(json)).toList();      
         // Sắp xếp theo displayOrder
         images.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
         
-        print('✅ DataSource: Parsed ${images.length} product images successfully');
         return images;
       } else {
-        print('❌ DataSource: Invalid product images response format');
         throw Exception('Invalid response format or failed response');
       }
     } catch (e) {
@@ -146,22 +153,14 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   @override
   Future<List<ProductImageModel>> getAllProductImages() async {
     try {
-      final url = ApiUrlHelper.getFullUrl(ApiConstants.allProductImagesEndpoint);
-      print('🖼️ DataSource: Calling all product images API: $url');
-      
+      final url = ApiUrlHelper.getFullUrl(ApiConstants.allProductImagesEndpoint);     
       final response = await dio.get(url);
-      print('📸 DataSource: All product images response: ${response.data}');
-      
-      // Parse response - API trả về có wrapper {success, message, data, errors}
       final responseData = response.data;
       if (responseData['success'] == true && responseData['data'] != null) {
         final List<dynamic> imagesData = responseData['data'] as List<dynamic>;
         final images = imagesData.map((json) => ProductImageModel.fromJson(json)).toList();
-        
-        print('✅ DataSource: Parsed ${images.length} product images successfully');
         return images;
       } else {
-        print('❌ DataSource: Invalid all product images response format');
         throw Exception('Invalid response format or failed response');
       }
     } catch (e) {

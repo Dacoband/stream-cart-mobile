@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../domain/entities/category_entity.dart';
 
 class CategorySection extends StatelessWidget {
@@ -117,9 +118,18 @@ class CategorySection extends StatelessWidget {
 
   Widget _buildCategoryFromEntity(BuildContext context, CategoryEntity category) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to category products
-        print('Category tapped: ${category.categoryName}');
+      onTap: () {    
+        Navigator.of(context).pushNamed(
+          AppRouter.categoryDetail,
+          arguments: {
+            'categoryId': category.categoryId,
+            'categoryName': category.categoryName,
+          },
+        ).then((result) {
+          print('✅ Navigation completed with result: $result');
+        }).catchError((error) {
+          print('❌ Navigation error: $error');
+        });
       },
       child: Container(
         decoration: BoxDecoration(
@@ -132,10 +142,10 @@ class CategorySection extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min, // Thêm để tránh overflow
+          mainAxisSize: MainAxisSize.min, 
           children: [
             Container(
-              width: 32, // Giảm kích thước icon
+              width: 32, 
               height: 32,
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
@@ -207,7 +217,7 @@ class CategorySection extends StatelessWidget {
   Widget _buildCategoryFromMock(BuildContext context, Map<String, dynamic> category) {
     return GestureDetector(
       onTap: () {
-        print('Category tapped: ${category['name']}');
+        // Could navigate to a sample category page for demo
       },
       child: Container(
         decoration: BoxDecoration(
