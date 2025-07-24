@@ -16,34 +16,25 @@ class ProfileDetailPage extends StatelessWidget {
         title: const Text(
           'Thông tin cá nhân',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFFB0F847),
+            fontSize: 16,
+            letterSpacing: 1.2,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: Color(0xFF202328),
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Color(0xFF4CAF50),
-                Color(0xFF66BB6A),
-              ],
-            ),
+            color: Color(0xFF202328),
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFFB0F847)),
         actions: [
           BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
               return Container(
                 margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
                 child: IconButton(
                   onPressed: state is ProfileLoaded
                       ? () async {
@@ -52,16 +43,14 @@ class ProfileDetailPage extends StatelessWidget {
                             AppRouter.editProfile,
                             arguments: state.profile,
                           );
-                          // If profile was updated, refresh the current page
                           if (result != null) {
-                            // Trigger reload
                             context.read<ProfileBloc>().add(LoadUserProfileEvent());
                           }
                         }
                       : null,
                   icon: const Icon(
                     Icons.edit_outlined,
-                    color: Colors.white,
+                    color: Color(0xFFB0F847),
                   ),
                   tooltip: 'Chỉnh sửa thông tin',
                 ),

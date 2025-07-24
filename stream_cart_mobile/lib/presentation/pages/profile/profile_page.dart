@@ -10,6 +10,8 @@ import '../../blocs/auth/auth_state.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_state.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
 
@@ -34,16 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess || authState is AuthAuthenticated) {
       final storageService = getIt<StorageService>();
-      final token = await storageService.getAccessToken();
-      
-      print('=== PROFILE PAGE DEBUG ===');
-      print('Access token exists: ${token != null}');
-      print('Token length: ${token?.length ?? 0}');
-      if (token != null) {
-        print('Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...');
-      }
-      print('========================');
-      
+      final token = await storageService.getAccessToken(); 
       context.read<ProfileBloc>().add(LoadUserProfileEvent());
     }
   }
@@ -72,6 +65,24 @@ class _ProfilePageState extends State<ProfilePage> {
     } else {
       showLoginRequiredDialog(context, message: message);
     }
+  }
+
+  void _onCartPressed() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      Navigator.pushNamed(context, AppRouter.cart);
+    } else {
+      showLoginRequiredDialog(context, message: 'Bạn cần đăng nhập để xem giỏ hàng');
+    }
+  }
+
+  void _onChatPressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tính năng chat đang phát triển'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _logout() {
@@ -126,7 +137,9 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text(
           'Trang cá nhân',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFFB0F847),
+            fontSize: 16,
+            letterSpacing: 1.2,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -135,30 +148,122 @@ class _ProfilePageState extends State<ProfilePage> {
         automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Color(0xFF4CAF50),
-                Color(0xFF66BB6A),
-              ],
-            ),
+            color: Color(0xFF202328),
           ),
         ),
         actions: [
+          // Chat icon
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  onPressed: _onChatPressed,
+                  icon: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Color(0xFFB0F847),
+                    size: 22,
+                  ),
+                ),
+                // Badge for unread messages
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF5722),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '5', // TODO: Get unread message count from API
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Cart icon
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+                int itemCount = 0;
+                if (cartState is CartLoaded) {
+                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                }
+
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: _onCartPressed,
+                      icon: const Icon(
+                        Icons.shopping_cart_outlined,
+                        color: Color(0xFFB0F847),
+                        size: 22,
+                      ),
+                    ),
+                    // Badge for cart items count - only show if itemCount > 0
+                    if (itemCount > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 248, 132, 55),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            itemCount > 99 ? '99+' : '$itemCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+          // Settings icon
           Container(
             margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
             child: IconButton(
               onPressed: () {
                 // TODO: Navigate to settings
               },
               icon: const Icon(
                 Icons.settings_outlined,
-                color: Colors.white,
+                color: Color(0xFFB0F847),
               ),
             ),
           ),
@@ -249,14 +354,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: ElevatedButton(
                             onPressed: _logout,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF2E7D32),
+                              backgroundColor: Color(0xFF202328),
+                              foregroundColor: const Color(0xFFB0F847),
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 side: const BorderSide(
-                                  color: Color(0xFF2E7D32),
+                                  color: Color(0xFFB0F847),
                                   width: 1.5,
                                 ),
                               ),
@@ -266,7 +371,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 Icon(
                                   Icons.logout,
-                                  color: Color(0xFF2E7D32),
+                                  color: Color(0xFFB0F847),
                                 ),
                                 SizedBox(width: 8),
                                 Text(
@@ -274,7 +379,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2E7D32),
+                                    color: Color(0xFFB0F847),
                                   ),
                                 ),
                               ],
@@ -290,8 +395,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               Navigator.pushNamed(context, AppRouter.login);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
-                              foregroundColor: Colors.white,
+                              backgroundColor: Color(0xFF202328),
+                              foregroundColor: Color(0xFFB0F847),
                               elevation: 2,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -303,7 +408,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 Icon(
                                   Icons.login,
-                                  color: Colors.white,
+                                  color: Color(0xFFB0F847),
                                 ),
                                 SizedBox(width: 8),
                                 Text(
@@ -311,7 +416,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                    color: Color(0xFFB0F847),
                                   ),
                                 ),
                               ],
@@ -365,12 +470,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        color: const Color(0xFF202328),
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: const Icon(
                         Icons.person_outline,
-                        color: Color(0xFF4CAF50),
+                        color: Color(0xFFB0F847),
                         size: 30,
                       ),
                     ),
@@ -384,7 +489,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2E7D32),
+                              color: Color(0xFF202328),
                             ),
                           ),
                           SizedBox(height: 4),
@@ -408,8 +513,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       Navigator.pushNamed(context, AppRouter.login);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
-                      foregroundColor: Colors.white,
+                      backgroundColor: Color(0xFF202328),
+                      foregroundColor: Color(0xFFB0F847),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

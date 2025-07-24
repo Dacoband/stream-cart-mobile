@@ -62,6 +62,16 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushNamed(context, AppRouter.livestreamList);
         break;
       case 1: 
+        if (_currentBottomNavIndex == 1) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+          context.read<HomeBloc>().add(RefreshHomeDataEvent());
+        }
         break;
       case 2: 
         Navigator.pushNamed(context, '/profile');
