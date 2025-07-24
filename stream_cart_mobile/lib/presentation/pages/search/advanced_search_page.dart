@@ -130,10 +130,14 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Tìm kiếm nâng cao', style: TextStyle(color: Colors.white)),
+        title: const Text('Tìm kiếm nâng cao', style: TextStyle(color: Color(0xFFB0F847))),
         elevation: 0,
-        backgroundColor: Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF202328),
+        foregroundColor: const Color(0xFFB0F847),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFB0F847)),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Column(
         children: [
@@ -151,17 +155,28 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
                         controller: _searchController,
                         decoration: InputDecoration(
                           hintText: 'Tìm kiếm sản phẩm...',
-                          prefixIcon: const Icon(Icons.search),
+                          hintStyle: const TextStyle(color: Color(0xFFB0F847)),
+                          prefixIcon: const Icon(Icons.search, color: Color(0xFFB0F847)),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   onPressed: _clearSearch,
-                                  icon: const Icon(Icons.clear),
+                                  icon: const Icon(Icons.clear, color: Color(0xFFB0F847)),
                                 )
                               : null,
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFB0F847)),
+                          ),
+                          enabledBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFB0F847)),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFB0F847), width: 2),
                           ),
                         ),
+                        style: const TextStyle(color: Colors.black),
                         onSubmitted: (_) => _performSearch(),
                         onChanged: (value) => setState(() {}),
                       ),
@@ -170,10 +185,10 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
                     // Search Button
                     IconButton(
                       onPressed: _performSearch,
-                      icon: const Icon(Icons.search),
+                      icon: const Icon(Icons.search, color: Color(0xFF202328)),
                       style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFFB0F847),
+                        foregroundColor: const Color(0xFF202328),
                       ),
                     ),
                   ],
@@ -189,26 +204,16 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
                       onPressed: _showFilters,
                       icon: Icon(
                         Icons.tune,
-                        color: _currentFilters.hasActiveFilters 
-                            ? Theme.of(context).primaryColor 
-                            : null,
+                        color: const Color(0xFFB0F847),
                       ),
                       label: Text(
                         _currentFilters.hasActiveFilters 
                             ? 'Bộ lọc (${_currentFilters.activeFiltersCount})'
                             : 'Bộ lọc',
-                        style: TextStyle(
-                          color: _currentFilters.hasActiveFilters 
-                              ? Theme.of(context).primaryColor 
-                              : null,
-                        ),
+                        style: const TextStyle(color: Color(0xFFB0F847)),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: _currentFilters.hasActiveFilters 
-                              ? Theme.of(context).primaryColor 
-                              : Colors.grey,
-                        ),
+                        side: const BorderSide(color: Color(0xFFB0F847)),
                       ),
                     ),
                     
@@ -218,7 +223,10 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
                     if (_currentFilters.hasActiveFilters)
                       TextButton(
                         onPressed: _clearFilters,
-                        child: const Text('Xóa bộ lọc'),
+                        child: const Text(
+                          'Xóa bộ lọc',
+                          style: TextStyle(color: Color(0xFFB0F847)),
+                        ),
                       ),
                   ],
                 ),
@@ -276,7 +284,9 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
   Widget _buildSearchContent(AdvancedSearchState state) {
     if (state is SearchLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          color: Color(0xFFB0F847),
+        ),
       );
     }
 
@@ -321,10 +331,18 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 80,
-            color: Colors.grey.shade400,
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB0F847),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.search_off,
+              size: 60,
+              color: Color(0xFF202328),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -360,6 +378,10 @@ class _AdvancedSearchPageState extends State<AdvancedSearchPage> {
           ],
           const SizedBox(height: 16),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFB0F847),
+              foregroundColor: const Color(0xFF202328),
+            ),
             onPressed: () {
               if (_currentFilters.hasActiveFilters) {
                 _clearFilters();
