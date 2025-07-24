@@ -163,7 +163,7 @@ class _HomePageState extends State<HomePage> {
       },
       child: Container(
         width: 80,
-        height: 60, 
+        height: 80, 
         padding: const EdgeInsets.all(6), 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -172,11 +172,11 @@ class _HomePageState extends State<HomePage> {
           children: [
             // Category icon
             Container(
-              width: 32, 
-              height: 32,
+              width: 40, 
+              height: 40,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(13), 
+                borderRadius: BorderRadius.circular(16), 
               ),
               child: Center(
                 child: iconUrl != null && iconUrl.isNotEmpty
@@ -752,7 +752,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
                         child: SizedBox(
-                          height: 80,
+                          height: 100,
                           child: _buildCategoryList(state),
                         ),
                       ),

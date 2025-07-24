@@ -11,7 +11,7 @@ import '../../widgets/product_detail/product_detail_skeleton.dart';
 import '../../widgets/product_detail/add_to_cart_button.dart';
 import '../../../domain/entities/product_detail_entity.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   final String productId;
 
   const ProductDetailPage({
@@ -20,15 +20,28 @@ class ProductDetailPage extends StatelessWidget {
   });
 
   @override
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
+}
+
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  bool _isDescriptionExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<ProductDetailBloc>()
-        ..add(LoadProductDetailEvent(productId)),
+        ..add(LoadProductDetailEvent(widget.productId)),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Chi tiết sản phẩm'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
+          title: const Text(
+            'Chi tiết sản phẩm',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: Color(0xFF202328),
+          foregroundColor: Color(0xFFB0F847),
           elevation: 0,
           actions: [
             IconButton(
@@ -147,22 +160,40 @@ class ProductDetailPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'Có lỗi xảy ra',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF202328),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
                         context.read<ProductDetailBloc>().add(
-                          LoadProductDetailEvent(productId),
+                          LoadProductDetailEvent(widget.productId),
                         );
                       },
-                      child: const Text('Thử lại'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF202328),
+                        foregroundColor: Color(0xFFB0F847),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: const Text(
+                        'Thử lại',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -207,26 +238,91 @@ class ProductDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Product Name
-                Text(
-                  product.productName,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                // Product Name Container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    product.productName,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF202328),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 
-                // Price Section
-                _buildPriceSection(product),
-                const SizedBox(height: 16),
+                // Price Section Container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _buildPriceSection(product),
+                ),
+                const SizedBox(height: 12),
                 
-                // Product Stats
-                _buildProductStats(product),
-                const SizedBox(height: 16),
+                // Product Stats Container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _buildProductStats(product),
+                ),
+                const SizedBox(height: 12),
                 
-                // Description
-                _buildDescription(product),
+                // Description Container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _buildDescription(product),
+                ),
                 const SizedBox(height: 16),
                 
                 // Variants
@@ -290,100 +386,157 @@ class ProductDetailPage extends StatelessWidget {
   }
 
   Widget _buildPriceSection(ProductDetailEntity product) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${product.finalPrice.toStringAsFixed(0)} ₫',
-          style: const TextStyle(
-            fontSize: 28,
+        const Text(
+          'Giá sản phẩm',
+          style: TextStyle(
+            fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.red,
+            color: Color(0xFF202328),
           ),
         ),
-        const SizedBox(width: 8),
-        if (product.discountPrice > 0) ...[
-          Text(
-            '${product.basePrice.toStringAsFixed(0)} ₫',
-            style: const TextStyle(
-              fontSize: 16,
-              decoration: TextDecoration.lineThrough,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              '-${((product.basePrice - product.finalPrice) / product.basePrice * 100).toStringAsFixed(0)}%',
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              '${product.finalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 115, 175, 24),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            if (product.discountPrice > 0) ...[
+              Text(
+                '${product.basePrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+                style: const TextStyle(
+                  fontSize: 14,
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '-${((product.basePrice - product.finalPrice) / product.basePrice * 100).toStringAsFixed(0)}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildProductStats(ProductDetailEntity product) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStatItem('Đã bán', '${product.quantitySold}'),
-        const SizedBox(width: 16),
-        _buildStatItem('Kho', '${product.stockQuantity}'),
-        const SizedBox(width: 16),
-        _buildStatItem('Cân nặng', product.weight),
+        const Text(
+          'Thông tin bán hàng',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF202328),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Flexible(child: _buildStatItem('Đã bán', '${product.quantitySold}')),
+            const SizedBox(width: 14),
+            Flexible(child: _buildStatItem('Kho', '${product.stockQuantity}')),
+            const SizedBox(width: 14),
+            Flexible(child: _buildStatItem('Cân nặng', product.weight)),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildStatItem(String label, String value) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$label: ',
+          '$label:',
           style: const TextStyle(
             color: Colors.grey,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
+        const SizedBox(height: 2),
         Text(
           value,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ],
     );
   }
 
   Widget _buildDescription(ProductDetailEntity product) {
+    final description = product.description.isNotEmpty ? product.description : 'Không có mô tả';
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Mô tả sản phẩm',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
+            color: Color(0xFF202328),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
-          product.description.isNotEmpty ? product.description : 'Không có mô tả',
+          description,
+          maxLines: _isDescriptionExpanded ? null : 4,
+          overflow: _isDescriptionExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             color: Colors.black87,
             height: 1.5,
           ),
         ),
+        if (description.length > 200) // Hiển thị nút chỉ khi mô tả dài
+          const SizedBox(height: 12),
+        if (description.length > 200)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isDescriptionExpanded = !_isDescriptionExpanded;
+              });
+            },
+            child: Text(
+              _isDescriptionExpanded ? 'Thu gọn' : 'Xem thêm',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFB0F847),
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+                decorationColor: Color(0xFFB0F847),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -398,8 +551,9 @@ class ProductDetailPage extends StatelessWidget {
             const Text(
               'Thông tin shop',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF202328),
               ),
             ),
             const SizedBox(height: 12),
@@ -422,14 +576,14 @@ class ProductDetailPage extends StatelessWidget {
                         product.shopName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                       ),
                       Text(
                         '${product.shopTotalProduct} sản phẩm',
                         style: const TextStyle(
                           color: Colors.grey,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -458,14 +612,14 @@ class ProductDetailPage extends StatelessWidget {
           value,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 14,
           ),
         ),
         Text(
           label,
           style: const TextStyle(
             color: Colors.grey,
-            fontSize: 12,
+            fontSize: 11,
           ),
         ),
       ],
@@ -482,8 +636,9 @@ class ProductDetailPage extends StatelessWidget {
             const Text(
               'Thông số kỹ thuật',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF202328),
               ),
             ),
             const SizedBox(height: 12),
@@ -509,7 +664,7 @@ class ProductDetailPage extends StatelessWidget {
               label,
               style: const TextStyle(
                 color: Colors.grey,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           ),
@@ -517,7 +672,7 @@ class ProductDetailPage extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
