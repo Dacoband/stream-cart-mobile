@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/product_entity.dart';
 import '../../../core/routing/app_router.dart';
-import '../../blocs/home/home_bloc.dart';
-import '../../blocs/home/home_state.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<ProductEntity>? products;
@@ -89,10 +86,6 @@ class ProductGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use productImages from parameter, fallback to empty map
     final Map<String, String> imageMap = productImages ?? {};
-    
-    // Debug: Print productImages map
-    print('🖼️ ProductGrid - productImages map: ${imageMap.keys.toList()}');
-    print('🖼️ ProductGrid - productImages count: ${imageMap.length}');
     if (products?.isNotEmpty == true) {
       print('🖼️ ProductGrid - products count: ${products!.length}');
       for (var product in products!) {
@@ -106,18 +99,17 @@ class ProductGrid extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Calculate responsive grid based on screen width
           final screenWidth = constraints.maxWidth;
-          final crossAxisCount = screenWidth > 600 ? 3 : 2; // 3 columns on tablets, 2 on phones
+          final crossAxisCount = screenWidth > 600 ? 3 : 2; 
           final itemWidth = (screenWidth - (12 * (crossAxisCount - 1))) / crossAxisCount;
-          final aspectRatio = itemWidth / (itemWidth * 1.35); // Dynamic aspect ratio
+          final aspectRatio = itemWidth / (itemWidth * 1.35); 
           
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              childAspectRatio: aspectRatio.clamp(0.65, 0.8), // Clamp aspect ratio for safety
+              childAspectRatio: aspectRatio.clamp(0.65, 0.8), 
               crossAxisSpacing: 12,
               mainAxisSpacing: 16,
             ),
@@ -127,7 +119,6 @@ class ProductGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               if (products?.isNotEmpty == true) {
                 final product = products![index];
-                // Lấy URL hình ảnh từ productImages map
                 final imageUrl = imageMap[product.id];
                 return _buildProductFromEntity(context, product, imageUrl);
               } else {
@@ -142,12 +133,8 @@ class ProductGrid extends StatelessWidget {
   }
 
   Widget _buildProductFromEntity(BuildContext context, ProductEntity product, String? imageUrl) {
-    // Debug: Print image URL information
-    print('🖼️ Product ${product.productName} - ID: ${product.id}, imageUrl: $imageUrl');
-    
     return GestureDetector(
       onTap: () {
-        print('Product tapped: ${product.productName} - ID: ${product.id}');
         Navigator.pushNamed(
           context,
           AppRouter.productDetails,
@@ -258,22 +245,21 @@ class ProductGrid extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8), // Reduced padding
+                padding: const EdgeInsets.all(8), 
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Product Name
                     Flexible(
                       child: Text(
                         product.productName,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 13, // Slightly smaller font
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
-                          height: 1.2, // Reduced line height
+                          height: 1.2, 
                         ),
                       ),
                     ),
@@ -288,7 +274,7 @@ class ProductGrid extends StatelessWidget {
                                   ? product.discountPrice 
                                   : product.basePrice),
                               style: const TextStyle(
-                                fontSize: 13, // Slightly smaller font
+                                fontSize: 13, 
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF4CAF50),
                               ),
@@ -301,7 +287,7 @@ class ProductGrid extends StatelessWidget {
                               child: Text(
                                 _formatPrice(product.basePrice),
                                 style: TextStyle(
-                                  fontSize: 11, // Smaller font for crossed price
+                                  fontSize: 11,
                                   color: Colors.grey.shade600,
                                   decoration: TextDecoration.lineThrough,
                                 ),
@@ -313,12 +299,11 @@ class ProductGrid extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    // Stock quantity
                     Flexible(
                       child: Text(
                         'Còn lại: ${product.stockQuantity}',
                         style: TextStyle(
-                          fontSize: 11, // Smaller font for stock
+                          fontSize: 11,
                           color: product.stockQuantity > 10 
                               ? Colors.green 
                               : product.stockQuantity > 0 
@@ -414,7 +399,7 @@ class ProductGrid extends StatelessWidget {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8), // Reduced padding
+                padding: const EdgeInsets.all(8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -426,10 +411,10 @@ class ProductGrid extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 13, // Slightly smaller font
+                          fontSize: 13, 
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
-                          height: 1.2, // Reduced line height
+                          height: 1.2,
                         ),
                       ),
                     ),
@@ -442,7 +427,7 @@ class ProductGrid extends StatelessWidget {
                             child: Text(
                               _formatPrice(product['price'].toDouble()),
                               style: const TextStyle(
-                                fontSize: 13, // Slightly smaller font
+                                fontSize: 13, 
                                 fontWeight: FontWeight.bold,
                                 color: Color.fromARGB(255, 245, 104, 38),
                               ),
@@ -455,7 +440,7 @@ class ProductGrid extends StatelessWidget {
                               child: Text(
                                 _formatPrice(product['originalPrice'].toDouble()),
                                 style: TextStyle(
-                                  fontSize: 11, // Smaller font for crossed price
+                                  fontSize: 11, 
                                   color: Colors.grey.shade600,
                                   decoration: TextDecoration.lineThrough,
                                 ),
@@ -472,7 +457,7 @@ class ProductGrid extends StatelessWidget {
                       child: Text(
                         'Còn lại: ${product['stockQuantity']}',
                         style: TextStyle(
-                          fontSize: 11, // Smaller font for stock
+                          fontSize: 11, 
                           color: product['stockQuantity'] > 10 
                               ? Colors.green 
                               : product['stockQuantity'] > 0 
@@ -494,12 +479,9 @@ class ProductGrid extends StatelessWidget {
   }
 
   String _formatPrice(double price) {
-    if (price >= 1000000) {
-      return '${(price / 1000000).toStringAsFixed(1).replaceAll('.0', '')}M₫';
-    } else if (price >= 1000) {
-      return '${(price / 1000).toStringAsFixed(1).replaceAll('.0', '')}K₫';
-    } else {
-      return '${price.toInt()}₫';
-    }
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String priceStr = price.toInt().toString();
+    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+    return '${priceStr}₫';
   }
 }
