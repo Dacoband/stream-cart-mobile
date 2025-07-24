@@ -8,13 +8,14 @@ import '../../blocs/home/home_event.dart';
 import '../../blocs/home/home_state.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/home/flash_sale_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
-import '../../widgets/common/cart_icon_badge.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -86,6 +87,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _onNotificationPressed() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tính năng thông báo đang phát triển'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _onSearchTapped() {
     Navigator.pushNamed(context, AppRouter.search);
   }
@@ -95,7 +105,6 @@ class _HomePageState extends State<HomePage> {
     String? iconUrl;
 
     if (category is Map<String, dynamic>) {
-      // Handle Map data (fallback case)
       categoryName = category['categoryName'] ??  
                     category['name'] ?? 
                     category['title'] ?? 
@@ -103,7 +112,6 @@ class _HomePageState extends State<HomePage> {
                     category['label'] ??
                     'Unknown';
       iconUrl = category['iconURL'] ?? category['iconUrl'];
-      print('Category from Map: $category -> name: $categoryName');
     } else if (category is String) {
       // Handle simple string category
       categoryName = category;
@@ -236,11 +244,11 @@ class _HomePageState extends State<HomePage> {
       case 'thời trang nữ':
       case 'fashion':
         return Icons.checkroom;
-      case 'thiết bị điện tử': // Match API data exactly
+      case 'thiết bị điện tử': 
       case 'thiết bị điện':
       case 'electronics':
         return Icons.electrical_services;
-      case 'laptop': // For subcategory
+      case 'laptop':
         return Icons.laptop;
       case 'thể thao':
       case 'sports':
@@ -272,10 +280,61 @@ class _HomePageState extends State<HomePage> {
       width: 48, // Fixed width to prevent squashing
       height: 48, // Fixed height to maintain aspect ratio
       child: Container(
-        child: CartIconBadge(
-          onTap: _onCartPressed,
-          iconColor: Colors.white,
-          badgeColor: const Color(0xFF2E7D32),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onCartPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+                int itemCount = 0;
+                if (cartState is CartLoaded) {
+                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                }
+
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                      size: 22, // Giống như các icon khác
+                    ),
+                    // Badge for cart items count - only show if itemCount > 0
+                    if (itemCount > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32), // Green color for cart
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            itemCount > 99 ? '99+' : '$itemCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -283,8 +342,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildChatIcon() {
     return SizedBox(
-      width: 48, // Fixed width to prevent squashing
-      height: 48, // Fixed height to maintain aspect ratio
+      width: 48, 
+      height: 48, 
       child: Container(
         child: Material(
           color: Colors.transparent,
@@ -297,7 +356,7 @@ class _HomePageState extends State<HomePage> {
                 const Icon(
                   Icons.chat_bubble_outline,
                   color: Colors.white,
-                  size: 22, // Slightly smaller to fit better
+                  size: 22, 
                 ),
                 // Badge for unread messages
                 Positioned(
@@ -306,7 +365,7 @@ class _HomePageState extends State<HomePage> {
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF5722), // Orange color for notifications
+                      color: const Color(0xFFFF5722), 
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: Colors.white,
@@ -319,6 +378,61 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: const Text(
                       '5', // TODO: Get unread message count from API
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationIcon() {
+    return SizedBox(
+      width: 48, 
+      height: 48, 
+      child: Container(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onNotificationPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 22, 
+                ),
+                // Badge for unread notifications
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF5722),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1,
+                      ),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: const Text(
+                      '3', // TODO: Get unread notification count from API
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -361,27 +475,21 @@ class _HomePageState extends State<HomePage> {
   Widget _buildFullBanner() {
     final List<Map<String, String>> banners = [
       {
-        'title': 'TUỔI TRẺ KHỎE ĐẸP',
-        'subtitle': 'CÙNG STREAM CARD',
         'image': 'assets/images/banner1.jpg',
         'buttonText': 'ĐẶT THÔNG BÁO NGAY!',
       },
       {
-        'title': 'XEM LIVESTREAM',
-        'subtitle': 'SẴN SẮP SẴN',
         'image': 'assets/images/banner2.jpg',
         'buttonText': 'JOIN NOW',
       },
       {
-        'title': 'MEGA LIVE BLACK FRIDAY',
-        'subtitle': 'STREAMCARD',
         'image': 'assets/images/banner3.jpg',
         'buttonText': 'KHÁM PHÁ NGAY',
       },
     ];
 
     return Container(
-      height: 120,
+      height: 160, 
       margin: const EdgeInsets.symmetric(horizontal: 2),
       child: PageView.builder(
         itemCount: banners.length,
@@ -414,71 +522,36 @@ class _HomePageState extends State<HomePage> {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                       colors: [
-                        Colors.black.withOpacity(0.2),
+                        Colors.black.withOpacity(0.3),
                         Colors.transparent,
                       ],
                     ),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        banner['title']!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black45,
-                              offset: Offset(1, 1),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        banner['subtitle']!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black45,
-                              offset: Offset(1, 1),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          banner['buttonText']!,
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
+                        ],
+                      ),
+                      child: Text(
+                        banner['buttonText']!,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -510,15 +583,88 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildCompactNotificationIcon() {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Container(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onNotificationPressed,
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF5722),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCompactCartIcon() {
     return SizedBox(
       width: 36,
       height: 36,
       child: Container(
-        child: CartIconBadge(
-          onTap: _onCartPressed,
-          iconColor: Colors.white,
-          badgeColor: const Color(0xFF2E7D32),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onCartPressed,
+            borderRadius: BorderRadius.circular(12),
+            child: BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+                int itemCount = 0;
+                if (cartState is CartLoaded) {
+                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                }
+
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    // Small badge for compact view - only show if itemCount > 0
+                    if (itemCount > 0)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -579,6 +725,8 @@ class _HomePageState extends State<HomePage> {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                _isScrolled ? _buildCompactNotificationIcon() : _buildNotificationIcon(),
+                                const SizedBox(width: 8),
                                 _isScrolled ? _buildCompactChatIcon() : _buildChatIcon(),
                                 const SizedBox(width: 8),
                                 _isScrolled ? _buildCompactCartIcon() : _buildCartIcon(),
@@ -624,18 +772,18 @@ class _HomePageState extends State<HomePage> {
                             bottomRight: Radius.circular(24),
                           ),
                         ),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20), // Tăng padding bottom để tránh overflow
                         child: Column(
                           children: [
                             // Banner section
                             SizedBox(
-                              height: 120,
+                              height: 160, // Tăng từ 120 lên 160 để banner to hơn
                               child: _buildFullBanner(),
                             ),
                             const SizedBox(height: 16),
                             // Categories section
                             SizedBox(
-                              height: 80,
+                              height: 80, // Giữ nguyên kích thước categories
                               child: _buildCategoryList(state),
                             ),
                           ],
