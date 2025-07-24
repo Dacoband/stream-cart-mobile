@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(
                               _getCategoryIcon(categoryName),
-                              color: const Color(0xFF4CAF50),
+                              color: const Color(0xFFB0F847),
                               size: 30,
                             );
                           },
@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                             if (loadingProgress == null) return child;
                             return Icon(
                               _getCategoryIcon(categoryName),
-                              color: const Color(0xFF4CAF50),
+                              color: const Color(0xFFB0F847),
                               size: 30, 
                             );
                           },
@@ -206,7 +206,7 @@ class _HomePageState extends State<HomePage> {
                       )
                     : Icon(
                         _getCategoryIcon(categoryName),
-                        color: const Color(0xFF4CAF50),
+                        color: const Color(0xFFB0F847),
                         size: 30,
                       ),
               ),
@@ -217,7 +217,7 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 categoryName,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black, // Changed to black for white background
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -277,8 +277,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCartIcon() {
     return SizedBox(
-      width: 48, // Fixed width to prevent squashing
-      height: 48, // Fixed height to maintain aspect ratio
+      width: 48, 
+      height: 48, 
       child: Container(
         child: Material(
           color: Colors.transparent,
@@ -297,8 +297,8 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     const Icon(
                       Icons.shopping_cart_outlined,
-                      color: Colors.white,
-                      size: 22, // Giống như các icon khác
+                      color: Color(0xFFB0F847),
+                      size: 22, 
                     ),
                     // Badge for cart items count - only show if itemCount > 0
                     if (itemCount > 0)
@@ -308,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2E7D32), // Green color for cart
+                            color: const Color.fromARGB(255, 248, 132, 55), 
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: Colors.white,
@@ -355,7 +355,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const Icon(
                   Icons.chat_bubble_outline,
-                  color: Colors.white,
+                  color: Color(0xFFB0F847),
                   size: 22, 
                 ),
                 // Badge for unread messages
@@ -410,8 +410,8 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const Icon(
                   Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 22, 
+                  color: Color(0xFFB0F847),
+                  size: 22,
                 ),
                 // Badge for unread notifications
                 Positioned(
@@ -608,7 +608,7 @@ class _HomePageState extends State<HomePage> {
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF5722),
+                      color: const Color(0xFFB0F847),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -646,7 +646,6 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.white,
                       size: 18,
                     ),
-                    // Small badge for compact view - only show if itemCount > 0
                     if (itemCount > 0)
                       Positioned(
                         right: 4,
@@ -655,7 +654,7 @@ class _HomePageState extends State<HomePage> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2E7D32),
+                            color: const Color(0xFFB0F847),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -675,32 +674,24 @@ class _HomePageState extends State<HomePage> {
     return BlocProvider<HomeBloc>(
       create: (context) => getIt<HomeBloc>()..add(LoadHomeDataEvent()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5), // Light background
+        backgroundColor: const Color(0xFFF5F5F5), 
         body: SafeArea(
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Search bar - always visible, becomes pinned when scrolled
                   SliverAppBar(
                     floating: true,
                     pinned: _isScrolled,
                     snap: !_isScrolled,
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: const Color(0xFF202328),
                     elevation: _isScrolled ? 2 : 0,
                     toolbarHeight: 60,
                     automaticallyImplyLeading: false,
                     flexibleSpace: Container(
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFF4CAF50),
-                            Color(0xFF66BB6A),
-                          ],
-                        ),
+                        color: const Color(0xFF202328), 
                         borderRadius: _isScrolled 
                           ? null 
                           : const BorderRadius.only(
@@ -737,56 +728,32 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-
-                  // Banner and Categories section - hidden when scrolled
                   if (!_isScrolled) ...[
-                    // Small spacing to create seamless effect
                     SliverToBoxAdapter(
                       child: Container(
-                        height: 2,
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Color(0xFF4CAF50),
-                              Color(0xFF66BB6A),
-                            ],
-                          ),
+                          color: Colors.white, 
+                        ),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        child: SizedBox(
+                          height: 160,
+                          child: _buildFullBanner(),
                         ),
                       ),
                     ),
                     SliverToBoxAdapter(
                       child: Container(
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Color(0xFF4CAF50),
-                              Color(0xFF66BB6A),
-                            ],
-                          ),
+                          color: Colors.white, 
                           borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(24),
                             bottomRight: Radius.circular(24),
                           ),
                         ),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20), // Tăng padding bottom để tránh overflow
-                        child: Column(
-                          children: [
-                            // Banner section
-                            SizedBox(
-                              height: 160, // Tăng từ 120 lên 160 để banner to hơn
-                              child: _buildFullBanner(),
-                            ),
-                            const SizedBox(height: 16),
-                            // Categories section
-                            SizedBox(
-                              height: 80, // Giữ nguyên kích thước categories
-                              child: _buildCategoryList(state),
-                            ),
-                          ],
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                        child: SizedBox(
+                          height: 80,
+                          child: _buildCategoryList(state),
                         ),
                       ),
                     ),
@@ -810,7 +777,7 @@ class _HomePageState extends State<HomePage> {
                             Icon(
                               Icons.error_outline,
                               size: 64,
-                              color: const Color(0xFF2E7D32),
+                              color: const Color(0xFFB0F847),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -818,7 +785,7 @@ class _HomePageState extends State<HomePage> {
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF2E7D32),
+                                color: Color(0xFFB0F847),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -835,7 +802,7 @@ class _HomePageState extends State<HomePage> {
                                 context.read<HomeBloc>().add(RefreshHomeDataEvent());
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF4CAF50),
+                                backgroundColor: const Color(0xFFB0F847),
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -856,7 +823,7 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       ),
-                    ),                  // Success state - show content
+                    ),
                   if (state is HomeLoaded) ...[
                     // Livestream section
                     const SliverToBoxAdapter(
@@ -875,13 +842,23 @@ class _HomePageState extends State<HomePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Đề xuất cho bạn',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2E7D32),
-                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.recommend,
+                                  color: Color.fromARGB(255, 134, 221, 4),
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Đề xuất cho bạn',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF202328),
+                                  ),
+                                ),
+                              ],
                             ),
                             TextButton(
                               onPressed: () {
@@ -890,7 +867,7 @@ class _HomePageState extends State<HomePage> {
                               child: const Text(
                                 'Xem tất cả',
                                 style: TextStyle(
-                                  color: Color(0xFF4CAF50),
+                                  color: Color.fromARGB(255, 147, 241, 6),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -904,11 +881,6 @@ class _HomePageState extends State<HomePage> {
                     SliverToBoxAdapter(
                       child: Builder(
                         builder: (context) {
-                          // Debug: Print productImages being passed to ProductGrid
-                          print('🏠 HomePage - Passing productImages to ProductGrid: ${state.productImages.keys.toList()}');
-                          print('🏠 HomePage - productImages count: ${state.productImages.length}');
-                          print('🏠 HomePage - products count: ${state.products.length}');
-                          
                           return ProductGrid(
                             key: ValueKey('product_grid_${state.productImages.length}'),
                             products: state.products,

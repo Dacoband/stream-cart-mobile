@@ -52,10 +52,10 @@ class _SearchPageState extends State<SearchPage> {
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF4CAF50),
+          backgroundColor: const Color(0xFF202328),
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFFB0F847)),
             onPressed: () => Navigator.pop(context),
           ),
           title: BlocBuilder<SearchBloc, SearchState>(
@@ -78,7 +78,7 @@ class _SearchPageState extends State<SearchPage> {
           actions: [
             // Advanced Search Button
             IconButton(
-              icon: const Icon(Icons.tune, color: Colors.white),
+              icon: const Icon(Icons.tune, color: Color(0xFFB0F847)),
               onPressed: () {
                 Navigator.pushNamed(
                   context,
@@ -92,7 +92,7 @@ class _SearchPageState extends State<SearchPage> {
               builder: (context, state) {
                 if (_searchController.text.isNotEmpty) {
                   return IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.white),
+                    icon: const Icon(Icons.clear, color: Color(0xFFB0F847)),
                     onPressed: () {
                       _searchController.clear();
                       context.read<SearchBloc>().add(const ClearSearchEvent());

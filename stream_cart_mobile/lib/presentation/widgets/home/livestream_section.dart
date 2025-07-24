@@ -57,34 +57,47 @@ class LiveStreamSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
+                  const Icon(
+                    Icons.live_tv,
+                    size: 20,
+                    color: Color.fromARGB(255, 68, 47, 44),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   const Text(
                     'Đang Live',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color.fromARGB(255, 68, 47, 44),
                     ),
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {
-                  // TODO: Navigate to all livestreams
-                },
-                child: const Text(
-                  'Xem tất cả',
-                  style: TextStyle(
-                    color: Colors.deepPurple,
-                    fontWeight: FontWeight.w500,
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF202328),
+                  border: Border.all(
+                    color: const Color(0xFFB0F847),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    // TODO: Navigate to all livestreams
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                  ),
+                  child: const Text(
+                    'Xem thêm',
+                    style: TextStyle(
+                      color: Color(0xFFB0F847),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

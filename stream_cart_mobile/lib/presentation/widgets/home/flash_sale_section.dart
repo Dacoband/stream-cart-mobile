@@ -14,28 +14,15 @@ class FlashSaleSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
-        print('🔥 FlashSaleSection build - state: ${state.runtimeType}');
-        
         if (state is HomeLoaded) {
-          print('🔥 HomeLoaded - isLoadingFlashSales: ${state.isLoadingFlashSales}, flashSales.length: ${state.flashSales.length}');
-          
           if (state.isLoadingFlashSales) {
-            print('🔥 Showing loading section...');
             return _buildLoadingSection();
           }
-
           if (state.flashSales.isNotEmpty) {
-            print('🔥 Showing flash sale section with ${state.flashSales.length} items');
             return _buildFlashSaleSection(context, state);
           }
-
-          // Nếu đã load xong nhưng không có data, hiển thị debug section
-          // Chỉ hiển thị debug khi chắc chắn đã load xong và không có data
-          print('🔥 Flash sales empty after loading - showing debug button');
           return _buildDebugSection(context);
         }
-
-        print('🔥 State is not HomeLoaded - hiding section');
         return const SizedBox.shrink();
       },
     );
@@ -161,7 +148,6 @@ class FlashSaleSection extends StatelessWidget {
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () {
-              print('🔥 Manual refresh flash sales button pressed');
               context.read<HomeBloc>().add(const RefreshFlashSalesEvent());
             },
             child: const Text('Refresh Flash Sales'),
@@ -196,35 +182,57 @@ class FlashSaleSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(
-            Icons.flash_on,
-            color: Colors.red[600],
-            size: 20,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'Flash Sale',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.red[600],
+          Expanded(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.flash_on,
+                  color: Colors.red[600],
+                  size: 20,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Flash Sale',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red[600],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (earliestEndTime != null) 
+                  Flexible(child: _buildCountdownTimer(earliestEndTime)),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          if (earliestEndTime != null) 
-            Flexible(child: _buildCountdownTimer(earliestEndTime)),
-          const Spacer(),
-          GestureDetector(
-            onTap: () {
-              // TODO: Navigate to flash sale page
-            },
-            child: Text(
-              'Xem tất cả',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF202328),
+              border: Border.all(
+                color: const Color(0xFF202328),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TextButton(
+              onPressed: () {
+                // TODO: Navigate to flash sale page
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 3,
+                ),
+              ),
+              child: const Text(
+                'Xem thêm',
+                style: TextStyle(
+                  color: Color(0xFFB0F847),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),

@@ -56,11 +56,7 @@ class SearchResults extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color.fromARGB(255, 30, 229, 80), const Color.fromARGB(255, 25, 210, 56)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFF202328),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -72,15 +68,15 @@ class SearchResults extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.search, color: Colors.white, size: 22),
+          Icon(Icons.search, color: Color(0xFFB0F847), size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Tìm thấy $totalResults kết quả cho "$query"',
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
               ),
             ),
           ),
@@ -95,14 +91,14 @@ class SearchResults extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.category, color: const Color.fromARGB(255, 42, 196, 22), size: 20),
+            Icon(Icons.category, color: Color(0xFFB0F847), size: 20),
             const SizedBox(width: 8),
             Text(
               'Danh mục (${categories.length})',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color.fromARGB(255, 22, 207, 22),
+                color: const Color(0xFFB0F847),
               ),
             ),
           ],
@@ -196,7 +192,7 @@ class SearchResults extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.shopping_bag, color: const Color(0xFF4CAF50), size: 20),
+            Icon(Icons.shopping_bag, color: const Color(0xFFB0F847), size: 20),
             const SizedBox(width: 8),
             Text(
               'Sản phẩm (${products.length})',
@@ -252,18 +248,18 @@ class SearchResults extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color.fromARGB(255, 238, 237, 237),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.08),
+              color: Color(0xFFB0F847).withOpacity(0.08),
               spreadRadius: 1,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
-            color: const Color.fromARGB(255, 30, 229, 106).withOpacity(0.1),
+            color: const Color.fromARGB(255, 197, 197, 197).withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -300,7 +296,7 @@ class SearchResults extends StatelessWidget {
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                color: Colors.blue.shade600,
+                                color: Color(0xFFB0F847),
                               ),
                             );
                           },
@@ -320,7 +316,7 @@ class SearchResults extends StatelessWidget {
                         child: Icon(
                           Icons.shopping_bag,
                           size: 40,
-                          color: Colors.blue.shade300,
+                          color: Color(0xFFB0F847).withOpacity(0.5),
                         ),
                       ),
                     // Sale badge
@@ -384,7 +380,7 @@ class SearchResults extends StatelessWidget {
                             style: TextStyle(
                               decoration: TextDecoration.lineThrough,
                               color: Colors.grey.shade500,
-                              fontSize: 11,
+                              fontSize: 14,
                             ),
                           ),
                           Text(
@@ -392,16 +388,16 @@ class SearchResults extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.red.shade600,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 16,
                             ),
                           ),
                         ] else ...[
                           Text(
                             '${product.finalPrice.toStringAsFixed(0)}₫',
                             style: TextStyle(
-                              color: const Color.fromARGB(255, 30, 229, 106),
+                              color: Color.fromARGB(255, 136, 201, 40),
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 16,
                             ),
                           ),
                         ],
