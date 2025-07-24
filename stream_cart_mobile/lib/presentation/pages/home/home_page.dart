@@ -27,10 +27,21 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   int _currentBottomNavIndex = 1; 
+  bool _isScrolled = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final isScrolled = _scrollController.hasClients && _scrollController.offset > 50;
+    if (isScrolled != _isScrolled) {
+      setState(() {
+        _isScrolled = isScrolled;
+      });
+    }
   }
 
   @override
@@ -46,12 +57,12 @@ class _HomePageState extends State<HomePage> {
     });
 
     switch (index) {
-      case 0: // Live
+      case 0: 
         Navigator.pushNamed(context, AppRouter.livestreamList);
         break;
       case 1: 
         break;
-      case 2: // Profile
+      case 2: 
         Navigator.pushNamed(context, '/profile');
         break;
     }
@@ -67,8 +78,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onChatPressed() {
-    // TODO: Navigate to chat page when API is ready
-    print('Chat button pressed - API integration pending');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Tính năng chat đang phát triển'),
@@ -82,11 +91,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategoryItem(dynamic category) {
-    // Safe access to category properties
     String categoryName;
     String? iconUrl;
-    
-    // Handle different category data structures
+
     if (category is Map<String, dynamic>) {
       // Handle Map data (fallback case)
       categoryName = category['categoryName'] ??  
@@ -102,12 +109,9 @@ class _HomePageState extends State<HomePage> {
       categoryName = category;
       iconUrl = null;
     } else {
-      // Handle entity objects (this should be the main case for API data)
       try {
-        // Try to access properties that should exist on CategoryEntity
         categoryName = category.categoryName ?? category.toString();
         iconUrl = category.iconURL;
-        print('Category from Entity: ${category.runtimeType} -> name: $categoryName, iconURL: $iconUrl');
       } catch (e) {
         categoryName = category?.toString() ?? 'Unknown';
         iconUrl = null;
@@ -117,10 +121,7 @@ class _HomePageState extends State<HomePage> {
     
     return GestureDetector(
       onTap: () {
-        print('Tapped on category: $categoryName');
-        
         // Navigate to category detail page
-        // We need categoryId from the category object
         if (category != null) {
           String? categoryId;
           
@@ -128,7 +129,6 @@ class _HomePageState extends State<HomePage> {
           if (category is Map<String, dynamic>) {
             categoryId = category['categoryId'] ?? category['id'];
           } else {
-            // For entity objects
             try {
               categoryId = category.categoryId;
             } catch (e) {
@@ -137,7 +137,6 @@ class _HomePageState extends State<HomePage> {
           }
           
           if (categoryId != null && categoryId.isNotEmpty) {
-            print('🚀 Navigating to category detail with ID: $categoryId');
             Navigator.of(context).pushNamed(
               AppRouter.categoryDetail,
               arguments: {
@@ -155,70 +154,71 @@ class _HomePageState extends State<HomePage> {
         }
       },
       child: Container(
-        width: 80, // Increased width for better display in larger header
-        padding: const EdgeInsets.all(6), // Increased padding
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10), // Slightly more rounded
-          // Removed border
-        ),
+        width: 80,
+        height: 60, 
+        padding: const EdgeInsets.all(6), 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min, // Add this to prevent overflow
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center, 
           children: [
             // Category icon
             Container(
-              width: 32, // Larger icon container for bigger header
+              width: 32, 
               height: 32,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(32), // Make it fully rounded (circular)
+                borderRadius: BorderRadius.circular(13), 
               ),
-              child: iconUrl != null && iconUrl.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(32),
-                      child: Image.network(
-                        iconUrl,
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback to default icon if image fails to load
-                          return Icon(
-                            _getCategoryIcon(categoryName),
-                            color: const Color(0xFF4CAF50),
-                            size: 20, // Larger icon size for bigger container
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Icon(
-                            _getCategoryIcon(categoryName),
-                            color: const Color(0xFF4CAF50),
-                            size: 20, // Larger icon size for bigger container
-                          );
-                        },
+              child: Center(
+                child: iconUrl != null && iconUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: Image.network(
+                          iconUrl,
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              _getCategoryIcon(categoryName),
+                              color: const Color(0xFF4CAF50),
+                              size: 30,
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Icon(
+                              _getCategoryIcon(categoryName),
+                              color: const Color(0xFF4CAF50),
+                              size: 30, 
+                            );
+                          },
+                        ),
+                      )
+                    : Icon(
+                        _getCategoryIcon(categoryName),
+                        color: const Color(0xFF4CAF50),
+                        size: 30,
                       ),
-                    )
-                  : Icon(
-                      _getCategoryIcon(categoryName),
-                      color: const Color(0xFF4CAF50),
-                      size: 20, // Larger icon size for bigger container
-                    ),
+              ),
             ),
-            const SizedBox(height: 4), // Increased spacing between icon and text
+            const SizedBox(height: 4),
             // Category name
-            Flexible(
+            Expanded(
               child: Text(
                 categoryName,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11, // Larger font for better readability in bigger header
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 2, // Allow 2 lines for longer names
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                ),
               ),
             ),
           ],
@@ -272,14 +272,6 @@ class _HomePageState extends State<HomePage> {
       width: 48, // Fixed width to prevent squashing
       height: 48, // Fixed height to maintain aspect ratio
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
         child: CartIconBadge(
           onTap: _onCartPressed,
           iconColor: Colors.white,
@@ -294,14 +286,6 @@ class _HomePageState extends State<HomePage> {
       width: 48, // Fixed width to prevent squashing
       height: 48, // Fixed height to maintain aspect ratio
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -358,17 +342,15 @@ class _HomePageState extends State<HomePage> {
     
     if (state is HomeLoaded && state.categories.isNotEmpty) {
       categoriesToShow = state.categories;
-      print('Using API categories: ${state.categories.length} items');
     } else {
       categoriesToShow = _getDefaultCategories();
-      print('Using default categories: ${categoriesToShow.length} items');
     }
     
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 4), // Slightly increased padding
+      padding: const EdgeInsets.symmetric(horizontal: 4), 
       itemCount: categoriesToShow.length,
-      separatorBuilder: (context, index) => const SizedBox(width: 12), // Increased spacing between items
+      separatorBuilder: (context, index) => const SizedBox(width: 12), 
       itemBuilder: (context, index) {
         final category = categoriesToShow[index];
         return _buildCategoryItem(category);
@@ -376,7 +358,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCompactBanner() {
+  Widget _buildFullBanner() {
     final List<Map<String, String>> banners = [
       {
         'title': 'TUỔI TRẺ KHỎE ĐẸP',
@@ -427,7 +409,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 child: Container(
-                  // Optional: Add a slight dark overlay for better text readability
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.centerLeft,
@@ -507,6 +488,42 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _buildCompactChatIcon() {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Container(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _onChatPressed,
+            borderRadius: BorderRadius.circular(12),
+            child: const Icon(
+              Icons.chat_bubble_outline,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactCartIcon() {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Container(
+        child: CartIconBadge(
+          onTap: _onCartPressed,
+          iconColor: Colors.white,
+          badgeColor: const Color(0xFF2E7D32),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<HomeBloc>(
@@ -519,99 +536,113 @@ class _HomePageState extends State<HomePage> {
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Header with search, cart and categories
+                  // Search bar - always visible, becomes pinned when scrolled
                   SliverAppBar(
                     floating: true,
-                    pinned: false,
-                    snap: true,
+                    pinned: _isScrolled,
+                    snap: !_isScrolled,
                     backgroundColor: const Color(0xFF4CAF50),
-                    elevation: 0,
-                    toolbarHeight: 280, // Increase height significantly for full category display
+                    elevation: _isScrolled ? 2 : 0,
+                    toolbarHeight: 60,
                     automaticallyImplyLeading: false,
-                    flexibleSpace: LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Get screen width for responsive design
-                        final screenWidth = MediaQuery.of(context).size.width;
-                        final isSmallScreen = screenWidth < 360;
-                        
-                        // Calculate available height and adjust category height dynamically
-                        final availableHeight = constraints.maxHeight;
-                        final searchBarHeight = 48.0; // Fixed search bar height
-                        final bannerHeight = isSmallScreen ? 100.0 : 120.0; // Responsive banner height
-                        final padding = 24.0; // Total vertical padding
-                        final spacing = 20.0; // Total spacing between elements
-                        
-                        // Ensure minimum space for categories
-                        final categoryHeight = (availableHeight - searchBarHeight - bannerHeight - padding - spacing).clamp(60.0, 90.0);
-                        
-                        return Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Color(0xFF4CAF50),
-                                Color(0xFF66BB6A),
+                    flexibleSpace: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFF4CAF50),
+                            Color(0xFF66BB6A),
+                          ],
+                        ),
+                        borderRadius: _isScrolled 
+                          ? null 
+                          : const BorderRadius.only(
+                              bottomLeft: Radius.circular(0),
+                              bottomRight: Radius.circular(0),
+                            ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: SafeArea(
+                        bottom: false,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: CustomSearchBar(
+                                controller: _searchController,
+                                hintText: 'Tìm kiếm sản phẩm...',
+                                readOnly: true,
+                                onTap: _onSearchTapped,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _isScrolled ? _buildCompactChatIcon() : _buildChatIcon(),
+                                const SizedBox(width: 8),
+                                _isScrolled ? _buildCompactCartIcon() : _buildCartIcon(),
                               ],
                             ),
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(24),
-                              bottomRight: Radius.circular(24),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppConstants.defaultPadding,
-                            vertical: 12, // Increased vertical padding
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Search bar and action icons row
-                              Row(
-                                children: [
-                                  // Search bar
-                                  Expanded(
-                                    child: CustomSearchBar(
-                                      controller: _searchController,
-                                      hintText: 'Tìm kiếm sản phẩm...',
-                                      readOnly: true,
-                                      onTap: _onSearchTapped,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Action icons container
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Chat icon
-                                      _buildChatIcon(),
-                                      const SizedBox(width: 8),
-                                      // Cart icon
-                                      _buildCartIcon(),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12), // Increased spacing after search bar
-                              // Banner section
-                              SizedBox(
-                                height: bannerHeight,
-                                child: _buildCompactBanner(),
-                              ),
-                              const SizedBox(height: 12), // Increased spacing before categories
-                              // Categories list with dynamic height
-                              Flexible(
-                                child: SizedBox(
-                                  height: categoryHeight,
-                                  child: _buildCategoryList(state),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     ),
                   ),
+
+                  // Banner and Categories section - hidden when scrolled
+                  if (!_isScrolled) ...[
+                    // Small spacing to create seamless effect
+                    SliverToBoxAdapter(
+                      child: Container(
+                        height: 2,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Color(0xFF4CAF50),
+                              Color(0xFF66BB6A),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Color(0xFF4CAF50),
+                              Color(0xFF66BB6A),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24),
+                          ),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        child: Column(
+                          children: [
+                            // Banner section
+                            SizedBox(
+                              height: 120,
+                              child: _buildFullBanner(),
+                            ),
+                            const SizedBox(height: 16),
+                            // Categories section
+                            SizedBox(
+                              height: 80,
+                              child: _buildCategoryList(state),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
 
                   // Loading indicator when loading
                   if (state is HomeLoading)
