@@ -308,16 +308,15 @@ class FlashSaleSection extends StatelessWidget {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
         
-        // Dynamic height calculation for better responsive design
         double cardHeight;
         if (screenHeight > 800) {
-          cardHeight = 220.0; // Large screens - increased for better content display
+          cardHeight = 220.0; 
         } else if (screenHeight > 700) {
-          cardHeight = 200.0; // Medium screens
+          cardHeight = 200.0; 
         } else if (screenHeight > 600) {
-          cardHeight = 180.0; // Smaller screens
+          cardHeight = 180.0; 
         } else {
-          cardHeight = 160.0; // Very small screens
+          cardHeight = 160.0; 
         }
         
         return SizedBox(
@@ -338,15 +337,20 @@ class FlashSaleSection extends StatelessWidget {
                   categoryId: '',
                   basePrice: flashSale.flashSalePrice,
                   discountPrice: 0,
+                  finalPrice: flashSale.flashSalePrice,
                   stockQuantity: 0,
                   isActive: true,
                   weight: 0,
-                  dimensions: '',
+                  length: 0,
+                  width: 0,
+                  height: 0,
                   hasVariant: false,
                   quantitySold: 0,
                   shopId: '',
                   createdAt: DateTime.now(),
                   createdBy: '',
+                  hasPrimaryImage: false,
+                  primaryImageUrl: '',
                 ),
               );
 
@@ -357,7 +361,7 @@ class FlashSaleSection extends StatelessWidget {
                 child: FlashSaleItemCard(
                   flashSale: flashSale,
                   product: product,
-                  imageUrl: productImages[product.id], // Pass image URL from productImages map
+                  imageUrl: productImages[product.id], 
                 ),
               );
             },

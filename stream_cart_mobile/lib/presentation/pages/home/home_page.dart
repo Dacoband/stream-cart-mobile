@@ -10,12 +10,17 @@ import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_state.dart';
+import '../../blocs/notification/notification_bloc.dart';
+import '../../blocs/notification/notification_event.dart';
+import '../../blocs/notification/notification_state.dart';
 import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/home/flash_sale_section.dart';
+import '../../widgets/home/shops_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
+// import '../../widgets/firebase_token_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,6 +39,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    
+    // Load unread notification count
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationBloc>().add(LoadUnreadCount());
+    });
   }
 
   void _onScroll() {
@@ -98,12 +108,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onNotificationPressed() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng thông báo đang phát triển'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    Navigator.pushNamed(context, AppRouter.notification);
   }
 
   void _onSearchTapped() {
@@ -406,57 +411,70 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNotificationIcon() {
-    return SizedBox(
-      width: 48, 
-      height: 48, 
-      child: Container(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _onNotificationPressed,
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Color(0xFFB0F847),
-                  size: 22,
-                ),
-                // Badge for unread notifications
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF5722),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1,
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        int unreadCount = 0;
+        
+        if (state is UnreadCountLoaded) {
+          unreadCount = state.count;
+        } else if (state is NotificationLoaded) {
+          unreadCount = state.unreadCount;
+        }
+        
+        return SizedBox(
+          width: 48, 
+          height: 48, 
+          child: Container(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _onNotificationPressed,
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      color: Color(0xFFB0F847),
+                      size: 22,
+                    ),
+                    // Badge for unread notifications
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF5722),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: const Text(
-                      '3', // TODO: Get unread notification count from API
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -594,40 +612,53 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCompactNotificationIcon() {
-    return SizedBox(
-      width: 36,
-      height: 36,
-      child: Container(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _onNotificationPressed,
-            borderRadius: BorderRadius.circular(12),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 18,
-                ),
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFB0F847),
-                      borderRadius: BorderRadius.circular(4),
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        int unreadCount = 0;
+        
+        if (state is UnreadCountLoaded) {
+          unreadCount = state.count;
+        } else if (state is NotificationLoaded) {
+          unreadCount = state.unreadCount;
+        }
+        
+        return SizedBox(
+          width: 36,
+          height: 36,
+          child: Container(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _onNotificationPressed,
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                      size: 18,
                     ),
-                  ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFB0F847),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -691,6 +722,10 @@ class _HomePageState extends State<HomePage> {
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
+                  // Firebase Debug Widget (chỉ hiển thị khi debug và không phải web)
+                  // const SliverToBoxAdapter(
+                  //   child: FirebaseTokenWidget(),
+                  // ),
                   SliverAppBar(
                     floating: true,
                     pinned: _isScrolled,
@@ -843,6 +878,11 @@ class _HomePageState extends State<HomePage> {
                     // Flash Sale section
                     const SliverToBoxAdapter(
                       child: FlashSaleSection(),
+                    ),
+
+                    // Shops section
+                    SliverToBoxAdapter(
+                      child: ShopsSection(),
                     ),
 
                     // Products section header

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class ProductEntity extends Equatable {
+  bool get isOnSale => discountPrice > 0 && discountPrice < basePrice;
   final String id;
   final String productName;
   final String description;
@@ -8,10 +9,13 @@ class ProductEntity extends Equatable {
   final String categoryId;
   final double basePrice;
   final double discountPrice;
+  final double finalPrice;
   final int stockQuantity;
   final bool isActive;
   final double weight;
-  final String dimensions;
+  final double length;
+  final double width;
+  final double height;
   final bool hasVariant;
   final int quantitySold;
   final String shopId;
@@ -19,6 +23,8 @@ class ProductEntity extends Equatable {
   final String createdBy;
   final DateTime? lastModifiedAt;
   final String? lastModifiedBy;
+  final bool hasPrimaryImage;
+  final String primaryImageUrl;
 
   const ProductEntity({
     required this.id,
@@ -28,10 +34,13 @@ class ProductEntity extends Equatable {
     required this.categoryId,
     required this.basePrice,
     required this.discountPrice,
+    required this.finalPrice,
     required this.stockQuantity,
     required this.isActive,
     required this.weight,
-    required this.dimensions,
+    required this.length,
+    required this.width,
+    required this.height,
     required this.hasVariant,
     required this.quantitySold,
     required this.shopId,
@@ -39,10 +48,10 @@ class ProductEntity extends Equatable {
     required this.createdBy,
     this.lastModifiedAt,
     this.lastModifiedBy,
+    required this.hasPrimaryImage,
+    required this.primaryImageUrl,
   });
 
-  double get finalPrice => discountPrice > 0 ? discountPrice : basePrice;
-  bool get isOnSale => discountPrice > 0 && discountPrice < basePrice;
 
   @override
   List<Object?> get props => [
@@ -53,10 +62,13 @@ class ProductEntity extends Equatable {
         categoryId,
         basePrice,
         discountPrice,
+        finalPrice,
         stockQuantity,
         isActive,
         weight,
-        dimensions,
+        length,
+        width,
+        height,
         hasVariant,
         quantitySold,
         shopId,
@@ -64,5 +76,7 @@ class ProductEntity extends Equatable {
         createdBy,
         lastModifiedAt,
         lastModifiedBy,
+        hasPrimaryImage,
+        primaryImageUrl,
       ];
 }
