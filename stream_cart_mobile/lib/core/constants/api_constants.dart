@@ -23,15 +23,24 @@ class ApiConstants {
   
   // Account endpoints
   static const String updateProfileEndpoint = '/api/account/{id}';
+
+  // Shop endpoints
+  static const String shopsEndpoint = '/api/shops'; // Lấy tất cả shop
+  static const String shopDetailEndpoint = '/api/shops/{id}';
+  static const String shopSearchEndpoint = '/api/shops/search'; // Tìm kiếm shop theo tên
+
   
   // Product endpoints
   static const String productsEndpoint = '/api/products';
   static const String productDetailsEndpoint = '/api/products/{id}';
   static const String productDetailEndpoint = '/api/products/{id}/detail';
   static const String searchProductsEndpoint = '/api/products/search';
+  static const String productsByShopEndpoint = '/api/products/shop/{shopId}'; // Lấy tất cả sản phẩm của shop đó
+  static const String productFlashSaleEndpoint = '/api/products/flash-sale';
   
   // Flash Sale endpoints
   static const String flashSalesEndpoint = '/api/flashsales';
+  static const String flashSaleDetailEndpoint = '/api/flashsales/{id}';
   
   // Product Image endpoints
   static const String allProductImagesEndpoint = '/api/product-images';
@@ -48,6 +57,15 @@ class ApiConstants {
   // Notification endpoints
   static const String notificationEndpoint = '/api/notification';
   static const String markAsReadEndpoint = '/api/notification/mark-as-read';
+
+  //Chat endpoints
+  static const String chatEndpoint = '/api/chat/messages';
+  static const String chatMessageEndpoint = '/api/chat/messages/{messageId}';
+  static const String chatRoomEndpoint = '/api/chat/rooms';
+  static const String chatRoomDetailsEndpoint = '/api/chat/rooms/{chatRoomId}/messages';
+  static const String chatRoomMarkAsReadEndpoint = '/api/chat/rooms/{chatRoomId}/mark-read';
+  static const String chatRoomShopEndpoint = '/api/chat/rooms/shop/{shopId}';
+
   
   // HTTP Status codes
   static const int successCode = 200;

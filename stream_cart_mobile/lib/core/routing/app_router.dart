@@ -14,6 +14,8 @@ import '../../presentation/pages/search/advanced_search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
 import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/pages/notification/notification_page.dart';
+import '../../presentation/pages/shop/shop_list_page.dart';
+import '../../presentation/pages/shop/shop_detail_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -38,6 +40,8 @@ class AppRouter {
   static const String cart = '/cart';
   static const String orders = '/orders';
   static const String notification = '/notification';
+  static const String shopList = '/shop-list';
+  static const String shopDetail = '/shop-detail';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -137,6 +141,15 @@ class AppRouter {
               child: Text('Trang livestream đang phát triển'),
             ),
           ),
+        );
+      case shopList:
+        return MaterialPageRoute(
+          builder: (_) => const ShopListPage(),
+        );
+      case shopDetail:
+        final String shopId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => ShopDetailPage(shopId: shopId),
         );
       default:
         return MaterialPageRoute(

@@ -17,6 +17,7 @@ import '../../widgets/common/custom_search_bar.dart';
 import '../../widgets/home/livestream_section.dart';
 import '../../widgets/home/product_grid.dart';
 import '../../widgets/home/flash_sale_section.dart';
+import '../../widgets/home/shops_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
 // import '../../widgets/firebase_token_widget.dart';
@@ -877,6 +878,11 @@ class _HomePageState extends State<HomePage> {
                     // Flash Sale section
                     const SliverToBoxAdapter(
                       child: FlashSaleSection(),
+                    ),
+
+                    // Shops section
+                    SliverToBoxAdapter(
+                      child: ShopsSection(),
                     ),
 
                     // Products section header
