@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'firebase_options.dart';
+import 'core/config/firebase_config.dart';
 import 'core/config/env.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
@@ -24,9 +24,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Load environment variables
+  await FirebaseConfig.loadEnv();
+  
   // Initialize Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: FirebaseConfig.currentPlatform,
   );
   
   // Set background message handler

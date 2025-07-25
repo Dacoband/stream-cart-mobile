@@ -41,46 +41,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I',
-    appId: '1:531713282766:web:c2a8fbb7e16271f061f69f', 
-    messagingSenderId: '531713282766',
-    projectId: 'stream-cart-mobile',
-    authDomain: 'stream-cart-mobile.firebaseapp.com',
-    storageBucket: 'stream-cart-mobile.firebasestorage.app',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_WEB_APP_ID'), 
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    authDomain: String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I',
-    appId: '1:531713282766:android:de3209a1702c41a761f69f',
-    messagingSenderId: '531713282766',
-    projectId: 'stream-cart-mobile',
-    storageBucket: 'stream-cart-mobile.firebasestorage.app',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_ANDROID_APP_ID'),
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I',
-    appId: '1:531713282766:ios:your-ios-app-id', // Bạn cần tạo iOS app riêng
-    messagingSenderId: '531713282766',
-    projectId: 'stream-cart-mobile',
-    storageBucket: 'stream-cart-mobile.firebasestorage.app',
-    iosBundleId: 'com.example.stream_cart_mobile',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_IOS_APP_ID'), 
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    iosBundleId: String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID'),
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I',
-    appId: '1:531713282766:macos:your-macos-app-id',
-    messagingSenderId: '531713282766',
-    projectId: 'stream-cart-mobile',
-    storageBucket: 'stream-cart-mobile.firebasestorage.app',
-    iosBundleId: 'com.example.stream_cart_mobile',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_MACOS_APP_ID'),
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    iosBundleId: String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID'),
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I',
-    appId: '1:531713282766:windows:your-windows-app-id',
-    messagingSenderId: '531713282766',
-    projectId: 'stream-cart-mobile',
-    authDomain: 'stream-cart-mobile.firebaseapp.com',
-    storageBucket: 'stream-cart-mobile.firebasestorage.app',
+    apiKey: String.fromEnvironment('FIREBASE_API_KEY'),
+    appId: String.fromEnvironment('FIREBASE_WINDOWS_APP_ID'),
+    messagingSenderId: String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    authDomain: String.fromEnvironment('FIREBASE_AUTH_DOMAIN'),
+    storageBucket: String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
   );
 }
