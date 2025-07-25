@@ -37,9 +37,13 @@ class ProductModel {
   final String categoryId;
   final double basePrice;
   final double discountPrice;
+  final double finalPrice;
   final int stockQuantity;
   final bool isActive;
   final double weight;
+  final double length;
+  final double width;
+  final double height;
   final String dimensions;
   final bool hasVariant;
   final int quantitySold;
@@ -48,6 +52,8 @@ class ProductModel {
   final String createdBy;
   final String? lastModifiedAt;
   final String? lastModifiedBy;
+  final bool hasPrimaryImage;
+  final String primaryImageUrl;
 
   const ProductModel({
     required this.id,
@@ -57,9 +63,13 @@ class ProductModel {
     required this.categoryId,
     required this.basePrice,
     required this.discountPrice,
+    required this.finalPrice,
     required this.stockQuantity,
     required this.isActive,
     required this.weight,
+    required this.length,
+    required this.width,
+    required this.height,
     required this.dimensions,
     required this.hasVariant,
     required this.quantitySold,
@@ -68,6 +78,8 @@ class ProductModel {
     required this.createdBy,
     this.lastModifiedAt,
     this.lastModifiedBy,
+    required this.hasPrimaryImage,
+    required this.primaryImageUrl,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -79,9 +91,13 @@ class ProductModel {
       categoryId: json['categoryId'] ?? '',
       basePrice: (json['basePrice'] ?? 0).toDouble(),
       discountPrice: (json['discountPrice'] ?? 0).toDouble(),
+      finalPrice: (json['finalPrice'] ?? 0).toDouble(),
       stockQuantity: json['stockQuantity'] ?? 0,
       isActive: json['isActive'] ?? true,
       weight: (json['weight'] ?? 0).toDouble(),
+      length: (json['length'] ?? 0).toDouble(),
+      width: (json['width'] ?? 0).toDouble(),
+      height: (json['height'] ?? 0).toDouble(),
       dimensions: json['dimensions'] ?? '',
       hasVariant: json['hasVariant'] ?? false,
       quantitySold: json['quantitySold'] ?? 0,
@@ -90,6 +106,8 @@ class ProductModel {
       createdBy: json['createdBy'] ?? '',
       lastModifiedAt: json['lastModifiedAt'],
       lastModifiedBy: json['lastModifiedBy'],
+      hasPrimaryImage: json['hasPrimaryImage'] ?? false,
+      primaryImageUrl: json['primaryImageUrl'] ?? '',
     );
   }
 
@@ -102,10 +120,13 @@ class ProductModel {
       'categoryId': categoryId,
       'basePrice': basePrice,
       'discountPrice': discountPrice,
+      'finalPrice': finalPrice,
       'stockQuantity': stockQuantity,
       'isActive': isActive,
       'weight': weight,
-      'dimensions': dimensions,
+      'length': length,
+      'width': width,
+      'height': height,
       'hasVariant': hasVariant,
       'quantitySold': quantitySold,
       'shopId': shopId,
@@ -113,6 +134,8 @@ class ProductModel {
       'createdBy': createdBy,
       'lastModifiedAt': lastModifiedAt,
       'lastModifiedBy': lastModifiedBy,
+      'hasPrimaryImage': hasPrimaryImage,
+      'primaryImageUrl': primaryImageUrl,
     };
   }
 
@@ -125,10 +148,13 @@ class ProductModel {
       categoryId: categoryId,
       basePrice: basePrice,
       discountPrice: discountPrice,
+      finalPrice: finalPrice,
       stockQuantity: stockQuantity,
       isActive: isActive,
       weight: weight,
-      dimensions: dimensions,
+      length: length,
+      width: width,
+      height: height,
       hasVariant: hasVariant,
       quantitySold: quantitySold,
       shopId: shopId,
@@ -136,6 +162,8 @@ class ProductModel {
       createdBy: createdBy,
       lastModifiedAt: lastModifiedAt != null ? DateTime.tryParse(lastModifiedAt!) : null,
       lastModifiedBy: lastModifiedBy,
+      hasPrimaryImage: hasPrimaryImage,
+      primaryImageUrl: primaryImageUrl,
     );
   }
 }
