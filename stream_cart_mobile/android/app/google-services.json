@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "531713282766",
+    "project_id": "stream-cart-mobile",
+    "storage_bucket": "stream-cart-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531713282766:android:de3209a1702c41a761f69f",
+        "android_client_info": {
+          "package_name": "com.example.stream_cart_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531713282766:android:6ae8ce852a81ff2f61f69f",
+        "android_client_info": {
+          "package_name": "com.yourcompany.streamcart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASRcQu4nsDNyASv8Z6CLFrim-_T3Q-66I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

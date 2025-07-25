@@ -13,10 +13,12 @@ import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
 import '../../presentation/pages/category/category_detail_page.dart';
+import '../../presentation/pages/notification/notification_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
+import '../../presentation/blocs/notification/notification_bloc.dart';
 import '../../domain/entities/user_profile_entity.dart';
 
 class AppRouter {
@@ -35,6 +37,7 @@ class AppRouter {
   static const String livestreamDetail = '/livestream-detail';
   static const String cart = '/cart';
   static const String orders = '/orders';
+  static const String notification = '/notification';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -117,6 +120,13 @@ class AppRouter {
             body: const Center(
               child: Text('Trang đơn hàng đang phát triển'),
             ),
+          ),
+        );
+      case notification:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<NotificationBloc>(),
+            child: const NotificationPage(),
           ),
         );
       case livestreamList:

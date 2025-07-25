@@ -45,6 +45,10 @@ class ApiConstants {
   static const String cartPreviewEndpoint = '/api/carts/PreviewOrder';
   static const String ordersEndpoint = '/api/orders';
   
+  // Notification endpoints
+  static const String notificationEndpoint = '/api/notification';
+  static const String markAsReadEndpoint = '/api/notification/mark-as-read';
+  
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;

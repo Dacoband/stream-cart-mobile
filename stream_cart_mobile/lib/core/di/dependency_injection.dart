@@ -42,13 +42,19 @@ import '../../domain/usecases/remove_multiple_cart_items_usecase.dart';
 import '../../domain/usecases/clear_cart_usecase.dart';
 import '../../domain/usecases/get_cart_preview_usecase.dart';
 import '../../domain/usecases/get_preview_order_usecase.dart';
+import '../../domain/usecases/get_notifications_usecase.dart';
+import '../../domain/usecases/mark_notification_as_read_usecase.dart';
+import '../../domain/usecases/get_unread_notification_count_usecase.dart';
 import '../../data/datasources/home_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source.dart';
 import '../../data/datasources/flash_sale_remote_data_source_impl.dart';
+import '../../data/datasources/notification_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../data/repositories/flash_sale_repository_impl.dart';
+import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../domain/repositories/flash_sale_repository.dart';
+import '../../domain/repositories/notification_repository.dart';
 import '../../data/datasources/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -60,6 +66,7 @@ import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
 import '../../presentation/blocs/cart/cart_bloc.dart';
 import '../../presentation/blocs/category_detail/category_detail_bloc.dart';
+import '../../presentation/blocs/notification/notification_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -248,4 +255,27 @@ Future<void> setupDependencies() async {
     print('CartBloc singleton created: ${cartBloc.hashCode}');
     return cartBloc;
   });
+
+  // === NOTIFICATION DEPENDENCIES ===
+  // Data sources
+  getIt.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(getIt()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(getIt()),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton(() => GetNotificationsUseCase(getIt()));
+  getIt.registerLazySingleton(() => MarkNotificationAsReadUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetUnreadNotificationCountUseCase(getIt()));
+
+  // Blocs
+  getIt.registerFactory(() => NotificationBloc(
+    getNotificationsUseCase: getIt(),
+    markNotificationAsReadUseCase: getIt(),
+    getUnreadNotificationCountUseCase: getIt(),
+  ));
 }
