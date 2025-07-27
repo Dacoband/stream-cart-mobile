@@ -149,7 +149,7 @@ class _NotificationPageState extends State<NotificationPage>
           children: [
             Icon(
               Icons.lock,
-              color: Colors.green[600],
+              color: Color(0xFFB0F847),
             ),
             const SizedBox(width: 8),
             const Text('Yêu cầu đăng nhập'),
@@ -164,12 +164,11 @@ class _NotificationPageState extends State<NotificationPage>
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // Navigate to login page
               Navigator.pushNamed(context, '/login');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFF202328),
+              foregroundColor: Color(0xFFB0F847),
             ),
             child: const Text('Đăng nhập'),
           ),
@@ -178,17 +177,53 @@ class _NotificationPageState extends State<NotificationPage>
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thông báo'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Tất cả'),
-            Tab(text: 'Chưa đọc'),
-          ],
+        title: const Text(
+          'Thông báo',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Color(0xFF202328),
+        foregroundColor: Color(0xFFB0F847),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                color: Color(0xFF202328),
+                height: 48,
+              ),
+              TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey[500],
+                indicatorWeight: 3,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                tabs: const [
+                  Tab(child: Text('Tất cả')),
+                  Tab(child: Text('Chưa đọc')),
+                ],
+              ),
+              // Vertical divider
+              Positioned(
+                left: MediaQuery.of(context).size.width / 2 - 0.75,
+                top: 12,
+                bottom: 12,
+                child: Container(
+                  width: 1.5,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -210,7 +245,7 @@ class _NotificationPageState extends State<NotificationPage>
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.green,
+                backgroundColor: Color(0xFFB0F847),
               ),
             );
           }
@@ -278,10 +313,23 @@ class _NotificationPageState extends State<NotificationPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 64,
-            color: Colors.grey[400],
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Color(0xFFB0F847),
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.notifications_none,
+                size: 64,
+                color: Color(0xFFB0F847),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -309,10 +357,23 @@ class _NotificationPageState extends State<NotificationPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.lock,
-            size: 64,
-            color: Colors.green[400],
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Color(0xFFB0F847),
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.lock,
+                size: 50,
+                color: Color(0xFFB0F847),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -334,12 +395,11 @@ class _NotificationPageState extends State<NotificationPage>
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              // Navigate to login page
               Navigator.pushNamed(context, '/login');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFF202328),
+              foregroundColor: Color(0xFFB0F847),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
             child: const Text('Đăng nhập'),
@@ -455,28 +515,48 @@ class _NotificationFilterDialogState extends State<_NotificationFilterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Lọc thông báo'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Loại thông báo:'),
-          const SizedBox(height: 16),
-          _buildTypeRadio('Tất cả', null),
-          _buildTypeRadio('Flash Sale', 'FlashSale'),
-          _buildTypeRadio('Đơn hàng', 'Order'),
-          _buildTypeRadio('Sản phẩm', 'Product'),
-        ],
+      title: const Text(
+        'Lọc thông báo',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFFB0F847)),
+        ),
+      backgroundColor: const Color(0xFF202328),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      contentPadding: const EdgeInsets.all(16),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Loại thông báo:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFFB0F847)),
+            ),
+            const SizedBox(height: 16),
+            _buildTypeRadio('Tất cả', null),
+            _buildTypeRadio('Flash Sale', 'FlashSale'),
+            _buildTypeRadio('Đơn hàng', 'Order'),
+            _buildTypeRadio('Sản phẩm', 'Product'),
+          ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Hủy'),
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0xFFB0F847),
+          ),
         ),
         ElevatedButton(
           onPressed: () {
             widget.onTypeChanged(_tempSelectedType);
             Navigator.pop(context);
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFFB0F847),
+            foregroundColor: Color(0xFF202328),
+          ),
           child: const Text('Áp dụng'),
         ),
       ],
@@ -485,9 +565,13 @@ class _NotificationFilterDialogState extends State<_NotificationFilterDialog> {
 
   Widget _buildTypeRadio(String title, String? value) {
     return RadioListTile<String?>(
-      title: Text(title),
+      title: Text(
+        title,
+        style: const TextStyle(color: Color(0xFFB0F847)),
+      ),
       value: value,
       groupValue: _tempSelectedType,
+      activeColor: const Color(0xFFB0F847),
       onChanged: (newValue) {
         setState(() {
           _tempSelectedType = newValue;
