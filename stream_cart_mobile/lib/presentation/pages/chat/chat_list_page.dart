@@ -5,6 +5,7 @@ import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 import 'package:stream_cart_mobile/presentation/widgets/common/auth_guard.dart';
 import 'package:stream_cart_mobile/presentation/widgets/common/custom_search_bar.dart';
+import 'package:stream_cart_mobile/core/di/dependency_injection.dart';
 import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
@@ -18,6 +19,8 @@ import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
 
 
+
+
 class ChatListPage extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
@@ -25,14 +28,14 @@ class ChatListPage extends StatelessWidget {
         message: 'Vui lòng đăng nhập để xem danh sách phòng chat',
         child: BlocProvider(
             create: (context) => ChatBloc(
-            loadChatRoomUseCase: context.read<LoadChatRoomUseCase>(),
-            loadChatRoomsByShopUseCase: context.read<LoadChatRoomsByShopUseCase>(),
-            loadChatRoomsUseCase: context.read<LoadChatRoomsUseCase>(),
-            sendMessageUseCase: context.read<SendMessageUseCase>(),
-            receiveMessageUseCase: context.read<ReceiveMessageUseCase>(),
-            markChatRoomAsReadUseCase: context.read<MarkChatRoomAsReadUseCase>(),
-            connectLiveKitUseCase: context.read<ConnectLiveKitUseCase>(),
-            disconnectLiveKitUseCase: context.read<DisconnectLiveKitUseCase>(),
+            loadChatRoomUseCase: getIt<LoadChatRoomUseCase>(),
+            loadChatRoomsByShopUseCase: getIt<LoadChatRoomsByShopUseCase>(),
+            loadChatRoomsUseCase: getIt<LoadChatRoomsUseCase>(),
+            sendMessageUseCase: getIt<SendMessageUseCase>(),
+            receiveMessageUseCase: getIt<ReceiveMessageUseCase>(),
+            markChatRoomAsReadUseCase: getIt<MarkChatRoomAsReadUseCase>(),
+            connectLiveKitUseCase: getIt<ConnectLiveKitUseCase>(),
+            disconnectLiveKitUseCase: getIt<DisconnectLiveKitUseCase>(),
             )..add(LoadChatRooms(pageNumber: 1, pageSize: 20)),
             child: Scaffold(
             appBar: AppBar(

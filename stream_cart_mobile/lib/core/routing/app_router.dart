@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../presentation/pages/chat/chat_detail_page.dart';
+import '../../presentation/pages/chat/chat_list_page.dart';
 import '../di/dependency_injection.dart';
 import '../../presentation/pages/auth/login_page.dart' as auth;
 import '../../presentation/pages/auth/register_page.dart';
@@ -42,6 +44,8 @@ class AppRouter {
   static const String notification = '/notification';
   static const String shopList = '/shop-list';
   static const String shopDetail = '/shop-detail';
+  static const String chatList = '/chat-list';
+static const String chatDetail = '/chat-detail';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -151,6 +155,27 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => ShopDetailPage(shopId: shopId),
         );
+      case chatList:
+        return MaterialPageRoute(
+          builder: (_) => ChatListPage(),
+        );
+      case chatDetail:
+        final args = settings.arguments as Map<String, String>?;
+        if (args == null || !args.containsKey('chatRoomId') || !args.containsKey('userId') || !args.containsKey('userName')) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Lỗi')),
+              body: const Center(child: Text('Thiếu thông tin phòng chat')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => ChatDetailPage(
+            chatRoomId: args['chatRoomId']!,
+            userId: args['userId']!,
+            userName: args['userName']!,
+          ),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -162,4 +187,5 @@ class AppRouter {
         );
     }
   }
+
 }
