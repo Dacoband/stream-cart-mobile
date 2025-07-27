@@ -1,0 +1,1 @@
+// Hỗ trợ phân trang trong danh sách tin nhắn chat. (hasReachedEnd)

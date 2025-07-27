@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 import 'package:stream_cart_mobile/presentation/widgets/common/auth_guard.dart';
-
+import 'package:stream_cart_mobile/presentation/widgets/common/custom_search_bar.dart';
 import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
@@ -12,114 +13,65 @@ import '../../../domain/usecases/chat/load_chat_rooms_usecase.dart';
 import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
-import '../../blocs/chat/chat_event.dart';
-import '../../blocs/chat/chat_state.dart';
-import '../../widgets/common/custom_search_bar.dart';
+import '../../widgets/chat/chat_list_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
-import 'chat_detail_page.dart';
+
 
 class ChatListPage extends StatelessWidget {
     @override
     Widget build(BuildContext context) {
         return AuthGuard(
-            message: 'Vui lòng đăng nhập để xem danh sách phòng chat',
-            child: BlocProvider(
-                create: (context) => ChatBloc(
-                loadChatRoomUseCase: context.read<LoadChatRoomUseCase>(),
-                loadChatRoomsByShopUseCase: context.read<LoadChatRoomsByShopUseCase>(),
-                loadChatRoomsUseCase: context.read<LoadChatRoomsUseCase>(),
-                sendMessageUseCase: context.read<SendMessageUseCase>(),
-                receiveMessageUseCase: context.read<ReceiveMessageUseCase>(),
-                markChatRoomAsReadUseCase: context.read<MarkChatRoomAsReadUseCase>(),
-                connectLiveKitUseCase: context.read<ConnectLiveKitUseCase>(),
-                disconnectLiveKitUseCase: context.read<DisconnectLiveKitUseCase>(),
-                )..add(LoadChatRooms(pageNumber: 1, pageSize: 20)),
-                child: Scaffold(
-                appBar: AppBar(
-                    title: Text('Danh sách phòng chat'),
-                    bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(56),
-                    child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: CustomSearchBar(
-                        controller: TextEditingController(),
-                        hintText: 'Tìm phòng chat...',
-                        onChanged: (query) {
-                            context.read<ChatBloc>().add(LoadChatRooms(
-                            pageNumber: 1,
-                            pageSize: 20,
-                            isActive: true,
-                            ));
-                        },
-                        ),
-                    ),
-                    ),
-                ),
-                body: BlocBuilder<ChatBloc, ChatState>(
-                    builder: (context, state) {
-                    if (state is ChatLoading) return const CustomLoadingWidget();
-                    if (state is ChatError) {
-                        return CustomErrorWidget(
-                        message: state.message,
-                        onRetry: () => context.read<ChatBloc>().add(LoadChatRooms()),
-                        );
-                    }
-                    if (state is ChatRoomsLoaded) {
-                        return ChatListWidget(chatRooms: state.chatRooms);
-                    }
-                    return const Center(child: Text('Không có dữ liệu'));
+        message: 'Vui lòng đăng nhập để xem danh sách phòng chat',
+        child: BlocProvider(
+            create: (context) => ChatBloc(
+            loadChatRoomUseCase: context.read<LoadChatRoomUseCase>(),
+            loadChatRoomsByShopUseCase: context.read<LoadChatRoomsByShopUseCase>(),
+            loadChatRoomsUseCase: context.read<LoadChatRoomsUseCase>(),
+            sendMessageUseCase: context.read<SendMessageUseCase>(),
+            receiveMessageUseCase: context.read<ReceiveMessageUseCase>(),
+            markChatRoomAsReadUseCase: context.read<MarkChatRoomAsReadUseCase>(),
+            connectLiveKitUseCase: context.read<ConnectLiveKitUseCase>(),
+            disconnectLiveKitUseCase: context.read<DisconnectLiveKitUseCase>(),
+            )..add(LoadChatRooms(pageNumber: 1, pageSize: 20)),
+            child: Scaffold(
+            appBar: AppBar(
+                title: const Text('Danh sách phòng chat'),
+                bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(56),
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: CustomSearchBar(
+                    controller: TextEditingController(),
+                    hintText: 'Tìm phòng chat...',
+                    onChanged: (query) {
+                        context.read<ChatBloc>().add(LoadChatRooms(
+                        pageNumber: 1,
+                        pageSize: 20,
+                        isActive: true,
+                        ));
                     },
-                ),
-                ),
-            ),
-        );
-    }
-}
-class ChatListWidget extends StatelessWidget{
-    final List<ChatEntity> chatRooms;
-    ChatListWidget({required this.chatRooms});
-    @override
-    Widget build(BuildContext context){
-        return ListView.builder(
-            itemCount: chatRooms.length,
-            itemBuilder: (context, index){
-                return ChatRoomItemWidget(chatRoom: chatRooms[index]);
-            },
-        );
-    }
-}
-
-class ChatRoomItemWidget extends StatelessWidget {
-    final ChatEntity chatRoom;
-
-    ChatRoomItemWidget({required this.chatRoom});
-
-    @override
-    Widget build(BuildContext context) {
-        return ListTile(
-            title: Text(chatRoom.shopName ?? 'Không tên'),
-            subtitle: Text(chatRoom.lastMessage?.content ?? ''),
-            trailing: chatRoom.unreadCount > 0
-                ? CircleAvatar(
-                    radius: 10,
-                    backgroundColor: Colors.red,
-                    child: Text(
-                        chatRoom.unreadCount.toString(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
                     ),
-                    )
-                : null,
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                builder: (_) => ChatDetailPage(
-                    chatRoomId: chatRoom.id,
-                    userId: chatRoom.userId,
-                    userName: chatRoom.userName ?? 'Unknown',
                 ),
                 ),
             ),
+            body: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) {
+                if (state is ChatLoading) return const CustomLoadingWidget();
+                if (state is ChatError) {
+                    return CustomErrorWidget(
+                    message: state.message,
+                    onRetry: () => context.read<ChatBloc>().add(LoadChatRooms()),
+                    );
+                }
+                if (state is ChatRoomsLoaded) {
+                    return ChatListWidget(chatRooms: state.chatRooms);
+                }
+                return const Center(child: Text('Không có dữ liệu'));
+                },
+            ),
+            ),
+        ),
         );
     }
 }
