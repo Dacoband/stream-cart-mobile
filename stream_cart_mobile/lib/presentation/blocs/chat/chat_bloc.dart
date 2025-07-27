@@ -1,16 +1,39 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:stream_cart_mobile/core/services/livekit_service.dart';
+
 import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
 import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
-class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final ChatRepository chatRepository;
-  final LivekitService livekitService;
+import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
+import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
+import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
+import '../../../domain/usecases/chat/load_chat_room_usecase.dart';
+import '../../../domain/usecases/chat/load_chat_rooms_usecase.dart';
+import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
+import '../../../domain/usecases/chat/receive_message_usecase.dart';
+import '../../../domain/usecases/chat/send_message_usecase.dart';
 
-  ChatBloc(this.chatRepository, this.livekitService) : super(ChatInitial()) {
+class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  final LoadChatRoomUseCase loadChatRoomUseCase;
+  final LoadChatRoomsUseCase loadChatRoomsUseCase;
+  final LoadChatRoomsByShopUseCase loadChatRoomsByShopUseCase;
+  final SendMessageUseCase sendMessageUseCase;
+  final ReceiveMessageUseCase receiveMessageUseCase;
+  final MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
+  final ConnectLiveKitUseCase connectLiveKitUseCase;
+  final DisconnectLiveKitUseCase disconnectLiveKitUseCase;
+
+  ChatBloc({
+    required this.loadChatRoomUseCase,
+    required this.loadChatRoomsUseCase,
+    required this.loadChatRoomsByShopUseCase,
+    required this.sendMessageUseCase,
+    required this.receiveMessageUseCase,
+    required this.markChatRoomAsReadUseCase,
+    required this.connectLiveKitUseCase,
+    required this.disconnectLiveKitUseCase,
+  }) : super(ChatInitial()) {
     on<LoadChatRoom>(_onLoadChatRoom);
     on<LoadChatRooms>(_onLoadChatRooms);
     on<LoadChatRoomsByShop>(_onLoadChatRoomsByShop);
@@ -24,120 +47,111 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   Future<void> _onLoadChatRoom(LoadChatRoom event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      final result = await chatRepository.getChatRoomMessages(event.chatRoomId);
-      result.fold(
-        (failure) => emit(ChatError(failure.message)),
-        (messages) => emit(ChatLoaded(messages: messages)), 
-      );
-    } catch (e) {
-      emit(ChatError('Lỗi khi tải phòng chat: $e'));
-    }
+    final result = await loadChatRoomUseCase(event.chatRoomId);
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (messages) => emit(ChatLoaded(messages: messages)),
+    );
   }
 
   Future<void> _onLoadChatRooms(LoadChatRooms event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      final result = await chatRepository.getChatRooms(
-        pageNumber: event.pageNumber,
-        pageSize: event.pageSize,
-        isActive: event.isActive,
-      );
-      result.fold(
-        (failure) => emit(ChatError(failure.message)),
-        (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
-      );
-    } catch (e) {
-      emit(ChatError('Lỗi khi tải danh sách phòng: $e'));
-    }
+    final result = await loadChatRoomsUseCase(
+      pageNumber: event.pageNumber,
+      pageSize: event.pageSize,
+      isActive: event.isActive,
+    );
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
+    );
   }
 
   Future<void> _onLoadChatRoomsByShop(LoadChatRoomsByShop event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      final result = await chatRepository.getChatRoomsByShop(
-        event.shopId,
-        pageNumber: event.pageNumber,
-        pageSize: event.pageSize,
-      );
-      result.fold(
-        (failure) => emit(ChatError(failure.message)),
-        (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
-      );
-    } catch (e) {
-      emit(ChatError('Lỗi khi tải phòng theo shop: $e'));
-    }
+    final result = await loadChatRoomsByShopUseCase(
+      shopId: event.shopId,
+      pageNumber: event.pageNumber,
+      pageSize: event.pageSize,
+    );
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
+    );
   }
 
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      final result = await chatRepository.sendMessage(
-        chatRoomId: event.chatRoomId,
-        content: event.message,
-        messageType: event.messageType,
-        attachmentUrl: event.attachmentUrl,
-      );
-      result.fold(
-        (failure) => emit(ChatError(failure.message)),
-        (message) => emit(ChatLoaded(messages: [message])),
-      );
-    } catch (e) {
-      emit(ChatError('Lỗi khi gửi tin nhắn: $e'));
-    }
+    final result = await sendMessageUseCase(
+      chatRoomId: event.chatRoomId,
+      content: event.message,
+      messageType: event.messageType,
+      attachmentUrl: event.attachmentUrl,
+    );
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (message) => emit(ChatLoaded(messages: [message])),
+    );
   }
 
-  void _onReceiveMessage(ReceiveMessage event, Emitter<ChatState> emit) {
-    final newMessage = ChatMessage(
-      id: DateTime.now().toIso8601String(), 
-      chatRoomId: '', 
-      senderUserId: event.senderId,
-      content: event.message,
-      sentAt: DateTime.now(),
-      isRead: false,
-      isEdited: false,
-      messageType: 'Text',
-      senderName: '', 
-      isMine: false, 
+  Future<void> _onReceiveMessage(ReceiveMessage event, Emitter<ChatState> emit) async {
+    final result = await receiveMessageUseCase(
+      message: event.message,
+      senderId: event.senderId,
+      chatRoomId: event.chatRoomId,
+      senderName: event.senderName,
+      isMine: event.isMine,
     );
-    emit(ChatLoaded(messages: [newMessage]));
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (newMessage) {
+        if (state is ChatLoaded) {
+          final currentState = state as ChatLoaded;
+          emit(currentState.copyWith(
+            messages: [...currentState.messages, newMessage],
+            chatRoomId: event.chatRoomId, 
+          ));
+        } else {
+          emit(ChatLoaded(
+            messages: [newMessage],
+            chatRoomId: event.chatRoomId,
+            chatRooms: const [], 
+            hasReachedMax: false,
+          ));
+        }
+      },
+    );
   }
 
   Future<void> _onMarkChatRoomAsRead(MarkChatRoomAsRead event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      final result = await chatRepository.markChatRoomAsRead(event.chatRoomId);
-      result.fold(
-        (failure) => emit(ChatError(failure.message)),
-        (_) => emit(state), 
-      );
-    } catch (e) {
-      emit(ChatError('Lỗi khi đánh dấu đã đọc: $e'));
-    }
+    final result = await markChatRoomAsReadUseCase(event.chatRoomId);
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) => emit(state),
+    );
   }
 
   Future<void> _onConnectLiveKit(ConnectLiveKit event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      await livekitService.initializeRoom(
-        chatRoomId: event.chatRoomId,
-        userId: event.userId,
-        userName: event.userName,
-      );
-      emit(LiveKitConnected(event.chatRoomId));
-    } catch (e) {
-      emit(ChatError('Lỗi khi kết nối LiveKit: $e'));
-    }
+    final result = await connectLiveKitUseCase(
+      chatRoomId: event.chatRoomId,
+      userId: event.userId,
+      userName: event.userName,
+    );
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) => emit(LiveKitConnected(event.chatRoomId)),
+    );
   }
 
   Future<void> _onDisconnectLiveKit(DisconnectLiveKit event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
-    try {
-      await livekitService.disconnect();
-      emit(LiveKitDisconnected());
-    } catch (e) {
-      emit(ChatError('Lỗi khi ngắt kết nối LiveKit: $e'));
-    }
+    final result = await disconnectLiveKitUseCase();
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) => emit(LiveKitDisconnected()),
+    );
   }
 
   void _onChatError(ChatErrorEvent event, Emitter<ChatState> emit) {

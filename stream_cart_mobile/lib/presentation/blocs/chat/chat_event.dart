@@ -66,11 +66,14 @@ class SendMessage extends ChatEvent {
 class ReceiveMessage extends ChatEvent {
   final String message;
   final String senderId;
+  final String chatRoomId;
+  final String senderName;
+  final bool isMine;
 
-  const ReceiveMessage(this.message, this.senderId);
+  const ReceiveMessage(this.message, this.senderId, this.chatRoomId, this.senderName, this.isMine);
 
   @override
-  List<Object?> get props => [message, senderId];
+  List<Object?> get props => [message, senderId, chatRoomId, senderName, isMine];
 }
 
 class MarkChatRoomAsRead extends ChatEvent {

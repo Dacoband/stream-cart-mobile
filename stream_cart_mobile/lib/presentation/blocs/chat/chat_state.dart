@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
 import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
 
 abstract class ChatState extends Equatable {
   const ChatState();
@@ -14,32 +14,43 @@ class ChatInitial extends ChatState {}
 class ChatLoading extends ChatState {}
 
 class ChatLoaded extends ChatState {
-  final List<ChatEntity> chatRooms;
   final List<ChatMessage> messages;
+  final List<ChatEntity> chatRooms;
   final bool hasReachedMax;
+  final String? chatRoomId;
 
   const ChatLoaded({
-    this.chatRooms = const [],
     this.messages = const [],
+    this.chatRooms = const [],
     this.hasReachedMax = false,
+    this.chatRoomId,
   });
 
-  @override
-  List<Object?> get props => [chatRooms, messages, hasReachedMax];
-}
+  ChatLoaded copyWith({
+    List<ChatMessage>? messages,
+    List<ChatEntity>? chatRooms,
+    bool? hasReachedMax,
+    String? chatRoomId,
+  }) {
+    return ChatLoaded(
+      messages: messages ?? this.messages,
+      chatRooms: chatRooms ?? this.chatRooms,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      chatRoomId: chatRoomId ?? this.chatRoomId,
+    );
+  }
 
+  @override
+  List<Object?> get props => [messages, chatRooms, hasReachedMax, chatRoomId];
+}
 
 class ChatRoomsLoaded extends ChatState {
   final List<ChatEntity> chatRooms;
-  final bool hasReachedMax;
 
-  const ChatRoomsLoaded({
-    this.chatRooms = const [],
-    this.hasReachedMax = false,
-  });
+  const ChatRoomsLoaded({this.chatRooms = const []});
 
   @override
-  List<Object?> get props => [chatRooms, hasReachedMax];
+  List<Object?> get props => [chatRooms];
 }
 
 class ChatError extends ChatState {
