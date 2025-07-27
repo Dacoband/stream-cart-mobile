@@ -54,7 +54,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     result.fold(
       (failure) => emit(CartError(failure.message)),
       (cartItems) {
-        // Calculate total amount from cart items
         double totalAmount = 0;
         for (var item in cartItems) {
           totalAmount += (item.currentPrice * item.quantity);
@@ -83,7 +82,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       (response) {
         if (response.success) {
           emit(CartItemAdded(response.message));
-          // Reload cart after adding item
           add(LoadCartEvent());
         } else {
           emit(CartError(response.errors.isNotEmpty ? response.errors.first : 'Lỗi không xác định'));
@@ -93,7 +91,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onUpdateCartItem(UpdateCartItemEvent event, Emitter<CartState> emit) async {
-    // Get current state để update ngay lập tức
     final currentState = state;
     if (currentState is! CartLoaded) {
       emit(CartLoading());
@@ -101,7 +98,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       return;
     }
 
-    // Update local state immediately for smooth UX
     final updatedItems = currentState.items.map((item) {
       if (item.cartItemId == event.cartItemId) {
         return item.copyWith(quantity: event.quantity);
@@ -109,13 +105,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       return item;
     }).toList();
 
-    // Calculate new total amount
     double newTotalAmount = 0;
     for (var item in updatedItems) {
       newTotalAmount += (item.currentPrice * item.quantity);
     }
 
-    // Emit updated state immediately
     emit(CartLoaded(items: updatedItems, totalAmount: newTotalAmount));
 
     final params = UpdateCartItemParams(
@@ -166,7 +160,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       (failure) => emit(CartError(failure.message)),
       (_) {
         emit(const CartCleared('Đã xóa tất cả sản phẩm khỏi giỏ hàng'));
-        // Reload cart after clearing
         add(LoadCartEvent());
       },
     );
@@ -228,7 +221,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     result.fold(
       (failure) => emit(CartError(failure.message)),
       (cartSummary) {
-        // Show success message with preview info
         emit(CartItemUpdated(
           'Preview Order: ${cartSummary.totalItem} sản phẩm - ${_formatPrice(cartSummary.totalAmount)}'
         ));
@@ -237,15 +229,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onRemoveCartItem(RemoveCartItemEvent event, Emitter<CartState> emit) async {
- 
     final currentState = state;
     if (currentState is CartLoaded) {
-      // Optimistic update - remove item from state immediately
       final updatedItems = currentState.items.where((item) => item.cartItemId != event.cartItemId).toList();
       final updatedSelections = Set<String>.from(currentState.selectedCartItemIds);
       updatedSelections.remove(event.cartItemId);
       
-      // Calculate updated total amount
       final updatedTotalAmount = updatedItems.fold<double>(
         0.0,
         (sum, item) => sum + item.currentPrice * item.quantity,
@@ -257,16 +246,13 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         selectedCartItemIds: updatedSelections,
       ));
 
-      // Then make the API call
       final result = await removeCartItemUseCase(event.cartItemId);
       result.fold(
         (failure) {
-          // If API call fails, reload cart to restore correct state
           add(LoadCartEvent());
           emit(CartError(failure.message));
         },
         (_) {
-          // Reload cart to ensure sync with server
           add(LoadCartEvent());
           emit(CartItemUpdated('Đã xóa sản phẩm khỏi giỏ hàng'));
         },
@@ -274,10 +260,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     }
   }
 
-  Future<void> _onRemoveSelectedCartItems(RemoveSelectedCartItemsEvent event, Emitter<CartState> emit) async {
-    print('🗑️ _onRemoveSelectedCartItems called for ${event.cartItemIds.length} items');
-    print('🗑️ CartBloc instance: $hashCode');
-    
+  Future<void> _onRemoveSelectedCartItems(RemoveSelectedCartItemsEvent event, Emitter<CartState> emit) async { 
     final currentState = state;
     if (currentState is CartLoaded) {
       emit(CartLoading());
@@ -286,7 +269,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       result.fold(
         (failure) => emit(CartError(failure.message)),
         (_) {
-          // Reload cart after successful removal
           add(LoadCartEvent());
           emit(CartItemUpdated('Đã xóa ${event.cartItemIds.length} sản phẩm khỏi giỏ hàng'));
         },
