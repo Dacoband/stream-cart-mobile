@@ -149,9 +149,8 @@ class ShopsSection extends StatelessWidget {
                     );
                   }
 
-                  return Container(
-                    height: 200,
-                    padding: const EdgeInsets.only(left: 16),
+                  return SizedBox(
+                    height: 200, 
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: shops.length,
@@ -236,124 +235,132 @@ class ShopsSection extends StatelessWidget {
             border: Border.all(color: Colors.grey[200]!),
           ),
           padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Shop Image/Logo
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey[300],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: shop.logoURL.isNotEmpty
-                      ? Image.network(
-                          shop.logoURL,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.store,
-                              color: Colors.grey,
-                              size: 30,
-                            );
-                          },
-                        )
-                      : const Icon(
-                          Icons.store,
-                          color: Colors.grey,
-                          size: 30,
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Shop Name
-              Text(
-                shop.shopName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF202328),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 6),
-
-              // Shop Rating and Product Count
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.star,
-                    color: const Color(0xFFFFB800),
-                    size: 14,
+          child: ConstrainedBox( // Add this to constrain the height
+            constraints: const BoxConstraints(maxHeight: 180), // Adjust height as needed
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // Ensure content takes minimum space
+              children: [
+                // Shop Image/Logo
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[300],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    shop.ratingAverage.toStringAsFixed(1),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: shop.logoURL.isNotEmpty
+                        ? Image.network(
+                            shop.logoURL,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.store,
+                                color: Colors.grey,
+                                size: 30,
+                              );
+                            },
+                          )
+                        : const Icon(
+                            Icons.store,
+                            color: Colors.grey,
+                            size: 30,
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Shop Name
+                Text(
+                  shop.shopName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF202328),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 6),
+
+                // Shop Rating and Product Count
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.star,
+                      color: const Color(0xFFFFB800),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      shop.ratingAverage.toStringAsFixed(1),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+
+                // Shop Status or Product Count
+                Text(
+                  '${shop.totalProduct} sản phẩm',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 8),
+
+                // View Shop Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 20, // Fixed height
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRouter.shopDetail,
+                        arguments: shop.id,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB0F847),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                      padding: EdgeInsets.zero, 
+                      minimumSize: Size.zero, 
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Xem shop',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0, 
+                      ),
+                      textAlign: TextAlign.center, 
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 4),
-
-              // Shop Status or Product Count
-              Text(
-                '${shop.totalProduct} sản phẩm',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[500],
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 8),
-
-              // View Shop Button
-              Container(
-                width: double.infinity,
-                height: 28,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      AppRouter.shopDetail,
-                      arguments: shop.id,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB0F847),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: const Text(
-                    'Xem shop',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

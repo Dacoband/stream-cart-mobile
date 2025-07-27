@@ -37,8 +37,8 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   
   #LiveKit
-  livekit_client: ^2.4.5
-  livekit_components: ^1.0.0
+  livekit_client: 2.4.9
+
 
 
   # HTTP client
@@ -94,7 +94,7 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.12
   json_serializable: ^6.8.0
-  retrofit_generator: ^8.1.0
+  retrofit_generator: 9.2.0
   injectable_generator: ^2.6.1
   hive_generator: ^2.0.1
   

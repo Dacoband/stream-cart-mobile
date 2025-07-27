@@ -32,25 +32,27 @@ class _ShopShimmerState extends State<ShopShimmer>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 6, // Show 6 shimmer cards
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+Widget build(BuildContext context) {
+  return ListView.builder(
+    padding: const EdgeInsets.all(16),
+    itemCount: 6, // Show 6 shimmer cards
+    itemBuilder: (context, index) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView( // Add this
               child: AnimatedBuilder(
                 animation: _animation,
                 builder: (context, child) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Add this
                     children: [
                       // Shop Header
                       Row(
@@ -99,17 +101,18 @@ class _ShopShimmerState extends State<ShopShimmer>
                       const SizedBox(height: 12),
                       
                       // Created Date
-                      _buildShimmerContainer(120, 12, 4),
+                      // _buildShimmerContainer(120, 12, 4),
                     ],
                   );
                 },
               ),
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildShimmerContainer(double width, double height, double borderRadius) {
     return Container(

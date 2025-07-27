@@ -65,6 +65,7 @@ class ApiConstants {
   static const String chatRoomDetailsEndpoint = '/api/chat/rooms/{chatRoomId}/messages';
   static const String chatRoomMarkAsReadEndpoint = '/api/chat/rooms/{chatRoomId}/mark-read';
   static const String chatRoomShopEndpoint = '/api/chat/rooms/shop/{shopId}';
+  static const String shopTokenEndpoint = '/api/chat/rooms/{chatRoomId}/shop-token';
 
   
   // HTTP Status codes
