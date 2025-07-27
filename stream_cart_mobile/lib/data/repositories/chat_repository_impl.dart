@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
 import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
 import 'package:stream_cart_mobile/data/datasources/chat_remote_data_source.dart';
 import 'package:stream_cart_mobile/core/error/failures.dart';
@@ -46,7 +47,7 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Failure, List<ChatEntity>>> getChatRoomMessages(
+  Future<Either<Failure, List<ChatMessage>>> getChatRoomMessages(
     String chatRoomId, {
     int pageNumber = 1,
     int pageSize = 50,
@@ -179,7 +180,7 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Failure, ChatEntity>> sendMessage({
+  Future<Either<Failure, ChatMessage>> sendMessage({
     required String chatRoomId,
     required String content,
     String messageType = 'Text',
@@ -194,23 +195,19 @@ class ChatRepositoryImpl implements ChatRepository {
       );
       return Right(message);
     } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để gửi tin nhắn'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 404) {
-        return Left(ServerFailure('Phòng chat không tồn tại'));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
+      if (e.message.contains('Vui lòng đăng nhập')) {
+        return Left(UnauthorizedFailure(e.message));
+      } else if (e.message.contains('Yêu cầu không hợp lệ') ||
+          e.message.contains('không thành công')) {
+        return Left(ServerFailure(e.message));
+      } else if (e.message.contains('Phòng chat không tồn tại')) {
+        return Left(ServerFailure(e.message));
+      } else if (e.message.contains('Lỗi máy chủ nội bộ')) {
+        return Left(ServerFailure(e.message));
+      } else if (e.message.contains('Kết nối timeout')) {
+        return Left(NetworkFailure(e.message));
       }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(ServerFailure(e.message)); // Xử lý lỗi chung
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
