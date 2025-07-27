@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
 import '../entities/chat_entity.dart';
 import '../../core/error/failures.dart';
 
@@ -21,7 +22,7 @@ abstract class ChatRepository {
   /// [pageNumber]: The page number to retrieve (default: 1).
   /// [pageSize]: The number of items per page (default: 50).
   /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
-  Future<Either<Failure, List<ChatEntity>>> getChatRoomMessages(
+  Future<Either<Failure, List<ChatMessage>>> getChatRoomMessages(
     String chatRoomId, {
     int pageNumber = 1,
     int pageSize = 50,
@@ -63,7 +64,7 @@ abstract class ChatRepository {
   /// [messageType]: The type of message (default: 'Text').
   /// [attachmentUrl]: Optional URL of an attachment (default: null).
   /// Returns [Either<Failure, ChatEntity>] containing the sent message or failure.
-  Future<Either<Failure, ChatEntity>> sendMessage({
+  Future<Either<Failure, ChatMessage>> sendMessage({
     required String chatRoomId,
     required String content,
     String messageType = 'Text',

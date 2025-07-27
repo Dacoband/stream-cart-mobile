@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:stream_cart_mobile/core/constants/api_constants.dart';
+import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../models/chat_model.dart';
 import '../../core/utils/api_url_helper.dart';
@@ -12,7 +13,7 @@ abstract class ChatRemoteDataSource {
     bool? isActive,
   });
 
-  Future<List<ChatEntity>> getChatRoomMessages(String chatRoomId, {
+  Future<List<ChatMessage>> getChatRoomMessages(String chatRoomId, {
     int pageNumber = 1,
     int pageSize = 50,
   });
@@ -25,7 +26,7 @@ abstract class ChatRemoteDataSource {
     required String initialMessage,
   });
 
-  Future<ChatEntity> sendMessage({
+  Future<ChatMessage> sendMessage({
     required String chatRoomId,
     required String content,
     String messageType = 'Text',
@@ -87,7 +88,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Future<List<ChatEntity>> getChatRoomMessages(String chatRoomId, {
+  Future<List<ChatMessage>> getChatRoomMessages(String chatRoomId, {
     int pageNumber = 1,
     int pageSize = 50,
   }) async {
@@ -108,7 +109,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       }
 
       final data = responseData['data']['items'] as List<dynamic>? ?? [];
-      return data.map((json) => ChatModel.fromJson(json).toEntity()).toList();
+      return data.map((json) => LastMessageModel.fromJson(json).toEntity()).toList();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw ServerException('Vui lòng đăng nhập để xem tin nhắn');
@@ -203,7 +204,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Future<ChatEntity> sendMessage({
+  Future<ChatMessage> sendMessage({
     required String chatRoomId,
     required String content,
     String messageType = 'Text',
@@ -226,7 +227,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
             errors.isNotEmpty ? errors.join(', ') : responseData['message'] ?? 'Yêu cầu không thành công');
       }
 
-      return ChatModel.fromJson(responseData['data']).toEntity();
+      return LastMessageModel.fromJson(responseData['data']).toEntity();
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw ServerException('Vui lòng đăng nhập để gửi tin nhắn');
