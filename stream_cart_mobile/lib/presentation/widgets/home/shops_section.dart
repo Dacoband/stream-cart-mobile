@@ -54,7 +54,7 @@ class ShopsSection extends StatelessWidget {
                       const Text(
                         'Khám phá Shop',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF202328),
                         ),
@@ -68,6 +68,7 @@ class ShopsSection extends StatelessWidget {
                     child: const Text(
                       'Xem tất cả',
                       style: TextStyle(
+                        fontSize: 12,
                         color: Color(0xFFB0F847),
                         fontWeight: FontWeight.w600,
                       ),
@@ -186,7 +187,7 @@ class ShopsSection extends StatelessWidget {
                     backgroundColor: const Color(0xFFB0F847),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(13),
                     ),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -194,13 +195,13 @@ class ShopsSection extends StatelessWidget {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.store, size: 20),
+                      Icon(Icons.store, size: 19),
                       SizedBox(width: 8),
                       Text(
                         'Xem tất cả Shop',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontSize: 11,
                         ),
                       ),
                       SizedBox(width: 8),
@@ -235,13 +236,13 @@ class ShopsSection extends StatelessWidget {
             border: Border.all(color: Colors.grey[200]!),
           ),
           padding: const EdgeInsets.all(12),
-          child: ConstrainedBox( // Add this to constrain the height
-            constraints: const BoxConstraints(maxHeight: 180), // Adjust height as needed
+          child: ConstrainedBox( 
+            constraints: const BoxConstraints(maxHeight: 180), 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min, // Ensure content takes minimum space
+              mainAxisSize: MainAxisSize.min, 
               children: [
-                // Shop Image/Logo
+                
                 Container(
                   width: 60,
                   height: 60,
@@ -277,12 +278,12 @@ class ShopsSection extends StatelessWidget {
                 Text(
                   shop.shopName,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF202328),
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
 
@@ -295,13 +296,13 @@ class ShopsSection extends StatelessWidget {
                     Icon(
                       Icons.star,
                       color: const Color(0xFFFFB800),
-                      size: 14,
+                      size: 15,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       shop.ratingAverage.toStringAsFixed(1),
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 8,
                         color: Colors.grey[600],
                         fontWeight: FontWeight.w500,
                       ),
@@ -315,7 +316,7 @@ class ShopsSection extends StatelessWidget {
                 Text(
                   '${shop.totalProduct} sản phẩm',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 9,
                     color: Colors.grey[500],
                   ),
                   textAlign: TextAlign.center,

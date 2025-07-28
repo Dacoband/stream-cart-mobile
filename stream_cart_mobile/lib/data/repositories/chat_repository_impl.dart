@@ -207,7 +207,7 @@ class ChatRepositoryImpl implements ChatRepository {
       } else if (e.message.contains('Kết nối timeout')) {
         return Left(NetworkFailure(e.message));
       }
-      return Left(ServerFailure(e.message)); // Xử lý lỗi chung
+      return Left(ServerFailure(e.message)); 
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
@@ -229,6 +229,40 @@ class ChatRepositoryImpl implements ChatRepository {
         return Left(ServerFailure(message));
       } else if (e.response?.statusCode == 404) {
         return Left(ServerFailure('Phòng chat không tồn tại'));
+      } else if (e.response?.statusCode == 500) {
+        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return Left(NetworkFailure('Kết nối timeout'));
+      }
+      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ChatEntity>>> getShopChatRooms({
+    int pageNumber = 1,
+    int pageSize = 20,
+    bool? isActive,
+  }) async {
+    try {
+      final chatRooms = await remoteDataSource.getShopChatRooms(
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+        isActive: isActive,
+      );
+      return Right(chatRooms);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem phòng chat của shop'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
+        return Left(ServerFailure(message));
       } else if (e.response?.statusCode == 500) {
         return Left(ServerFailure('Lỗi máy chủ nội bộ'));
       } else if (e.type == DioExceptionType.connectionTimeout ||

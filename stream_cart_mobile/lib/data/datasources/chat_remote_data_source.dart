@@ -38,6 +38,11 @@ abstract class ChatRemoteDataSource {
     int pageSize = 20,
   });
   Future<String> getShopToken(String chatRoomId); 
+  Future<List<ChatEntity>> getShopChatRooms({
+    int pageNumber = 1,
+    int pageSize = 20,
+    bool? isActive,
+  });
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -314,6 +319,48 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         throw ServerException(responseData?['message'] ?? 'Yêu cầu không hợp lệ');
       } else if (e.response?.statusCode == 404) {
         throw ServerException('Shop không tồn tại');
+      } else if (e.response?.statusCode == 500) {
+        throw ServerException('Lỗi máy chủ nội bộ');
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw ServerException('Kết nối timeout');
+      }
+      throw ServerException('Lỗi kết nối: ${e.message}');
+    } catch (e) {
+      throw ServerException('Lỗi không xác định: $e');
+    }
+  }
+
+  @override
+  Future<List<ChatEntity>> getShopChatRooms({
+    int pageNumber = 1,
+    int pageSize = 20,
+    bool? isActive,
+  }) async {
+    try {
+      final response = await dio.get(
+        ApiConstants.chatShopRoomsEndpoint,
+        queryParameters: {
+          'pageNumber': pageNumber,
+          'pageSize': pageSize,
+          if (isActive != null) 'isActive': isActive,
+        },
+      );
+      final responseData = response.data;
+      if (responseData['success'] == false) {
+        final errors = responseData['errors'] as List<dynamic>? ?? [];
+        throw ServerException(
+          errors.isNotEmpty ? errors.join(', ') : responseData['message'] ?? 'Yêu cầu không thành công'
+        );
+      }
+      final items = responseData['data']['items'] as List<dynamic>? ?? [];
+      return items.map((e) => ChatModel.fromJson(e).toEntity()).toList();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw ServerException('Vui lòng đăng nhập để xem phòng chat của shop');
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        throw ServerException(responseData?['message'] ?? 'Yêu cầu không hợp lệ');
       } else if (e.response?.statusCode == 500) {
         throw ServerException('Lỗi máy chủ nội bộ');
       } else if (e.type == DioExceptionType.connectionTimeout ||

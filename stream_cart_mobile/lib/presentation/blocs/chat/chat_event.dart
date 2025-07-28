@@ -31,6 +31,21 @@ class LoadChatRooms extends ChatEvent {
   List<Object?> get props => [pageNumber, pageSize, isActive];
 }
 
+class LoadShopChatRooms extends ChatEvent {
+  final int pageNumber;
+  final int pageSize;
+  final bool? isActive;
+
+  const LoadShopChatRooms({
+    this.pageNumber = 1,
+    this.pageSize = 20,
+    this.isActive,
+  });
+
+  @override
+  List<Object?> get props => [pageNumber, pageSize, isActive];
+}
+
 class LoadChatRoomsByShop extends ChatEvent {
   final String shopId;
   final int pageNumber;

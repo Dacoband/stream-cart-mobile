@@ -2,6 +2,9 @@ import 'dart:typed_data';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
+
+import '../../presentation/blocs/chat/chat_event.dart';
 
 
 class LivekitService {
@@ -17,14 +20,18 @@ class LivekitService {
   final Duration retryDelay;
   int _currentRetry = 0;
 
+
   void Function(String status)? onStatusChanged;
 
+
   LivekitService(
-    this._chatRepository, {
-    this.maxRetry = 3,
-    this.retryDelay = const Duration(seconds: 2),
-    this.onStatusChanged,
-  });
+    this._chatRepository,
+    {
+      this.maxRetry = 3,
+      this.retryDelay = const Duration(seconds: 2),
+      this.onStatusChanged,
+    }
+  );
 
   Future<void> initializeRoom({
     required String chatRoomId,
@@ -143,7 +150,15 @@ class LivekitService {
       } else if (event is ParticipantDisconnectedEvent) {
         print('Participant left: ${event.participant.identity} (${event.participant.name})');
       } else if (event is DataReceivedEvent) {
-        print('Nhận dữ liệu: ${String.fromCharCodes(event.data)} từ ${event.participant?.identity}');
+        final messageStr = String.fromCharCodes(event.data);
+        // Gửi event cho ChatBloc nếu đã set
+        _chatBloc?.add(ReceiveMessage(
+          messageStr,
+          event.participant?.identity ?? '',
+          _chatRoomId ?? '',
+          event.participant?.name ?? '',
+          false,
+        ));
       }
     });
   }
@@ -155,7 +170,7 @@ class LivekitService {
       _chatRoomId = null;
       _userId = null;
       _userName = null;
-      _currentRetry = 0; // Reset khi ngắt kết nối thủ công
+      _currentRetry = 0; 
       print('Đã ngắt kết nối khỏi LiveKit');
     } else {
       print('Chưa kết nối, không cần ngắt kết nối.');
@@ -181,4 +196,10 @@ class LivekitService {
   bool get isConnected => _isConnected;
 
   Room? get room => _room;
+
+  ChatBloc? _chatBloc;
+
+  void setChatBloc(ChatBloc chatBloc) {
+    _chatBloc = chatBloc;
+  }
 }

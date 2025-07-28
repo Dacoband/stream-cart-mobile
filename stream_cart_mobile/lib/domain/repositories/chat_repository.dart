@@ -76,4 +76,16 @@ abstract class ChatRepository {
   /// [chatRoomId]: The ID of the chat room.
   /// Returns [Either<Failure, String>] containing the token or failure.
   Future<Either<Failure, String>> getShopToken(String chatRoomId);
+
+  /// Retrieves a list of chat rooms associated with a specific shop based on pagination.
+  /// 
+  /// [pageNumber]: The page number to retrieve (default: 1).
+  /// [pageSize]: The number of items per page (default: 20).
+  /// [isActive]: Optional filter to get only active rooms (default: null).
+  /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
+  Future<Either<Failure, List<ChatEntity>>> getShopChatRooms({
+    int pageNumber = 1,
+    int pageSize = 20,
+    bool? isActive,
+  });
 }

@@ -21,7 +21,7 @@ class ChatInputWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: const Color.fromARGB(255, 108, 218, 45).withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -31,11 +31,11 @@ class ChatInputWidget extends StatelessWidget {
               controller: textController,
               decoration: InputDecoration(
                 hintText: 'Nhập tin nhắn...',
-                hintStyle: TextStyle(color: Colors.grey.shade300),
+                hintStyle: TextStyle(color: Colors.black87),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.black87),
             ),
           ),
           IconButton(
