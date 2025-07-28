@@ -37,8 +37,8 @@ void main() async {
   
   try {
     await Env.load();
-  } catch (e) {
-    
+  } catch (e, s) {
+    debugPrint('Env load error: $e\n$s');
   }
   
   await setupDependencies();

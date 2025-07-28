@@ -13,6 +13,7 @@ class ConnectLiveKitUseCase {
     required String userName,
   }) async {
     try {
+      print('ConnectLiveKitUseCase: chatRoomId=$chatRoomId, userId=$userId, userName=$userName');
       await livekitService.initializeRoom(chatRoomId: chatRoomId, userId: userId, userName: userName);
       return Right(null);
     } catch (e) {

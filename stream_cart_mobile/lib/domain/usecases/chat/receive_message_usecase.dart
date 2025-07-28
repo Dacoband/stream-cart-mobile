@@ -2,8 +2,11 @@ import 'package:dartz/dartz.dart';
 import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
 
 import '../../../core/error/failures.dart';
+import '../../repositories/chat_repository.dart';
 
 class ReceiveMessageUseCase {
+  final ChatRepository repository;
+  ReceiveMessageUseCase(this.repository);
   Future<Either<Failure, ChatMessage>> call({
     required String message,
     required String senderId,
