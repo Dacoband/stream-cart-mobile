@@ -13,6 +13,7 @@ import '../../../domain/usecases/chat/load_chat_rooms_usecase.dart';
 import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
+import '../../../core/services/livekit_service.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final LoadChatRoomUseCase loadChatRoomUseCase;
@@ -43,6 +44,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ConnectLiveKit>(_onConnectLiveKit);
     on<DisconnectLiveKit>(_onDisconnectLiveKit);
     on<ChatErrorEvent>(_onChatError);
+    on<ChatLiveKitStatusChanged>(_onLiveKitStatusChanged);
+
+    // Listen to LivekitService status if available
+    final livekitService = _tryGetLivekitService();
+    if (livekitService != null) {
+      livekitService.onStatusChanged = (status) {
+        add(ChatLiveKitStatusChanged(status));
+      };
+    }
+  }
+
+  LivekitService? _tryGetLivekitService() {
+    try {
+      // Nếu dùng getIt hoặc DI, lấy LivekitService ở đây
+      // import '../services/livekit_service.dart';
+      // return getIt<LivekitService>();
+      return null; // Nếu không dùng getIt thì bỏ qua
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _onLiveKitStatusChanged(ChatLiveKitStatusChanged event, Emitter<ChatState> emit) {
+    final status = event.status;
+    if (status.contains('Đang kết nối lại')) {
+      emit(ChatReconnecting(status));
+    } else if (status.contains('Reconnect thất bại') || status.contains('Kết nối thất bại')) {
+      emit(ChatReconnectFailed(status));
+    } else if (status.contains('Đã kết nối')) {
+      // Có thể emit LiveKitConnected nếu muốn
+      emit(ChatStatusChanged(status));
+    } else if (status.contains('Lỗi kết nối')) {
+      emit(ChatError(status));
+    } else {
+      emit(ChatStatusChanged(status));
+    }
   }
 
   Future<void> _onLoadChatRoom(LoadChatRoom event, Emitter<ChatState> emit) async {
@@ -133,17 +170,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onConnectLiveKit(ConnectLiveKit event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
-    final result = await connectLiveKitUseCase(
-      chatRoomId: event.chatRoomId,
-      userId: event.userId,
-      userName: event.userName,
-    );
-    result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (_) => emit(LiveKitConnected(event.chatRoomId)),
-    );
-  }
+  emit(ChatLoading());
+  final result = await connectLiveKitUseCase(
+    chatRoomId: event.chatRoomId,
+    userId: event.userId,
+    userName: event.userName,
+  );
+  result.fold(
+    (failure) => emit(ChatError(failure.message)),
+    (_) {
+      emit(LiveKitConnected(event.chatRoomId));
+      add(LoadChatRoom(event.chatRoomId));
+    },
+  );
+}
 
   Future<void> _onDisconnectLiveKit(DisconnectLiveKit event, Emitter<ChatState> emit) async {
     emit(ChatLoading());

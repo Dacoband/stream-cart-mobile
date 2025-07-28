@@ -114,3 +114,10 @@ class ChatErrorEvent extends ChatEvent {
   @override
   List<Object?> get props => [message];
 }
+
+class ChatLiveKitStatusChanged extends ChatEvent {
+  final String status;
+  const ChatLiveKitStatusChanged(this.status);
+  @override
+  List<Object?> get props => [status];
+}

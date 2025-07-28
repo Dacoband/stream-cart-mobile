@@ -72,3 +72,24 @@ class LiveKitConnected extends ChatState {
 }
 
 class LiveKitDisconnected extends ChatState {}
+
+class ChatReconnecting extends ChatState {
+  final String message;
+  const ChatReconnecting(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class ChatReconnectFailed extends ChatState {
+  final String message;
+  const ChatReconnectFailed(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class ChatStatusChanged extends ChatState {
+  final String status;
+  const ChatStatusChanged(this.status);
+  @override
+  List<Object?> get props => [status];
+}
