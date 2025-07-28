@@ -72,6 +72,19 @@ import '../../presentation/blocs/cart/cart_bloc.dart';
 import '../../presentation/blocs/category_detail/category_detail_bloc.dart';
 import '../../presentation/blocs/notification/notification_bloc.dart';
 import '../../presentation/blocs/shop/shop_bloc.dart';
+import '../../data/datasources/chat_remote_data_source.dart';
+import '../../data/repositories/chat_repository_impl.dart';
+import '../../domain/repositories/chat_repository.dart';
+import '../../domain/usecases/chat/load_chat_rooms_usecase.dart';
+import '../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
+import '../../domain/usecases/chat/load_chat_room_usecase.dart';
+import '../../domain/usecases/chat/send_message_usecase.dart';
+import '../../domain/usecases/chat/receive_message_usecase.dart';
+import '../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
+import '../../domain/usecases/chat/connect_livekit_usecase.dart';
+import '../../domain/usecases/chat/disconnect_livekit_usecase.dart';
+import '../../presentation/blocs/chat/chat_bloc.dart';
+import '../services/livekit_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -210,7 +223,27 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetShopsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetShopByIdUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByShopUseCase(getIt()));
+
+  getIt.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(getIt()), 
+  );
+
+  getIt.registerLazySingleton<ChatRepository>(
+  () => ChatRepositoryImpl(getIt<ChatRemoteDataSource>()), 
+);
+
+  getIt.registerLazySingleton(() => LoadChatRoomsUseCase(getIt()));
+  getIt.registerLazySingleton(() => LoadChatRoomsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => LoadChatRoomUseCase(getIt()));
+  getIt.registerLazySingleton(() => SendMessageUseCase(getIt()));
+  getIt.registerLazySingleton(() => ReceiveMessageUseCase(getIt()));
+  getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt()));
+  getIt.registerLazySingleton(() => ConnectLiveKitUseCase(getIt<LivekitService>()));
+  getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
   
+  //Livekit dependencies
+  getIt.registerLazySingleton(() => LivekitService(getIt()));
+
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
@@ -303,5 +336,17 @@ Future<void> setupDependencies() async {
     getShopsUseCase: getIt(),
     getShopByIdUseCase: getIt(),
     getProductsByShopUseCase: getIt(),
+  ));
+
+  // Register ChatBloc
+  getIt.registerFactory(() => ChatBloc(
+    loadChatRoomUseCase: getIt(),
+    loadChatRoomsByShopUseCase: getIt(),
+    loadChatRoomsUseCase: getIt(),
+    sendMessageUseCase: getIt(),
+    receiveMessageUseCase: getIt(),
+    markChatRoomAsReadUseCase: getIt(),
+    connectLiveKitUseCase: getIt(),
+    disconnectLiveKitUseCase: getIt(),
   ));
 }

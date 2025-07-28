@@ -46,6 +46,10 @@ class LivekitService {
       _setupListeners();
 
       try {
+        print('LiveKit URL: $url');
+        print('LiveKit Token: $token');
+        print('Connecting to LiveKit as user: $userName');
+        
         await _room.connect(
           url,
           token,

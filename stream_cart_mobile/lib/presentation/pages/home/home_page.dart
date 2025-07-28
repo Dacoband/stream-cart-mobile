@@ -99,12 +99,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onChatPressed() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng chat đang phát triển'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      Navigator.pushNamed(context, AppRouter.chatList);
+    } else {
+      showLoginRequiredDialog(context, message: 'Bạn cần đăng nhập để sử dụng chat');
+    }
   }
 
   void _onNotificationPressed() {
