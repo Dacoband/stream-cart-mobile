@@ -232,7 +232,7 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 categoryName,
                 style: const TextStyle(
-                  color: Colors.black, // Changed to black for white background
+                  color: Colors.black, 
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),

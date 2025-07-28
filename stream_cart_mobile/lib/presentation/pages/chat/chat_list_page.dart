@@ -5,6 +5,9 @@ import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 import 'package:stream_cart_mobile/presentation/widgets/common/auth_guard.dart';
 import 'package:stream_cart_mobile/presentation/widgets/common/custom_search_bar.dart';
+import '../../../core/enums/user_role.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 import '../../widgets/chat/chat_list_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -20,11 +23,22 @@ class ChatListPage extends StatefulWidget {
 
 class _ChatListPageState extends State<ChatListPage> with RouteAware {
   @override
-  void initState() {
-    super.initState();
-    // Gửi event load phòng chat khi vào trang
-    context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-  }
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final authState = context.read<AuthBloc>().state;
+    int? roleValue;
+    if (authState is AuthSuccess) {
+      roleValue = authState.loginResponse?.account?.role;
+    }
+    final userRole = UserRole.fromValue(roleValue ?? 1);
+    if (userRole == UserRole.seller) {
+      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
+    } else {
+      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+    }
+  });
+}
 
   @override
   void didChangeDependencies() {
@@ -43,7 +57,17 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
   void didPopNext() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+        final authState = context.read<AuthBloc>().state;
+        int? roleValue;
+        if (authState is AuthSuccess) {
+          roleValue = authState.loginResponse?.account?.role;
+        }
+        final userRole = UserRole.fromValue(roleValue ?? 1);
+        if (userRole == UserRole.seller) {
+          context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
+        } else {
+          context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+        }
       }
     });
   }
@@ -61,13 +85,27 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: CustomSearchBar(
                 controller: TextEditingController(),
-                hintText: 'Tìm phòng chat...',
+                hintText: 'Tìm kiếm phòng chat...',
                 onChanged: (query) {
-                  context.read<ChatBloc>().add(LoadChatRooms(
-                    pageNumber: 1,
-                    pageSize: 20,
-                    isActive: true,
-                  ));
+                  final authState = context.read<AuthBloc>().state;
+                  int? roleValue;
+                  if (authState is AuthSuccess) {
+                    roleValue = authState.loginResponse?.account?.role;
+                  }
+                  final userRole = UserRole.fromValue(roleValue ?? 1);
+                  if (userRole == UserRole.seller) {
+                    context.read<ChatBloc>().add(LoadShopChatRooms(
+                      pageNumber: 1,
+                      pageSize: 20,
+                      isActive: true,
+                    ));
+                  } else {
+                    context.read<ChatBloc>().add(LoadChatRooms(
+                      pageNumber: 1,
+                      pageSize: 20,
+                      isActive: true,
+                    ));
+                  }
                 },
               ),
             ),

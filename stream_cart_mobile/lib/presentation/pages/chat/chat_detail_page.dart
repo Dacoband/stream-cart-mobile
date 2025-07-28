@@ -5,6 +5,8 @@ import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 
+import '../../../core/di/dependency_injection.dart';
+import '../../../core/services/livekit_service.dart';
 import '../../widgets/chat/chat_input_widget.dart';
 import '../../widgets/chat/chat_message_list_widget.dart';
 import '../../widgets/chat/livekit_status_widget.dart';
@@ -32,7 +34,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Chỉ phát ConnectLiveKit khi lần đầu vào phòng chat
+    getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!_hasConnected) {
         context.read<ChatBloc>().add(ConnectLiveKit(

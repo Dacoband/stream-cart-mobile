@@ -20,6 +20,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/search_repository.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/shop_repository.dart';
+import '../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/otp_usecases.dart';
@@ -63,6 +64,7 @@ import '../../data/datasources/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
+import '../../presentation/blocs/chat/chat_event.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
@@ -234,18 +236,36 @@ Future<void> setupDependencies() async {
 
   getIt.registerLazySingleton(() => LoadChatRoomsUseCase(getIt()));
   getIt.registerLazySingleton(() => LoadChatRoomsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => LoadShopChatRoomsUseCase(getIt()));
   getIt.registerLazySingleton(() => LoadChatRoomUseCase(getIt()));
   getIt.registerLazySingleton(() => SendMessageUseCase(getIt()));
   getIt.registerLazySingleton(() => ReceiveMessageUseCase(getIt()));
   getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt()));
   getIt.registerLazySingleton(() => ConnectLiveKitUseCase(getIt<LivekitService>()));
   getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
+
+  // Register ChatBloc
+  getIt.registerLazySingleton<ChatBloc>(() => ChatBloc(
+    loadChatRoomUseCase: getIt(),
+    loadChatRoomsByShopUseCase: getIt(),
+    loadChatRoomsUseCase: getIt(),
+    loadShopChatRoomsUseCase: getIt(),
+    sendMessageUseCase: getIt(),
+    receiveMessageUseCase: getIt(),
+    markChatRoomAsReadUseCase: getIt(),
+    connectLiveKitUseCase: getIt(),
+    disconnectLiveKitUseCase: getIt(),
+  ));
   
   //Livekit dependencies
-  getIt.registerLazySingleton<LivekitService>(() => LivekitService(getIt(), onStatusChanged: (status) {
-    // Nếu muốn, có thể gửi event lên Bloc tại đây hoặc để Bloc tự set callback sau
-    // Ví dụ: getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
-  }));
+  getIt.registerLazySingleton<LivekitService>(() => LivekitService(
+    getIt(), 
+    onStatusChanged: (status) {
+      // Nếu muốn, có thể gửi event lên Bloc tại đây hoặc để Bloc tự set callback sau
+      // Ví dụ: getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
+        getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
+    }
+  ));
 
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
@@ -341,15 +361,5 @@ Future<void> setupDependencies() async {
     getProductsByShopUseCase: getIt(),
   ));
 
-  // Register ChatBloc
-  getIt.registerFactory(() => ChatBloc(
-    loadChatRoomUseCase: getIt(),
-    loadChatRoomsByShopUseCase: getIt(),
-    loadChatRoomsUseCase: getIt(),
-    sendMessageUseCase: getIt(),
-    receiveMessageUseCase: getIt(),
-    markChatRoomAsReadUseCase: getIt(),
-    connectLiveKitUseCase: getIt(),
-    disconnectLiveKitUseCase: getIt(),
-  ));
+  
 }

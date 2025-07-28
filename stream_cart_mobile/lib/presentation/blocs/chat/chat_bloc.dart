@@ -8,6 +8,7 @@ import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_rooms_usecase.dart';
+import '../../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
@@ -17,6 +18,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final LoadChatRoomUseCase loadChatRoomUseCase;
   final LoadChatRoomsUseCase loadChatRoomsUseCase;
   final LoadChatRoomsByShopUseCase loadChatRoomsByShopUseCase;
+  final LoadShopChatRoomsUseCase loadShopChatRoomsUseCase;
   final SendMessageUseCase sendMessageUseCase;
   final ReceiveMessageUseCase receiveMessageUseCase;
   final MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
@@ -27,6 +29,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.loadChatRoomUseCase,
     required this.loadChatRoomsUseCase,
     required this.loadChatRoomsByShopUseCase,
+    required this.loadShopChatRoomsUseCase,
     required this.sendMessageUseCase,
     required this.receiveMessageUseCase,
     required this.markChatRoomAsReadUseCase,
@@ -36,6 +39,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LoadChatRoom>(_onLoadChatRoom);
     on<LoadChatRooms>(_onLoadChatRooms);
     on<LoadChatRoomsByShop>(_onLoadChatRoomsByShop);
+    on<LoadShopChatRooms>(_onLoadShopChatRooms);
     on<SendMessage>(_onSendMessage);
     on<ReceiveMessage>(_onReceiveMessage);
     on<MarkChatRoomAsRead>(_onMarkChatRoomAsRead);
@@ -115,6 +119,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
+  Future<void> _onLoadShopChatRooms(LoadShopChatRooms event, Emitter<ChatState> emit) async {
+  emit(ChatLoading());
+  final result = await loadShopChatRoomsUseCase(
+    pageNumber: event.pageNumber,
+    pageSize: event.pageSize,
+    isActive: event.isActive,
+  );
+  result.fold(
+    (failure) => emit(ChatError(failure.message)),
+    (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
+  );
+}
+
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
     final result = await sendMessageUseCase(
@@ -125,38 +142,46 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
     result.fold(
       (failure) => emit(ChatError(failure.message)),
-      (message) => emit(ChatLoaded(messages: [message])),
+      (message) {
+        add(ReceiveMessage(
+          message.content,
+          message.senderUserId,
+          message.chatRoomId,
+          message.senderName,
+          true, // isMine
+        ));
+      },
     );
   }
 
   Future<void> _onReceiveMessage(ReceiveMessage event, Emitter<ChatState> emit) async {
-    final result = await receiveMessageUseCase(
-      message: event.message,
-      senderId: event.senderId,
-      chatRoomId: event.chatRoomId,
-      senderName: event.senderName,
-      isMine: event.isMine,
-    );
-    result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (newMessage) {
-        if (state is ChatLoaded) {
-          final currentState = state as ChatLoaded;
-          emit(currentState.copyWith(
-            messages: [...currentState.messages, newMessage],
-            chatRoomId: event.chatRoomId, 
-          ));
-        } else {
-          emit(ChatLoaded(
-            messages: [newMessage],
-            chatRoomId: event.chatRoomId,
-            chatRooms: const [], 
-            hasReachedMax: false,
-          ));
-        }
-      },
-    );
-  }
+  final result = await receiveMessageUseCase(
+    message: event.message,
+    senderId: event.senderId,
+    chatRoomId: event.chatRoomId,
+    senderName: event.senderName,
+    isMine: event.isMine,
+  );
+  result.fold(
+    (failure) => emit(ChatError(failure.message)),
+    (newMessage) {
+      if (state is ChatLoaded) {
+        final currentState = state as ChatLoaded;
+        emit(currentState.copyWith(
+          messages: [...currentState.messages, newMessage], 
+          chatRoomId: event.chatRoomId,
+        ));
+      } else {
+        emit(ChatLoaded(
+          messages: [newMessage],
+          chatRoomId: event.chatRoomId,
+          chatRooms: const [],
+          hasReachedMax: false,
+        ));
+      }
+    },
+  );
+}
 
   Future<void> _onMarkChatRoomAsRead(MarkChatRoomAsRead event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
