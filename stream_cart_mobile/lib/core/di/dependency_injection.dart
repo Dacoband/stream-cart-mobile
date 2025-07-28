@@ -242,7 +242,10 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
   
   //Livekit dependencies
-  getIt.registerLazySingleton(() => LivekitService(getIt()));
+  getIt.registerLazySingleton<LivekitService>(() => LivekitService(getIt(), onStatusChanged: (status) {
+    // Nếu muốn, có thể gửi event lên Bloc tại đây hoặc để Bloc tự set callback sau
+    // Ví dụ: getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
+  }));
 
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
