@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
-import 'package:stream_cart_mobile/core/error/failures.dart';
+
 
 class LivekitService {
   Room? _room;

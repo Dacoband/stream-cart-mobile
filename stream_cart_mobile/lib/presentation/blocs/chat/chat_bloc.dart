@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
+
 import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
