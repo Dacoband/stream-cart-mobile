@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import '../../presentation/blocs/address/address_bloc.dart';
+import '../../presentation/pages/address/add_edit_address_page.dart';
+import '../../presentation/pages/address/address_list_page.dart';
 import '../../presentation/pages/chat/chat_detail_page.dart';
 import '../../presentation/pages/chat/chat_list_page.dart';
 import '../di/dependency_injection.dart';
@@ -45,7 +49,11 @@ class AppRouter {
   static const String shopList = '/shop-list';
   static const String shopDetail = '/shop-detail';
   static const String chatList = '/chat-list';
-static const String chatDetail = '/chat-detail';
+  static const String chatDetail = '/chat-detail';
+  static const String addressList = '/address-list';
+  static const String addAddress = '/add-address';
+  static const String editAddress = '/edit-address';
+
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -174,6 +182,33 @@ static const String chatDetail = '/chat-detail';
             chatRoomId: args['chatRoomId']!,
             userId: args['userId']!,
             userName: args['userName']!,
+          ),
+        );
+      case addressList:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<AddressBloc>(),
+            child: const AddressListPage(),
+          ),
+        );
+
+      case addAddress:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<AddressBloc>(),
+            child: const AddEditAddressPage(),
+          ),
+        );
+
+      case editAddress:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final address = args?['address'];
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<AddressBloc>(),
+            child: AddEditAddressPage(
+              initialAddress: address,
+            ),
           ),
         );
       default:
