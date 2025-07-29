@@ -26,6 +26,56 @@ class AddressModel extends AddressEntity {
     required super.lastModifiedBy,
   });
 
+  factory AddressModel.fromJson(Map<String, dynamic> json) {
+    return AddressModel(
+      id: json['id'] as String,
+      recipientName: json['recipientName'] as String,
+      street: json['street'] as String,
+      ward: json['ward'] as String,
+      district: json['district'] as String,
+      city: json['city'] as String,
+      country: json['country'] as String,
+      postalCode: json['postalCode'] as String,
+      phoneNumber: json['phoneNumber'] as String,
+      isDefaultShipping: json['isDefaultShipping'] as bool,
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      type: AddressType.fromValue(json['type'] as int),
+      isActive: json['isActive'] as bool,
+      accountId: json['accountId'] as String,
+      shopId: json['shopId'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdBy: json['createdBy'] as String,
+      lastModifiedAt: DateTime.parse(json['lastModifiedAt'] as String),
+      lastModifiedBy: json['lastModifiedBy'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'recipientName': recipientName,
+      'street': street,
+      'ward': ward,
+      'district': district,
+      'city': city,
+      'country': country,
+      'postalCode': postalCode,
+      'phoneNumber': phoneNumber,
+      'isDefaultShipping': isDefaultShipping,
+      'latitude': latitude,
+      'longitude': longitude,
+      'type': type.value,
+      'isActive': isActive,
+      'accountId': accountId,
+      'shopId': shopId,
+      'createdAt': createdAt.toIso8601String(),
+      'createdBy': createdBy,
+      'lastModifiedAt': lastModifiedAt.toIso8601String(),
+      'lastModifiedBy': lastModifiedBy,
+    };
+  }
+
   factory AddressModel.fromEntity(AddressEntity entity) {
     return AddressModel(
       id: entity.id,
