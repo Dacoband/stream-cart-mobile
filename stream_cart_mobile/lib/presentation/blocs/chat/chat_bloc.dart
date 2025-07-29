@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
@@ -76,7 +77,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } else if (status.contains('Reconnect thất bại') || status.contains('Kết nối thất bại')) {
       emit(ChatReconnectFailed(status));
     } else if (status.contains('Đã kết nối')) {
-      // Có thể emit LiveKitConnected nếu muốn
       emit(ChatStatusChanged(status));
     } else if (status.contains('Lỗi kết nối')) {
       emit(ChatError(status));
@@ -137,8 +137,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 }
 
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
-    // Không emit ChatLoading ở đây, giữ nguyên state hiện tại
-    // emit(ChatLoading());
     
     // 1. Gửi tin nhắn qua API để lưu vào database
     final result = await sendMessageUseCase(
@@ -154,10 +152,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         // 2. Gửi tin nhắn qua LiveKit để real-time
         final livekitService = _tryGetLivekitService();
         if (livekitService?.isConnected == true) {
-          // Format tin nhắn cho LiveKit
-          final livekitMessage = '${message.content}|${message.senderUserId}|${message.senderName}|${DateTime.now().toIso8601String()}|${message.messageType}|true';
-          livekitService?.sendDataMessage(livekitMessage);
-          print('✅ Đã gửi tin nhắn qua LiveKit: ${message.content}');
+          final livekitMessage = {
+            'content': message.content,
+            'senderUserId': message.senderUserId,
+            'senderName': message.senderName,
+            'sentAt': DateTime.now().toIso8601String(),
+            'messageType': message.messageType,
+            'isMine': true,
+          };
+          
+          final jsonString = jsonEncode(livekitMessage);
+          livekitService?.sendDataMessage(jsonString);
+          print('✅ Đã gửi tin nhắn qua LiveKit JSON: ${message.content}');
         } else {
           print('⚠️ LiveKit không kết nối, chỉ gửi qua API');
         }
@@ -169,7 +175,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           message.senderUserId,
           message.chatRoomId,
           message.senderName,
-          true, // isMine
+          true, 
         ));
         print('✅ Đã dispatch ReceiveMessage event');
       },
@@ -180,29 +186,36 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     print('📨 _onReceiveMessage được gọi với: ${event.message}');
     print('📨 Current state: ${state.runtimeType}');
     
-    // Parse tin nhắn từ LiveKit format: content|senderUserId|senderName|sentAt|messageType|isMine
     String content = event.message;
     String senderUserId = event.senderId;
     String senderName = event.senderName;
     bool isMine = event.isMine;
     bool isFromLiveKit = false;
     
-    // Nếu tin nhắn có format từ LiveKit (chứa |), parse nó
-    if (event.message.contains('|')) {
-      isFromLiveKit = true;
-      List<String> parts = event.message.split('|');
-      if (parts.length >= 5) {
-        content = parts[0];
-        senderUserId = parts[1];
-        senderName = parts[2];
-        // sentAt = parts[3];
-        // messageType = parts[4];
+    // Kiểm tra xem có phải JSON format từ LiveKit không
+    try {
+      final parsed = jsonDecode(event.message);
+      if (parsed is Map<String, dynamic> && parsed.containsKey('content')) {
+        isFromLiveKit = true;
+        content = parsed['content'] ?? '';
+        senderUserId = parsed['senderUserId'] ?? event.senderId;
+        senderName = parsed['senderName'] ?? event.senderName;
         
-        print('📨 Nhận tin nhắn LiveKit từ $senderName: $content');
+        print('📨 Nhận tin nhắn LiveKit JSON từ $senderName: $content');
+      }
+    } catch (e) {
+      if (event.message.contains('|')) {
+        isFromLiveKit = true;
+        List<String> parts = event.message.split('|');
+        if (parts.length >= 5) {
+          content = parts[0];
+          senderUserId = parts[1];
+          senderName = parts[2];
+          
+          print('📨 Nhận tin nhắn LiveKit legacy từ $senderName: $content');
+        }
       }
     }
-    
-    // Chỉ xác định isMine cho tin nhắn từ LiveKit, tin nhắn local dispatch giữ nguyên
     if (isFromLiveKit) {
       final authService = getIt<AuthService>();
       final currentUserId = await authService.getCurrentUserId();
@@ -227,8 +240,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (state is ChatLoaded) {
           final currentState = state as ChatLoaded;
           print('📋 Current messages count: ${currentState.messages.length}');
-          
-          // Kiểm tra để không duplicate tin nhắn
           final isDuplicate = currentState.messages.any((msg) => 
             msg.content == newMessage.content && 
             msg.senderUserId == newMessage.senderUserId &&
@@ -280,7 +291,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     result.fold(
       (failure) => emit(ChatError(failure.message)),
       (_) {
-        // Kết nối ChatBloc với LiveKit service để nhận tin nhắn real-time
         final livekitService = _tryGetLivekitService();
         livekitService?.setChatBloc(this);
         
