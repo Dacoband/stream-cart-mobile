@@ -24,6 +24,17 @@ class ApiConstants {
   // Account endpoints
   static const String updateProfileEndpoint = '/api/account/{id}';
 
+  // Address endpoints
+  static const String addressEndpoint = '/api/address';
+  static const String addressDetailEndpoint = '/api/address/{id}';
+  static const String addressDeleteEndpoint = '/api/address/{id}';
+  static const String addressSetDefaultEndpoint = '/api/address/{id}/set-default-shipping'; // PUT
+  static const String addressDefaultShippingEndpoint = '/api/address/default-shipping'; // GET address mặc định
+  static const String addressByTypeEndpoint = '/api/address/by-type/{type}'; // Lấy địa chỉ theo loại (shipping, billing)
+  static const String addressAssignToShopEndpoint = '/api/address/{id}/assign-to-shop/{shopId}'; // Gán địa chỉ cho shop
+  static const String addressUnAssignFromShopEndpoint = '/api/address/{id}/unassign-from-shop'; // Bỏ gán địa chỉ khỏi shop
+  static const String addressByShopEndpoint = '/api/address/shops/{shopId}'; // Lấy địa chỉ của shop
+
   // Shop endpoints
   static const String shopsEndpoint = '/api/shops'; // Lấy tất cả shop
   static const String shopDetailEndpoint = '/api/shops/{id}';
