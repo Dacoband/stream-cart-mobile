@@ -97,11 +97,19 @@ class ChatMessageItemWidget extends StatelessWidget {
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isMine ? Colors.blue[100] : Colors.grey[800],
-          borderRadius: BorderRadius.circular(8),
+          color: isMine ? const Color(0xFF2196F3) : const Color(0xFF424242),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(12),
+            topRight: const Radius.circular(12),
+            bottomLeft: Radius.circular(isMine ? 12 : 4),
+            bottomRight: Radius.circular(isMine ? 4 : 12),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -112,22 +120,54 @@ class ChatMessageItemWidget extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Sender name
             Text(
               message.senderName,
-              style: TextStyle(fontSize: 12, color: isMine ? Colors.blue[900] : Colors.white),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isMine ? Colors.white.withOpacity(0.8) : Colors.white.withOpacity(0.6),
+              ),
             ),
+            const SizedBox(height: 4),
+            // Message content
             Text(
               message.content,
-              style: TextStyle(fontSize: 14, color: isMine ? Colors.black87 : Colors.white),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+              ),
+              softWrap: true,
             ),
+            const SizedBox(height: 4),
+            // Timestamp
             Text(
-              message.sentAt.toString().split('.')[0], 
-              style: TextStyle(fontSize: 10, color: isMine ? Colors.blueGrey : Colors.grey),
+              _formatTime(message.sentAt),
+              style: TextStyle(
+                fontSize: 11,
+                color: isMine ? Colors.white.withOpacity(0.7) : Colors.white.withOpacity(0.5),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+    
+    if (messageDate == today) {
+      // Today - show only time
+      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else {
+      // Other days - show date and time
+      return '${dateTime.day}/${dateTime.month} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
   }
 }

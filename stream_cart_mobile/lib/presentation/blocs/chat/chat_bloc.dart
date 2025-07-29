@@ -185,9 +185,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     String senderUserId = event.senderId;
     String senderName = event.senderName;
     bool isMine = event.isMine;
+    bool isFromLiveKit = false;
     
     // Nếu tin nhắn có format từ LiveKit (chứa |), parse nó
     if (event.message.contains('|')) {
+      isFromLiveKit = true;
       List<String> parts = event.message.split('|');
       if (parts.length >= 5) {
         content = parts[0];
@@ -195,17 +197,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         senderName = parts[2];
         // sentAt = parts[3];
         // messageType = parts[4];
-        // isMine = parts.length > 5 ? parts[5] == 'true' : false; // Bỏ phần này
         
         print('📨 Nhận tin nhắn LiveKit từ $senderName: $content');
       }
     }
     
-    // Xác định isMine dựa trên current user ID
-    final authService = getIt<AuthService>();
-    final currentUserId = await authService.getCurrentUserId();
-    isMine = currentUserId != null && currentUserId == senderUserId;
-    print('📨 Current userId: $currentUserId, senderUserId: $senderUserId, isMine: $isMine');
+    // Chỉ xác định isMine cho tin nhắn từ LiveKit, tin nhắn local dispatch giữ nguyên
+    if (isFromLiveKit) {
+      final authService = getIt<AuthService>();
+      final currentUserId = await authService.getCurrentUserId();
+      isMine = currentUserId != null && currentUserId == senderUserId;
+      print('📨 LiveKit - Current userId: $currentUserId, senderUserId: $senderUserId, isMine: $isMine');
+    } else {
+      print('📨 Local dispatch - keeping original isMine: $isMine');
+    }
     
     final result = await receiveMessageUseCase(
       message: content,
