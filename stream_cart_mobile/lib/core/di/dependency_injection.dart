@@ -87,6 +87,25 @@ import '../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../presentation/blocs/chat/chat_bloc.dart';
 import '../services/livekit_service.dart';
+import '../../core/services/address_external_service.dart';
+import '../../data/datasources/address_remote_data_source.dart';
+import '../../data/repositories/address_repository_impl.dart';
+import '../../domain/repositories/address_repository.dart';
+import '../../domain/usecases/address/get_addresses_usecase.dart';
+import '../../domain/usecases/address/create_address_usecase.dart';
+import '../../domain/usecases/address/update_address_usecase.dart';
+import '../../domain/usecases/address/delete_address_usecase.dart';
+import '../../domain/usecases/address/get_address_by_id_usecase.dart';
+import '../../domain/usecases/address/set_default_shipping_address_usecase.dart';
+import '../../domain/usecases/address/get_default_shipping_address_usecase.dart';
+import '../../domain/usecases/address/get_addresses_by_type_usecase.dart';
+import '../../domain/usecases/address/assign_address_to_shop_usecase.dart';
+import '../../domain/usecases/address/get_addresses_by_shop_usecase.dart';
+import '../../domain/usecases/address/get_provinces_usecase.dart';
+import '../../domain/usecases/address/get_districts_usecase.dart';
+import '../../domain/usecases/address/get_wards_usecase.dart';
+import '../../presentation/blocs/address/address_bloc.dart';
+
 
 final getIt = GetIt.instance;
 
@@ -361,5 +380,59 @@ Future<void> setupDependencies() async {
     getProductsByShopUseCase: getIt(),
   ));
 
-  
+  // === ADDRESS DEPENDENCIES ===
+  // Services
+  getIt.registerLazySingleton<AddressExternalService>(
+    () => AddressExternalService(getIt<Dio>()),
+  );
+
+  // Data sources
+  getIt.registerLazySingleton<AddressRemoteDataSource>(
+    () => AddressRemoteDataSourceImpl(getIt<Dio>(), getIt<AddressExternalService>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<AddressRepository>(
+    () => AddressRepositoryImpl(
+      remoteDataSource: getIt<AddressRemoteDataSource>(),
+    ),
+  );
+
+  // Use cases - Core CRUD
+  getIt.registerLazySingleton(() => GetAddressesUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => CreateAddressUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => UpdateAddressUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => DeleteAddressUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetAddressByIdUseCase(getIt<AddressRepository>()));
+
+  // Use cases - Address Management
+  getIt.registerLazySingleton(() => SetDefaultShippingAddressUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetDefaultShippingAddressUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetAddressesByTypeUseCase(getIt<AddressRepository>()));
+
+  // Use cases - Shop Integration
+  getIt.registerLazySingleton(() => AssignAddressToShopUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetAddressesByShopUseCase(getIt<AddressRepository>()));
+
+  // Use cases - Location API
+  getIt.registerLazySingleton(() => GetProvincesUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetDistrictsUseCase(getIt<AddressRepository>()));
+  getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
+
+  // Blocs
+  getIt.registerFactory(() => AddressBloc(
+    getAddressesUseCase: getIt(),
+    createAddressUseCase: getIt(),
+    updateAddressUseCase: getIt(),
+    deleteAddressUseCase: getIt(),
+    getAddressByIdUseCase: getIt(),
+    setDefaultShippingAddressUseCase: getIt(),
+    getDefaultShippingAddressUseCase: getIt(),
+    getAddressesByTypeUseCase: getIt(),
+    assignAddressToShopUseCase: getIt(),
+    getAddressesByShopUseCase: getIt(),
+    getProvincesUseCase: getIt(),
+    getDistrictsUseCase: getIt(),
+    getWardsUseCase: getIt(),
+  ));
 }
