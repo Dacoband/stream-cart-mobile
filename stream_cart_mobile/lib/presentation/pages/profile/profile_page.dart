@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/routing/app_router.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -316,7 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     title: 'Địa chỉ giao hàng',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
-                        // TODO: Navigate to addresses
+                        Navigator.pushNamed(context, AppRouter.addressList);
                       }, 'Bạn cần đăng nhập để quản lý địa chỉ giao hàng');
                     },
                   ),
@@ -534,7 +535,6 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         }
 
-        // Nếu đã đăng nhập, hiển thị profile từ ProfileBloc
         return BlocBuilder<ProfileBloc, ProfileState>(
           builder: (context, state) {
         if (state is ProfileLoading) {

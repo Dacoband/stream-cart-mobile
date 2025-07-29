@@ -60,7 +60,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<List<AddressModel>> getAddresses() async {
     try {
-      final response = await _dio.get('/addresses');
+      final response = await _dio.get('/api/addresses');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
@@ -115,7 +115,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
         if (shopId != null) 'shopId': shopId,
       };
 
-      final response = await _dio.post('/addresses', data: data);
+      final response = await _dio.post('/api/addresses', data: data);
       
       if (response.statusCode == 201) {
         return AddressModel.fromJson(response.data['data']);
@@ -163,7 +163,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       if (latitude != null) data['latitude'] = latitude;
       if (longitude != null) data['longitude'] = longitude;
 
-      final response = await _dio.put('/addresses/$id', data: data);
+      final response = await _dio.put('/api/addresses/$id', data: data);
       
       if (response.statusCode == 200) {
         return AddressModel.fromJson(response.data['data']);
@@ -186,7 +186,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<void> deleteAddress(String id) async {
     try {
-      final response = await _dio.delete('/addresses/$id');
+      final response = await _dio.delete('/api/addresses/$id');
       
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('Failed to delete address');
@@ -207,7 +207,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> getAddressById(String id) async {
     try {
-      final response = await _dio.get('/addresses/$id');
+      final response = await _dio.get('/api/addresses/$id');
       
       if (response.statusCode == 200) {
         return AddressModel.fromJson(response.data['data']);
@@ -230,7 +230,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> setDefaultShippingAddress(String id) async {
     try {
-      final response = await _dio.put('/addresses/$id/set-default');
+      final response = await _dio.put('/api/addresses/$id/set-default');
       
       if (response.statusCode == 200) {
         return AddressModel.fromJson(response.data['data']);
@@ -253,7 +253,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel?> getDefaultShippingAddress() async {
     try {
-      final response = await _dio.get('/addresses/default');
+      final response = await _dio.get('/api/addresses/default-shipping');
       
       if (response.statusCode == 200) {
         final data = response.data['data'];
@@ -277,7 +277,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<List<AddressModel>> getAddressesByType(AddressType type) async {
     try {
-      final response = await _dio.get('/addresses?type=${type.value}');
+      final response = await _dio.get('/api/addresses?type=${type.value}');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
@@ -299,7 +299,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> assignAddressToShop(String addressId, String shopId) async {
     try {
-      final response = await _dio.put('/addresses/$addressId/assign-shop', 
+      final response = await _dio.put('/api/addresses/$addressId/assign-shop', 
         data: {'shopId': shopId});
       
       if (response.statusCode == 200) {
@@ -323,7 +323,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> unassignAddressFromShop(String addressId) async {
     try {
-      final response = await _dio.put('/addresses/$addressId/unassign-shop');
+      final response = await _dio.put('/api/addresses/$addressId/unassign-shop');
       
       if (response.statusCode == 200) {
         return AddressModel.fromJson(response.data['data']);
@@ -346,7 +346,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<List<AddressModel>> getAddressesByShop(String shopId) async {
     try {
-      final response = await _dio.get('/addresses/shop/$shopId');
+      final response = await _dio.get('/api/addresses/shop/$shopId');
       
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
