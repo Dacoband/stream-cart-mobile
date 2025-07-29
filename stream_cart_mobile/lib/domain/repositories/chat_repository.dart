@@ -74,8 +74,14 @@ abstract class ChatRepository {
   /// Retrieves the shop token for a specific chat room to use with LiveKit.
   /// 
   /// [chatRoomId]: The ID of the chat room.
+  /// [userId]: The ID of the user requesting the token (optional).
+  /// [timestamp]: Timestamp to ensure unique identity (optional).
   /// Returns [Either<Failure, String>] containing the token or failure.
-  Future<Either<Failure, String>> getShopToken(String chatRoomId);
+  Future<Either<Failure, String>> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  });
 
   /// Retrieves a list of chat rooms associated with a specific shop based on pagination.
   /// 

@@ -37,7 +37,11 @@ abstract class ChatRemoteDataSource {
     int pageNumber = 1,
     int pageSize = 20,
   });
-  Future<String> getShopToken(String chatRoomId); 
+  Future<String> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  }); 
   Future<List<ChatEntity>> getShopChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
@@ -255,11 +259,29 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
 
   @override
-  Future<String> getShopToken(String chatRoomId) async {
+  Future<String> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  }) async {
     try {
       final url = ApiUrlHelper.getFullUrl(
           '${ApiConstants.shopTokenEndpoint.replaceFirst('{chatRoomId}', chatRoomId)}');
-      final response = await dio.get(url);
+      
+      // Add query parameters for better token generation
+      final queryParams = <String, dynamic>{};
+      if (userId != null) {
+        queryParams['userId'] = userId;
+      }
+      if (timestamp != null) {
+        queryParams['timestamp'] = timestamp;
+      }
+      
+      print('getShopToken - Request URL: $url');
+      print('getShopToken - Query params: $queryParams');
+      print('getShopToken - Backend now supports both customer and shop accounts');
+      
+      final response = await dio.get(url, queryParameters: queryParams);
       final responseData = response.data;
       if (responseData['success'] == false) {
         final errors = responseData['errors'] as List<dynamic>? ?? [];

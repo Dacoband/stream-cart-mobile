@@ -37,6 +37,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!_hasConnected) {
+        // Load chat room messages trước
+        context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+        
+        // Sau đó connect LiveKit
         context.read<ChatBloc>().add(ConnectLiveKit(
           chatRoomId: widget.chatRoomId,
           userId: widget.userId,
@@ -58,10 +62,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return AuthGuard(
       message: 'Vui lòng đăng nhập để vào phòng chat',
-      child: WillPopScope(
-        onWillPop: () async {
-          context.read<ChatBloc>().add(DisconnectLiveKit());
-          return true;
+      child: PopScope(
+        onPopInvoked: (didPop) {
+          if (didPop) {
+            context.read<ChatBloc>().add(DisconnectLiveKit());
+          }
         },
         child: Scaffold(
           appBar: AppBar(title: const Text('Phòng Chat', style: TextStyle(fontSize: 16))),
@@ -69,24 +74,54 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             builder: (context, state) {
               return Column(
                 children: [
+                  // Hiển thị loading khi đang kết nối
+                  if (state is ChatLoading)
+                    const LinearProgressIndicator(),
+                  
                   Expanded(child: ChatMessageListWidget()),
+                  
                   // Hiển thị nút Thử lại khi gặp lỗi kết nối hoặc reconnect failed
-                  if (state is ChatReconnectFailed || state is ChatError)
+                  if (state is ChatError && state.message.contains('LiveKit'))
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.read<ChatBloc>().add(
-                            ConnectLiveKit(
-                              chatRoomId: widget.chatRoomId,
-                              userId: widget.userId,
-                              userName: widget.userName,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '⚠️ ${state.message}',
+                              style: const TextStyle(color: Colors.red, fontSize: 12),
+                              textAlign: TextAlign.center,
                             ),
-                          );
-                        },
-                        child: const Text('Thử lại'),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                context.read<ChatBloc>().add(
+                                  ConnectLiveKit(
+                                    chatRoomId: widget.chatRoomId,
+                                    userId: widget.userId,
+                                    userName: widget.userName,
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              ),
+                              child: const Text('🔄 Thử lại kết nối'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                  
                   LiveKitStatusWidget(),
                   ChatInputWidget(chatRoomId: widget.chatRoomId, userName: widget.userName),
                 ],

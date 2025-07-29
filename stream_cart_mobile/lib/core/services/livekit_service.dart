@@ -67,7 +67,16 @@ class LivekitService {
     while (retryCount < maxRetry) {
       try {
         onStatusChanged?.call(isReconnect ? 'Đang kết nối lại...' : 'Đang kết nối...');
-        final result = await _chatRepository.getShopToken(chatRoomId);
+        
+        // Tạo timestamp unique để tránh duplicate identity
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        print('🔄 Requesting token for userId: $_userId, timestamp: $timestamp');
+        
+        final result = await _chatRepository.getShopToken(
+          chatRoomId, 
+          userId: _userId!, 
+          timestamp: timestamp,
+        );
         final token = result.fold(
           (failure) => throw Exception('Lỗi khi lấy token: ${failure.message}'),
           (token) => token,
@@ -79,8 +88,8 @@ class LivekitService {
         }
 
         print('LiveKit URL: $url');
-        print('LiveKit Token: $token');
-        print('Connecting to LiveKit as user: $userName');
+        print('LiveKit Token: ${token.substring(0, 50)}...');  // Chỉ hiển thị 50 ký tự đầu
+        print('Connecting to LiveKit as user: $userName (userId: $_userId)');
 
         await _room!.connect(url, token, connectOptions: ConnectOptions(autoSubscribe: true));
         _isConnected = true;
@@ -118,7 +127,15 @@ class LivekitService {
         onStatusChanged?.call('Đã kết nối');
       } else if (event is RoomDisconnectedEvent) {
         _isConnected = false;
-        print('Ngắt kết nối khỏi phòng: ${_room!.name} do ${event.reason}');
+        print('🔴 Ngắt kết nối khỏi phòng: ${_room!.name} do ${event.reason}');
+        
+        if (event.reason == DisconnectReason.duplicateIdentity) {
+          print('⚠️ DUPLICATE IDENTITY DETECTED! Backend chưa fix unique identity!');
+          onStatusChanged?.call('❌ Duplicate Identity - Backend cần fix!');
+          // Không retry cho duplicate identity
+          return;
+        }
+        
         onStatusChanged?.call('Đã ngắt kết nối, thử kết nối lại...');
 
         if (_chatRoomId != null &&
@@ -146,11 +163,13 @@ class LivekitService {
           onStatusChanged?.call('Kết nối thất bại sau $maxRetry lần thử');
         }
       } else if (event is ParticipantConnectedEvent) {
-        print('Participant joined: ${event.participant.identity} (${event.participant.name})');
+        print('👋 Participant joined: ${event.participant.identity} (${event.participant.name})');
       } else if (event is ParticipantDisconnectedEvent) {
-        print('Participant left: ${event.participant.identity} (${event.participant.name})');
+        print('👋 Participant left: ${event.participant.identity} (${event.participant.name})');
       } else if (event is DataReceivedEvent) {
         final messageStr = String.fromCharCodes(event.data);
+        print('📨 LiveKit message received from ${event.participant?.identity}: $messageStr');
+        
         // Gửi event cho ChatBloc nếu đã set
         _chatBloc?.add(ReceiveMessage(
           messageStr,
