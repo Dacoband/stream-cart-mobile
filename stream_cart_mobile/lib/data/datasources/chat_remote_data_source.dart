@@ -268,11 +268,20 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       final url = ApiUrlHelper.getFullUrl(
           '${ApiConstants.shopTokenEndpoint.replaceFirst('{chatRoomId}', chatRoomId)}');
       
-      // Don't send any parameters - let backend extract everything from JWT
-      print('getShopToken - Request URL: $url');
-      print('getShopToken - Using only JWT token for authentication and user identification');
+      // Add query parameters for better token generation
+      final queryParams = <String, dynamic>{};
+      if (userId != null) {
+        queryParams['userId'] = userId;
+      }
+      if (timestamp != null) {
+        queryParams['timestamp'] = timestamp;
+      }
       
-      final response = await dio.get(url);
+      print('getShopToken - Request URL: $url');
+      print('getShopToken - Query params: $queryParams');
+      print('getShopToken - Backend now supports both customer and shop accounts');
+      
+      final response = await dio.get(url, queryParameters: queryParams);
       final responseData = response.data;
       if (responseData['success'] == false) {
         final errors = responseData['errors'] as List<dynamic>? ?? [];

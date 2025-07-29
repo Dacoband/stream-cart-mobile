@@ -46,7 +46,7 @@ class CustomErrorWidget extends StatelessWidget {
                   final authState = context.read<AuthBloc>().state;
                   int? roleValue;
                   if (authState is AuthSuccess) {
-                    roleValue = authState.loginResponse?.account?.role;
+                    roleValue = authState.loginResponse.account.role;
                   }
                   final userRole = UserRole.fromValue(roleValue ?? 1);
                   if (userRole == UserRole.seller) {

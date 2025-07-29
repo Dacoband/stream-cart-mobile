@@ -78,14 +78,7 @@ class LivekitService {
           timestamp: timestamp,
         );
         final token = result.fold(
-          (failure) {
-            // Nếu lỗi Guid format, có thể do customer account không được hỗ trợ
-            if (failure.message.contains('Unrecognized Guid format')) {
-              print('⚠️ Customer account không hỗ trợ LiveKit, chỉ sử dụng API messaging');
-              throw Exception('CUSTOMER_ACCOUNT_NOT_SUPPORTED');
-            }
-            throw Exception('Lỗi khi lấy token: ${failure.message}');
-          },
+          (failure) => throw Exception('Lỗi khi lấy token: ${failure.message}'),
           (token) => token,
         );
 
@@ -107,15 +100,6 @@ class LivekitService {
       } catch (e) {
         _isConnected = false;
         print('Lỗi kết nối đến LiveKit: $e');
-        
-        // Nếu là customer account không được hỗ trợ, dừng thử lại
-        if (e.toString().contains('CUSTOMER_ACCOUNT_NOT_SUPPORTED')) {
-          print('💡 Sử dụng API messaging cho customer account');
-          onStatusChanged?.call('Chỉ hỗ trợ tin nhắn API');
-          _currentRetry = 0;
-          return; // Dừng hoàn toàn, không thử lại
-        }
-        
         onStatusChanged?.call('Lỗi kết nối: $e');
         if (e.toString().contains('404') || e.toString().contains('token') || e.toString().contains('401') || e.toString().contains('403')) {
           retryCount++;

@@ -266,16 +266,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       userName: event.userName,
     );
     result.fold(
-      (failure) {
-        // Nếu là customer account không được hỗ trợ, vẫn load chat room nhưng không kết nối LiveKit
-        if (failure.message.contains('CUSTOMER_ACCOUNT_NOT_SUPPORTED')) {
-          print('📱 Customer account: Chỉ sử dụng API messaging');
-          // Chỉ load chat room, không emit ChatLoaded rỗng trước
-          add(LoadChatRoom(event.chatRoomId));
-          return;
-        }
-        emit(ChatError(failure.message));
-      },
+      (failure) => emit(ChatError(failure.message)),
       (_) {
         // Kết nối ChatBloc với LiveKit service để nhận tin nhắn real-time
         final livekitService = _tryGetLivekitService();
