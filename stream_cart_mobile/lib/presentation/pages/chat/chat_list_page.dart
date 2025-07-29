@@ -23,22 +23,23 @@ class ChatListPage extends StatefulWidget {
 
 class _ChatListPageState extends State<ChatListPage> with RouteAware {
   @override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final authState = context.read<AuthBloc>().state;
-    int? roleValue;
-    if (authState is AuthSuccess) {
-      roleValue = authState.loginResponse?.account?.role;
-    }
-    final userRole = UserRole.fromValue(roleValue ?? 1);
-    if (userRole == UserRole.seller) {
-      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-    } else {
-      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-    }
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthBloc>().state;
+      int? roleValue;
+      if (authState is AuthSuccess) {
+        roleValue = authState.loginResponse.account.role;
+      }
+      final userRole = UserRole.fromValue(roleValue ?? 1);
+      if (userRole == UserRole.seller) {
+        context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
+      } else {
+        context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+      }
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -60,7 +61,7 @@ void initState() {
         final authState = context.read<AuthBloc>().state;
         int? roleValue;
         if (authState is AuthSuccess) {
-          roleValue = authState.loginResponse?.account?.role;
+          roleValue = authState.loginResponse.account.role;
         }
         final userRole = UserRole.fromValue(roleValue ?? 1);
         if (userRole == UserRole.seller) {
@@ -90,7 +91,7 @@ void initState() {
                   final authState = context.read<AuthBloc>().state;
                   int? roleValue;
                   if (authState is AuthSuccess) {
-                    roleValue = authState.loginResponse?.account?.role;
+                    roleValue = authState.loginResponse.account.role;
                   }
                   final userRole = UserRole.fromValue(roleValue ?? 1);
                   if (userRole == UserRole.seller) {

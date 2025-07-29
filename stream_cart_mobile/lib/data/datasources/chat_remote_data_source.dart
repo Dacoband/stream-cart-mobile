@@ -37,7 +37,11 @@ abstract class ChatRemoteDataSource {
     int pageNumber = 1,
     int pageSize = 20,
   });
-  Future<String> getShopToken(String chatRoomId); 
+  Future<String> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  }); 
   Future<List<ChatEntity>> getShopChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
@@ -255,10 +259,19 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
 
   @override
-  Future<String> getShopToken(String chatRoomId) async {
+  Future<String> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  }) async {
     try {
       final url = ApiUrlHelper.getFullUrl(
           '${ApiConstants.shopTokenEndpoint.replaceFirst('{chatRoomId}', chatRoomId)}');
+      
+      // Don't send any parameters - let backend extract everything from JWT
+      print('getShopToken - Request URL: $url');
+      print('getShopToken - Using only JWT token for authentication and user identification');
+      
       final response = await dio.get(url);
       final responseData = response.data;
       if (responseData['success'] == false) {

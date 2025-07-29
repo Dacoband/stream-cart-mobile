@@ -214,9 +214,17 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Either<Failure, String>> getShopToken(String chatRoomId) async {
+  Future<Either<Failure, String>> getShopToken(
+    String chatRoomId, {
+    String? userId,
+    int? timestamp,
+  }) async {
     try {
-      final token = await remoteDataSource.getShopToken(chatRoomId);
+      final token = await remoteDataSource.getShopToken(
+        chatRoomId,
+        userId: userId,
+        timestamp: timestamp,
+      );
       return Right(token);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

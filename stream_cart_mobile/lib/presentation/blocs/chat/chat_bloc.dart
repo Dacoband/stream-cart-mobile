@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 
@@ -13,6 +13,7 @@ import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
 import '../../../core/services/livekit_service.dart';
+import '../../../core/di/dependency_injection.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final LoadChatRoomUseCase loadChatRoomUseCase;
@@ -59,11 +60,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   LivekitService? _tryGetLivekitService() {
     try {
-      // Nếu dùng getIt hoặc DI, lấy LivekitService ở đây
-      // import '../services/livekit_service.dart';
-      // return getIt<LivekitService>();
-      return null; // Nếu không dùng getIt thì bỏ qua
-    } catch (_) {
+      // Sử dụng getIt để lấy LivekitService
+      return getIt<LivekitService>();
+    } catch (e) {
+      print('⚠️ Không thể lấy LivekitService: $e');
       return null;
     }
   }
@@ -89,7 +89,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await loadChatRoomUseCase(event.chatRoomId);
     result.fold(
       (failure) => emit(ChatError(failure.message)),
-      (messages) => emit(ChatLoaded(messages: messages)),
+      (messages) => emit(ChatLoaded(
+        messages: messages, 
+        chatRoomId: event.chatRoomId,
+      )),
     );
   }
 
@@ -133,16 +136,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 }
 
   Future<void> _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
+    // Không emit ChatLoading ở đây, giữ nguyên state hiện tại
+    // emit(ChatLoading());
+    
+    // 1. Gửi tin nhắn qua API để lưu vào database
     final result = await sendMessageUseCase(
       chatRoomId: event.chatRoomId,
       content: event.message,
       messageType: event.messageType,
       attachmentUrl: event.attachmentUrl,
     );
+    
     result.fold(
       (failure) => emit(ChatError(failure.message)),
       (message) {
+        // 2. Gửi tin nhắn qua LiveKit để real-time
+        final livekitService = _tryGetLivekitService();
+        if (livekitService?.isConnected == true) {
+          // Format tin nhắn cho LiveKit
+          final livekitMessage = '${message.content}|${message.senderUserId}|${message.senderName}|${DateTime.now().toIso8601String()}|${message.messageType}|true';
+          livekitService?.sendDataMessage(livekitMessage);
+          print('✅ Đã gửi tin nhắn qua LiveKit: ${message.content}');
+        } else {
+          print('⚠️ LiveKit không kết nối, chỉ gửi qua API');
+        }
+        
+        // 3. Thêm tin nhắn vào UI ngay lập tức
+        print('🔄 Đang thêm tin nhắn vào UI: ${message.content}');
         add(ReceiveMessage(
           message.content,
           message.senderUserId,
@@ -150,38 +170,84 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           message.senderName,
           true, // isMine
         ));
+        print('✅ Đã dispatch ReceiveMessage event');
       },
     );
   }
 
   Future<void> _onReceiveMessage(ReceiveMessage event, Emitter<ChatState> emit) async {
-  final result = await receiveMessageUseCase(
-    message: event.message,
-    senderId: event.senderId,
-    chatRoomId: event.chatRoomId,
-    senderName: event.senderName,
-    isMine: event.isMine,
-  );
-  result.fold(
-    (failure) => emit(ChatError(failure.message)),
-    (newMessage) {
-      if (state is ChatLoaded) {
-        final currentState = state as ChatLoaded;
-        emit(currentState.copyWith(
-          messages: [...currentState.messages, newMessage], 
-          chatRoomId: event.chatRoomId,
-        ));
-      } else {
-        emit(ChatLoaded(
-          messages: [newMessage],
-          chatRoomId: event.chatRoomId,
-          chatRooms: const [],
-          hasReachedMax: false,
-        ));
+    print('📨 _onReceiveMessage được gọi với: ${event.message}');
+    print('📨 Current state: ${state.runtimeType}');
+    
+    // Parse tin nhắn từ LiveKit format: content|senderUserId|senderName|sentAt|messageType|isMine
+    String content = event.message;
+    String senderUserId = event.senderId;
+    String senderName = event.senderName;
+    bool isMine = event.isMine;
+    
+    // Nếu tin nhắn có format từ LiveKit (chứa |), parse nó
+    if (event.message.contains('|')) {
+      List<String> parts = event.message.split('|');
+      if (parts.length >= 5) {
+        content = parts[0];
+        senderUserId = parts[1];
+        senderName = parts[2];
+        // sentAt = parts[3];
+        // messageType = parts[4];
+        isMine = parts.length > 5 ? parts[5] == 'true' : false;
+        
+        print('📨 Nhận tin nhắn LiveKit từ $senderName: $content (isMine: $isMine)');
       }
-    },
-  );
-}
+    }
+    
+    final result = await receiveMessageUseCase(
+      message: content,
+      senderId: senderUserId,
+      chatRoomId: event.chatRoomId,
+      senderName: senderName,
+      isMine: isMine,
+    );
+    
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (newMessage) {
+        print('📝 Tin nhắn mới được tạo: ${newMessage.content}');
+        if (state is ChatLoaded) {
+          final currentState = state as ChatLoaded;
+          print('📋 Current messages count: ${currentState.messages.length}');
+          
+          // Kiểm tra để không duplicate tin nhắn
+          final isDuplicate = currentState.messages.any((msg) => 
+            msg.content == newMessage.content && 
+            msg.senderUserId == newMessage.senderUserId &&
+            msg.sentAt.difference(newMessage.sentAt).abs().inSeconds < 5
+          );
+          
+          print('🔍 Is duplicate: $isDuplicate');
+          
+          if (!isDuplicate) {
+            final updatedMessages = [...currentState.messages, newMessage];
+            print('📬 Updating messages count: ${currentState.messages.length} -> ${updatedMessages.length}');
+            emit(currentState.copyWith(
+              messages: updatedMessages, 
+              chatRoomId: event.chatRoomId,
+            ));
+            print('✅ Đã thêm tin nhắn vào UI: $content');
+          } else {
+            print('⚠️ Bỏ qua tin nhắn duplicate: $content');
+          }
+        } else {
+          print('📋 State không phải ChatLoaded, tạo mới với 1 tin nhắn');
+          emit(ChatLoaded(
+            messages: [newMessage],
+            chatRoomId: event.chatRoomId,
+            chatRooms: const [],
+            hasReachedMax: false,
+          ));
+        }
+      },
+    );
+  }
 
   Future<void> _onMarkChatRoomAsRead(MarkChatRoomAsRead event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
@@ -193,20 +259,33 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onConnectLiveKit(ConnectLiveKit event, Emitter<ChatState> emit) async {
-  emit(ChatLoading());
-  final result = await connectLiveKitUseCase(
-    chatRoomId: event.chatRoomId,
-    userId: event.userId,
-    userName: event.userName,
-  );
-  result.fold(
-    (failure) => emit(ChatError(failure.message)),
-    (_) {
-      emit(LiveKitConnected(event.chatRoomId));
-      add(LoadChatRoom(event.chatRoomId));
-    },
-  );
-}
+    emit(ChatLoading());
+    final result = await connectLiveKitUseCase(
+      chatRoomId: event.chatRoomId,
+      userId: event.userId,
+      userName: event.userName,
+    );
+    result.fold(
+      (failure) {
+        // Nếu là customer account không được hỗ trợ, vẫn load chat room nhưng không kết nối LiveKit
+        if (failure.message.contains('CUSTOMER_ACCOUNT_NOT_SUPPORTED')) {
+          print('📱 Customer account: Chỉ sử dụng API messaging');
+          // Chỉ load chat room, không emit ChatLoaded rỗng trước
+          add(LoadChatRoom(event.chatRoomId));
+          return;
+        }
+        emit(ChatError(failure.message));
+      },
+      (_) {
+        // Kết nối ChatBloc với LiveKit service để nhận tin nhắn real-time
+        final livekitService = _tryGetLivekitService();
+        livekitService?.setChatBloc(this);
+        
+        emit(LiveKitConnected(event.chatRoomId));
+        add(LoadChatRoom(event.chatRoomId));
+      },
+    );
+  }
 
   Future<void> _onDisconnectLiveKit(DisconnectLiveKit event, Emitter<ChatState> emit) async {
     emit(ChatLoading());

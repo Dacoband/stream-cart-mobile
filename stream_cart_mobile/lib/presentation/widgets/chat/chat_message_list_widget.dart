@@ -31,7 +31,14 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
       listener: (context, state) {
         if (state is ChatLoaded) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollController.jumpTo(0); 
+            // Scroll to bottom (latest message) smoother
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
           });
         }
       },
@@ -50,14 +57,27 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
             );
           }
           if (state is ChatLoaded) {
+            if (state.messages.isEmpty) {
+              return const Center(child: Text('Chưa có tin nhắn. Hãy gửi tin nhắn đầu tiên!'));
+            }
+            
+            // Sắp xếp tin nhắn theo thời gian: cũ -> mới (tin nhắn mới nhất ở cuối)
+            final sortedMessages = List<ChatMessage>.from(state.messages)
+              ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+            
             return ListView.builder(
-              reverse: true,
               controller: _scrollController,
-              itemCount: state.messages.length,
+              itemCount: sortedMessages.length,
               itemBuilder: (context, index) {
-                return ChatMessageItemWidget(message: state.messages[index]);
+                // Hiển thị tin nhắn theo thứ tự thời gian (cũ -> mới)
+                // Tin nhắn cũ nhất ở trên (index 0), tin nhắn mới nhất ở dưới (index cuối)
+                return ChatMessageItemWidget(message: sortedMessages[index]);
               },
             );
+          }
+          // Handle các state khác như LiveKitConnected, ChatStatusChanged
+          if (state is LiveKitConnected || state is ChatStatusChanged) {
+            return const Center(child: Text('Đang tải tin nhắn...'));
           }
           return const Center(child: Text('Không có tin nhắn'));
         },
