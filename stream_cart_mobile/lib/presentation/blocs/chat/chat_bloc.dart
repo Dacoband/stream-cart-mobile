@@ -13,6 +13,7 @@ import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
 import '../../../core/services/livekit_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/di/dependency_injection.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
@@ -194,11 +195,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         senderName = parts[2];
         // sentAt = parts[3];
         // messageType = parts[4];
-        isMine = parts.length > 5 ? parts[5] == 'true' : false;
+        // isMine = parts.length > 5 ? parts[5] == 'true' : false; // Bỏ phần này
         
-        print('📨 Nhận tin nhắn LiveKit từ $senderName: $content (isMine: $isMine)');
+        print('📨 Nhận tin nhắn LiveKit từ $senderName: $content');
       }
     }
+    
+    // Xác định isMine dựa trên current user ID
+    final authService = getIt<AuthService>();
+    final currentUserId = await authService.getCurrentUserId();
+    isMine = currentUserId != null && currentUserId == senderUserId;
+    print('📨 Current userId: $currentUserId, senderUserId: $senderUserId, isMine: $isMine');
     
     final result = await receiveMessageUseCase(
       message: content,
