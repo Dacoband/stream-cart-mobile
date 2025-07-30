@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import '../../presentation/blocs/address/address_bloc.dart';
 import '../../presentation/pages/address/add_edit_address_page.dart';
 import '../../presentation/pages/address/address_list_page.dart';

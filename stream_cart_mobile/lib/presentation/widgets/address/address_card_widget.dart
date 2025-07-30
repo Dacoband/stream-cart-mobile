@@ -60,13 +60,27 @@ class AddressCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    address.recipientName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF202328),
-                    ),
+                  child: Row(
+                    children: [
+                      if (isDefault) ...[
+                        const Icon(
+                          Icons.star,
+                          size: 16,
+                          color: Color(0xFFFFA726),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Expanded(
+                        child: Text(
+                          address.recipientName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF202328),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (isDefault)

@@ -22,6 +22,7 @@ import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/blocs/chat/chat_bloc.dart';
 import 'presentation/blocs/notification/notification_bloc.dart';
+import 'presentation/blocs/address/address_bloc.dart';
 import 'presentation/pages/auth/auth_wrapper.dart';
 import 'presentation/pages/chat/chat_list_page.dart';
 
@@ -96,6 +97,9 @@ class MyApp extends StatelessWidget {
             connectLiveKitUseCase: getIt<ConnectLiveKitUseCase>(),
             disconnectLiveKitUseCase: getIt<DisconnectLiveKitUseCase>(),
           ),
+        ),
+        BlocProvider(
+          create: (context) => getIt<AddressBloc>(),
         ),
       ],
       child: MaterialApp(
