@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 
 import '../../../domain/entities/address_entity.dart';
 import '../../blocs/address/address_bloc.dart';
@@ -21,9 +20,7 @@ class _AddressListPageState extends State<AddressListPage> {
   @override
   void initState() {
     super.initState();
-    // Load addresses and default address when page opens
     context.read<AddressBloc>().add(const GetAddressesEvent());
-    context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
   }
 
   @override
@@ -77,7 +74,6 @@ class _AddressListPageState extends State<AddressListPage> {
             );
             // Reload addresses
             context.read<AddressBloc>().add(const GetAddressesEvent());
-            context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
           } else if (state is AddressUpdated) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -87,7 +83,6 @@ class _AddressListPageState extends State<AddressListPage> {
             );
             // Reload addresses
             context.read<AddressBloc>().add(const GetAddressesEvent());
-            context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
           } else if (state is AddressDeleted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -97,7 +92,6 @@ class _AddressListPageState extends State<AddressListPage> {
             );
             // Reload addresses
             context.read<AddressBloc>().add(const GetAddressesEvent());
-            context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
           } else if (state is DefaultShippingAddressSet) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -107,7 +101,6 @@ class _AddressListPageState extends State<AddressListPage> {
             );
             // Reload addresses
             context.read<AddressBloc>().add(const GetAddressesEvent());
-            context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
           }
         },
         builder: (context, state) {
@@ -137,20 +130,18 @@ class _AddressListPageState extends State<AddressListPage> {
     return BlocBuilder<AddressBloc, AddressState>(
       builder: (context, state) {
         List<AddressEntity> addresses = [];
-        AddressEntity? defaultAddress;
 
-        // Extract addresses from different states
+        // Get addresses from current state
         if (state is AddressesLoaded) {
           addresses = state.addresses;
-        }
-
-        // Get default address from previous state or current state
-        final blocState = context.read<AddressBloc>().state;
-        if (blocState is DefaultShippingAddressLoaded) {
-          defaultAddress = blocState.address;
+          print('🎯 UI: AddressesLoaded with ${addresses.length} addresses');
+          addresses.asMap().forEach((index, address) {
+            print('   UI Address $index: ${address.recipientName} - isDefault: ${address.isDefaultShipping}');
+          });
         }
 
         if (addresses.isEmpty) {
+          print('📭 UI: No addresses found, showing empty state');
           return EmptyAddress(
             onAddAddress: () => _navigateToAddAddress(),
           );
@@ -158,35 +149,38 @@ class _AddressListPageState extends State<AddressListPage> {
 
         return RefreshIndicator(
           onRefresh: () async {
+            print('🔄 UI: Refreshing addresses');
             context.read<AddressBloc>().add(const GetAddressesEvent());
-            context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
           },
           color: const Color(0xFF4CAF50),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               // Default Address Section
-              if (defaultAddress != null) ...[
-                const Text(
-                  'Địa chỉ mặc định',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF202328),
+              ...addresses.where((addr) => addr.isDefaultShipping).map((address) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Địa chỉ mặc định',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF202328),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                AddressCard(
-                  address: defaultAddress,
-                  isDefault: true,
-                  onEdit: () => _navigateToEditAddress(defaultAddress!),
-                  onDelete: () => _showDeleteDialog(defaultAddress!),
-                ),
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 12),
+                  AddressCard(
+                    address: address,
+                    isDefault: true,
+                    onEdit: () => _navigateToEditAddress(address),
+                    onDelete: () => _showDeleteDialog(address),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              )).toList(),
 
               // Other Addresses Section
-              if (addresses.where((addr) => addr.id != defaultAddress?.id).isNotEmpty) ...[
+              if (addresses.where((addr) => !addr.isDefaultShipping).isNotEmpty) ...[
                 const Text(
                   'Địa chỉ khác',
                   style: TextStyle(
@@ -197,7 +191,7 @@ class _AddressListPageState extends State<AddressListPage> {
                 ),
                 const SizedBox(height: 12),
                 ...addresses
-                    .where((addr) => addr.id != defaultAddress?.id)
+                    .where((addr) => !addr.isDefaultShipping)
                     .map((address) => AddressCard(
                           address: address,
                           isDefault: false,
@@ -217,33 +211,43 @@ class _AddressListPageState extends State<AddressListPage> {
     );
   }
 
-  void _navigateToAddAddress() {
-    Navigator.push(
+  void _navigateToAddAddress() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => GetIt.instance<AddressBloc>(),
+        builder: (context) => BlocProvider.value(
+          value: context.read<AddressBloc>(),
           child: const AddEditAddressPage(),
         ),
       ),
     );
+
+    if (result == true && mounted) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        context.read<AddressBloc>().add(const GetAddressesEvent());
+      }
+    }
   }
 
-  void _navigateToEditAddress(AddressEntity address) {
-    Navigator.push(
+  void _navigateToEditAddress(AddressEntity address) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider(
-          create: (context) => GetIt.instance<AddressBloc>(),
-          child: AddEditAddressPage(
-            initialAddress: address,
-          ),
+        builder: (context) => BlocProvider.value(
+          value: context.read<AddressBloc>(),
+          child: AddEditAddressPage(initialAddress: address),
         ),
       ),
     );
+    
+    if (result == true && mounted) {
+      context.read<AddressBloc>().add(const GetAddressesEvent());
+    }
   }
 
   void _setDefaultAddress(AddressEntity address) {
+    print('🎯 UI: Setting address ${address.id} as default');
     context.read<AddressBloc>().add(
       SetDefaultShippingAddressEvent(id: address.id),
     );

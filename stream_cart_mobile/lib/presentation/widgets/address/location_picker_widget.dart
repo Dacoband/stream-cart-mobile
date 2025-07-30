@@ -8,7 +8,7 @@ class LocationPicker extends StatefulWidget {
   final List<ProvinceEntity> provinces;
   final List<ProvinceEntity> districts;
   final List<WardEntity> wards;
-  final Function(String provinceId, String provinceName, String districtId, String districtName, String wardId, String wardName) onLocationSelected;
+  final Function(String provinceId, String provinceName, String districtId, String districtName, String wardId, String wardName, double latitude, double longitude) onLocationSelected;
   final Function() onLoadProvinces;
   final Function(String provinceId) onLoadDistricts;
   final Function(String districtId) onLoadWards;
@@ -109,6 +109,8 @@ class _LocationPickerState extends State<LocationPicker> {
                 selectedDistrict!.fullName,
                 ward.id,
                 ward.fullName,
+                double.tryParse(ward.latitude) ?? 0.0,
+                double.tryParse(ward.longitude) ?? 0.0,
               );
             }
           },

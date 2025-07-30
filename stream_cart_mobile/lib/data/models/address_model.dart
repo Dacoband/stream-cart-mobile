@@ -28,26 +28,30 @@ class AddressModel extends AddressEntity {
 
   factory AddressModel.fromJson(Map<String, dynamic> json) {
     return AddressModel(
-      id: json['id'] as String,
-      recipientName: json['recipientName'] as String,
-      street: json['street'] as String,
-      ward: json['ward'] as String,
-      district: json['district'] as String,
-      city: json['city'] as String,
-      country: json['country'] as String,
-      postalCode: json['postalCode'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-      isDefaultShipping: json['isDefaultShipping'] as bool,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      type: AddressType.fromValue(json['type'] as int),
-      isActive: json['isActive'] as bool,
-      accountId: json['accountId'] as String,
-      shopId: json['shopId'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      createdBy: json['createdBy'] as String,
-      lastModifiedAt: DateTime.parse(json['lastModifiedAt'] as String),
-      lastModifiedBy: json['lastModifiedBy'] as String,
+      id: json['id'] ?? '',
+      recipientName: json['recipientName'] ?? '',
+      street: json['street'] ?? '',
+      ward: json['ward'] ?? '',
+      district: json['district'] ?? '',
+      city: json['city'] ?? '',
+      country: json['country'] ?? AddressEntity.defaultCountry,
+      postalCode: json['postalCode'] ?? AddressEntity.defaultPostalCode,
+      phoneNumber: json['phoneNumber'] ?? '',
+      isDefaultShipping: json['isDefaultShipping'] ?? false,
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      type: AddressType.fromValue(json['type'] ?? 0),
+      isActive: json['isActive'] ?? true,
+      accountId: json['accountId'] ?? '',
+      shopId: json['shopId'],
+      createdAt: json['createdAt'] != null 
+        ? DateTime.parse(json['createdAt']) 
+        : DateTime.now(),
+      createdBy: json['createdBy'] ?? '',
+      lastModifiedAt: json['lastModifiedAt'] != null 
+        ? DateTime.parse(json['lastModifiedAt']) 
+        : DateTime.now(),
+      lastModifiedBy: json['lastModifiedBy'] ?? '',
     );
   }
 
@@ -224,10 +228,10 @@ class WardModel extends WardEntity {
 
   factory WardModel.fromJson(Map<String, dynamic> json) {
     return WardModel(
-      id: json['id'] as String,
-      fullName: json['full_name'] as String,
-      latitude: json['latitude'] as String,
-      longitude: json['longitude'] as String,
+      id: json['id'] ?? '',
+      fullName: json['full_name'] ?? '',
+      latitude: json['latitude']?.toString() ?? '0.0',
+      longitude: json['longitude']?.toString() ?? '0.0',
     );
   }
 

@@ -66,7 +66,13 @@ class _AddEditAddressPageState extends State<AddEditAddressPage> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            Navigator.pop(context);
+
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                Navigator.pop(context, true); 
+              }
+            });
+            
           } else if (state is AddressUpdated) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -75,7 +81,11 @@ class _AddEditAddressPageState extends State<AddEditAddressPage> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            Navigator.pop(context);
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                Navigator.pop(context, true); 
+              }
+            });
           }
         },
         builder: (context, state) {
@@ -84,7 +94,6 @@ class _AddEditAddressPageState extends State<AddEditAddressPage> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // White container for form
                 Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(20),

@@ -10,7 +10,7 @@ import 'location_picker_widget.dart';
 import 'address_type_selector.dart';
 
 class AddressForm extends StatefulWidget {
-  final AddressEntity? initialAddress; // null = create, có value = edit
+  final AddressEntity? initialAddress; 
   final Function(Map<String, dynamic>) onSubmit;
   final bool isLoading;
   
@@ -34,18 +34,20 @@ class _AddressFormState extends State<AddressForm> {
   AddressType _selectedType = AddressType.residential;
   bool _isDefaultShipping = false;
   
-  // Location data
+  // Location data arrays
+  List<ProvinceEntity> _provinces = [];
+  List<ProvinceEntity> _districts = [];
+  List<WardEntity> _wards = [];
+  
+  // Location selection
   String? _selectedProvinceId;
   String? _selectedProvinceName;
   String? _selectedDistrictId;
   String? _selectedDistrictName;
   String? _selectedWardId;
   String? _selectedWardName;
-
-  // Location lists
-  List<ProvinceEntity> _provinces = [];
-  List<ProvinceEntity> _districts = [];
-  List<WardEntity> _wards = [];
+  double _selectedLatitude = 0.0;
+  double _selectedLongitude = 0.0;
 
   @override
   void initState() {
@@ -67,6 +69,8 @@ class _AddressFormState extends State<AddressForm> {
       _selectedProvinceName = address.city;
       _selectedDistrictName = address.district;
       _selectedWardName = address.ward;
+      _selectedLatitude = address.latitude;
+      _selectedLongitude = address.longitude;
     }
   }
 
@@ -85,6 +89,8 @@ class _AddressFormState extends State<AddressForm> {
     String districtName,
     String wardId,
     String wardName,
+    double latitude,
+    double longitude,
   ) {
     setState(() {
       _selectedProvinceId = provinceId;
@@ -93,6 +99,8 @@ class _AddressFormState extends State<AddressForm> {
       _selectedDistrictName = districtName;
       _selectedWardId = wardId;
       _selectedWardName = wardName;
+      _selectedLatitude = latitude;
+      _selectedLongitude = longitude;
     });
   }
 
@@ -132,8 +140,8 @@ class _AddressFormState extends State<AddressForm> {
         // Add default values
         'country': 'Việt Nam',
         'postalCode': '70000',
-        'latitude': 0.0, 
-        'longitude': 0.0, 
+        'latitude': _selectedLatitude, // ✅ Use ward coordinates
+        'longitude': _selectedLongitude, // ✅ Use ward coordinates
       };
 
       widget.onSubmit(formData);

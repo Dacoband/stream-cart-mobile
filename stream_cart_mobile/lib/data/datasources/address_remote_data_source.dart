@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../core/enums/address_type.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/services/address_external_service.dart';
@@ -45,7 +44,6 @@ abstract class AddressRemoteDataSource {
   Future<AddressModel> unassignAddressFromShop(String addressId);
   Future<List<AddressModel>> getAddressesByShop(String shopId);
 
-  // External API for provinces/districts/wards
   Future<List<ProvinceModel>> getProvinces();
   Future<List<ProvinceModel>> getDistricts(String provinceId);
   Future<List<WardModel>> getWards(String districtId);
@@ -230,10 +228,31 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
   @override
   Future<AddressModel> setDefaultShippingAddress(String id) async {
     try {
-      final response = await _dio.put('/api/addresses/$id/set-default');
+      final response = await _dio.put('/api/addresses/$id/set-default-shipping');
       
       if (response.statusCode == 200) {
-        return AddressModel.fromJson(response.data['data']);
+        return AddressModel(
+          id: id,
+          recipientName: '', 
+          street: '',
+          ward: '',
+          district: '',
+          city: '',
+          country: 'Việt Nam',
+          postalCode: '70000',
+          phoneNumber: '',
+          isDefaultShipping: true, // Quan trọng nhất
+          latitude: 0.0,
+          longitude: 0.0,
+          type: AddressType.residential, // AddressType.residential
+          isActive: true,
+          accountId: '',
+          shopId: null,
+          createdAt: DateTime.now(),
+          createdBy: '',
+          lastModifiedAt: DateTime.now(),
+          lastModifiedBy: '',
+        );
       } else {
         throw ServerException('Failed to set default address');
       }
@@ -265,7 +284,7 @@ class AddressRemoteDataSourceImpl implements AddressRemoteDataSource {
       if (e.response?.statusCode == 401) {
         throw UnauthorizedException('Unauthorized');
       } else if (e.response?.statusCode == 404) {
-        return null; // No default address set
+        return null; 
       } else {
         throw ServerException('Server error: ${e.message}');
       }

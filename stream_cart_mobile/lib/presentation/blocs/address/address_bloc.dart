@@ -78,8 +78,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     
     final result = await getAddressesUseCase();
     result.fold(
-      (failure) => emit(AddressError(message: failure.message)),
-      (addresses) => emit(AddressesLoaded(addresses: addresses)),
+      (failure) {
+        emit(AddressError(message: failure.message));
+      },
+      (addresses) {
+        emit(AddressesLoaded(addresses: addresses));
+      },
     );
   }
 
@@ -154,12 +158,35 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
 
   // Address Management Event Handlers
   Future<void> _onSetDefaultShippingAddress(SetDefaultShippingAddressEvent event, Emitter<AddressState> emit) async {
-    emit(const AddressLoading());
+    // Giữ current state để update
+    final currentState = state;
+    if (currentState is! AddressesLoaded) {
+      emit(const AddressLoading());
+      // Nếu không có addresses đã load, load lại từ đầu
+      add(const GetAddressesEvent());
+      return;
+    }
     
     final result = await setDefaultShippingAddressUseCase(event.id);
     result.fold(
-      (failure) => emit(AddressError(message: failure.message)),
-      (address) => emit(DefaultShippingAddressSet(address: address)),
+      (failure) {
+        emit(AddressError(message: failure.message));
+      },
+      (updatedAddress) {
+        // Update local state: set tất cả addresses khác thành not default, set target address thành default
+        final updatedAddresses = currentState.addresses.map((address) {
+          if (address.id == event.id) {
+            // Set address này thành default
+            return address.copyWith(isDefaultShipping: true);
+          } else {
+            // Set tất cả addresses khác thành not default
+            return address.copyWith(isDefaultShipping: false);
+          }
+        }).toList();
+        
+        emit(AddressesLoaded(addresses: updatedAddresses));
+        emit(DefaultShippingAddressSet(address: updatedAddress));
+      },
     );
   }
 
@@ -168,8 +195,12 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
     
     final result = await getDefaultShippingAddressUseCase();
     result.fold(
-      (failure) => emit(AddressError(message: failure.message)),
-      (address) => emit(DefaultShippingAddressLoaded(address: address)),
+      (failure) {
+        emit(AddressError(message: failure.message));
+      },
+      (address) {
+        emit(DefaultShippingAddressLoaded(address: address));
+      },
     );
   }
 

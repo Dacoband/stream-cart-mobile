@@ -36,18 +36,18 @@ class AddressesLoaded extends AddressState {
 
 class AddressCreated extends AddressState {
   final AddressEntity address;
-
+  
   const AddressCreated({required this.address});
-
+  
   @override
   List<Object> get props => [address];
 }
 
 class AddressUpdated extends AddressState {
   final AddressEntity address;
-
+  
   const AddressUpdated({required this.address});
-
+  
   @override
   List<Object> get props => [address];
 }
