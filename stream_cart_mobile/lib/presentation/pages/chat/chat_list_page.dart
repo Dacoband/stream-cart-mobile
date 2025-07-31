@@ -23,14 +23,18 @@ class ChatListPage extends StatefulWidget {
 
 class _ChatListPageState extends State<ChatListPage> with RouteAware {
   @override
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = context.read<AuthBloc>().state;
       int? roleValue;
+      String? userId;
+      String? userName;
+      
       if (authState is AuthSuccess) {
         roleValue = authState.loginResponse.account.role;
+        userId = authState.loginResponse.account.id;
+        userName = authState.loginResponse.account.username;
       }
       final userRole = UserRole.fromValue(roleValue ?? 1);
       if (userRole == UserRole.seller) {

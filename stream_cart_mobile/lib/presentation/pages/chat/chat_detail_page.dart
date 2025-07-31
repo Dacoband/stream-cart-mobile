@@ -53,8 +53,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    // Khi rời phòng chat, phát DisconnectLiveKit
-    context.read<ChatBloc>().add(DisconnectLiveKit());
+    // context.read<ChatBloc>().add(const DisconnectLiveKit());
     super.dispose();
   }
 

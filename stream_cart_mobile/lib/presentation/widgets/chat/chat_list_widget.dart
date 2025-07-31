@@ -3,8 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import '../../pages/chat/chat_detail_page.dart';
 import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
 
 class ChatListWidget extends StatelessWidget {
   final List<ChatEntity> chatRooms;
@@ -49,19 +52,35 @@ class ChatListWidget extends StatelessWidget {
                   ),
                 )
               : null,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BlocProvider.value(
-                value: BlocProvider.of<ChatBloc>(context),
-                child: ChatDetailPage(
-                  chatRoomId: chatRoom.id,
-                  userId: chatRoom.userId,
-                  userName: chatRoom.userName ?? 'Unknown',
+          onTap: () {
+            final authState = context.read<AuthBloc>().state;
+            String? userId;
+            String? userName;
+            
+            if (authState is AuthSuccess) {
+              userId = authState.loginResponse.account.id;
+              userName = authState.loginResponse.account.username;
+            }
+            context.read<ChatBloc>().add(SwitchChatRoom(
+              chatRoomId: chatRoom.id,
+              userId: userId ?? '',
+              userName: userName ?? 'Unknown',
+            ));
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider.value(
+                  value: BlocProvider.of<ChatBloc>(context),
+                  child: ChatDetailPage(
+                    chatRoomId: chatRoom.id,
+                    userId: chatRoom.userId,
+                    userName: chatRoom.userName ?? 'Unknown',
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

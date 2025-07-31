@@ -7,6 +7,43 @@ abstract class ChatEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class ConnectGlobalLiveKit extends ChatEvent {
+  final String chatRoomId;
+  final String userId;
+  final String userName;
+
+  const ConnectGlobalLiveKit({
+    required this.chatRoomId,
+    required this.userId,
+    required this.userName,
+  });
+
+  @override
+  List<Object?> get props => [chatRoomId, userId, userName];
+}
+
+class DisconnectGlobalLiveKit extends ChatEvent {
+  const DisconnectGlobalLiveKit();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class SwitchChatRoom extends ChatEvent {
+  final String chatRoomId;
+  final String userId;
+  final String userName;
+
+  const SwitchChatRoom({
+    required this.chatRoomId,
+    required this.userId,
+    required this.userName,
+  });
+
+  @override
+  List<Object?> get props => [chatRoomId, userId, userName];
+}
+
 class LoadChatRoom extends ChatEvent {
   final String chatRoomId;
 

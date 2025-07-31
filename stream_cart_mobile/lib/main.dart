@@ -21,12 +21,12 @@ import 'domain/usecases/chat/send_message_usecase.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/blocs/chat/chat_bloc.dart';
+import 'presentation/blocs/chat/chat_event.dart';
 import 'presentation/blocs/notification/notification_bloc.dart';
 import 'presentation/blocs/address/address_bloc.dart';
 import 'presentation/pages/auth/auth_wrapper.dart';
 import 'presentation/pages/chat/chat_list_page.dart';
 
-// Background message handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -35,16 +35,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables
+
   await FirebaseConfig.loadEnv();
   
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: FirebaseConfig.currentPlatform,
   );
   
-  // Set background message handler
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   
   try {
@@ -55,7 +52,6 @@ void main() async {
   
   await setupDependencies();
   
-  // Initialize search history service
   await getIt.get<SearchHistoryService>().initializeHistory();
   
   // Initialize SignalR manager for real-time notifications
@@ -67,8 +63,39 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    if (state == AppLifecycleState.detached || state == AppLifecycleState.paused) {
+      try {
+        final chatBloc = getIt<ChatBloc>();
+        chatBloc.add(const DisconnectGlobalLiveKit());
+      } catch (e) {
+        print('Error disconnecting LiveKit: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

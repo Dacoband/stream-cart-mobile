@@ -27,6 +27,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
   final ConnectLiveKitUseCase connectLiveKitUseCase;
   final DisconnectLiveKitUseCase disconnectLiveKitUseCase;
+  String? _currentGlobalChatRoomId;
+  bool _isGlobalConnectionActive = false;
 
   ChatBloc({
     required this.loadChatRoomUseCase,
@@ -50,6 +52,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<DisconnectLiveKit>(_onDisconnectLiveKit);
     on<ChatErrorEvent>(_onChatError);
     on<ChatLiveKitStatusChanged>(_onLiveKitStatusChanged);
+    on<ConnectGlobalLiveKit>(_onConnectGlobalLiveKit);
+    on<DisconnectGlobalLiveKit>(_onDisconnectGlobalLiveKit);
+    on<SwitchChatRoom>(_onSwitchChatRoom);
 
     // Listen to LivekitService status if available
     final livekitService = _tryGetLivekitService();
@@ -58,6 +63,64 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         add(ChatLiveKitStatusChanged(status));
       };
     }
+  }
+
+  Future<void> _onConnectGlobalLiveKit(ConnectGlobalLiveKit event, Emitter<ChatState> emit) async {
+    if (_isGlobalConnectionActive && _currentGlobalChatRoomId == event.chatRoomId) {
+      // Đã kết nối rồi, chỉ load messages
+      add(LoadChatRoom(event.chatRoomId));
+      return;
+    }
+
+    emit(ChatLoading());
+    final result = await connectLiveKitUseCase(
+      chatRoomId: event.chatRoomId,
+      userId: event.userId,
+      userName: event.userName,
+    );
+    
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) {
+        _currentGlobalChatRoomId = event.chatRoomId;
+        _isGlobalConnectionActive = true;
+        
+        final livekitService = _tryGetLivekitService();
+        livekitService?.setChatBloc(this);
+        
+        emit(LiveKitConnected(event.chatRoomId));
+        add(LoadChatRoom(event.chatRoomId));
+      },
+    );
+  }
+
+  Future<void> _onSwitchChatRoom(SwitchChatRoom event, Emitter<ChatState> emit) async {
+    if (_isGlobalConnectionActive) {
+      // Chỉ load messages của room mới, không disconnect LiveKit
+      add(LoadChatRoom(event.chatRoomId));
+    } else {
+      // Chưa có kết nối global, tạo mới
+      add(ConnectGlobalLiveKit(
+        chatRoomId: event.chatRoomId,
+        userId: event.userId,
+        userName: event.userName,
+      ));
+    }
+  }
+
+  Future<void> _onDisconnectGlobalLiveKit(DisconnectGlobalLiveKit event, Emitter<ChatState> emit) async {
+    if (!_isGlobalConnectionActive) return;
+
+    emit(ChatLoading());
+    final result = await disconnectLiveKitUseCase();
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) {
+        _isGlobalConnectionActive = false;
+        _currentGlobalChatRoomId = null;
+        emit(LiveKitDisconnected());
+      },
+    );
   }
 
   LivekitService? _tryGetLivekitService() {
@@ -301,15 +364,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onDisconnectLiveKit(DisconnectLiveKit event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
-    final result = await disconnectLiveKitUseCase();
-    result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (_) => emit(LiveKitDisconnected()),
-    );
+    if (state is ChatLoaded) {
+      final currentState = state as ChatLoaded;
+      emit(ChatRoomsLoaded(chatRooms: currentState.chatRooms));
+    }
   }
 
   void _onChatError(ChatErrorEvent event, Emitter<ChatState> emit) {
     emit(ChatError(event.message));
+  }
+
+  @override
+  Future<void> close() async {
+    if (_isGlobalConnectionActive) {
+      await disconnectLiveKitUseCase();
+    }
+    return super.close();
   }
 }
