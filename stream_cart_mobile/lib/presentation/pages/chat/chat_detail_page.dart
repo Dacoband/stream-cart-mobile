@@ -9,7 +9,6 @@ import '../../../core/di/dependency_injection.dart';
 import '../../../core/services/livekit_service.dart';
 import '../../widgets/chat/chat_input_widget.dart';
 import '../../widgets/chat/chat_message_list_widget.dart';
-import '../../widgets/chat/chat_message_widget.dart';
 class ChatDetailPage extends StatefulWidget {
   final String chatRoomId;
   final String userId;
@@ -32,15 +31,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void initState() {
     super.initState();
-    
-    // Set ChatBloc to LivekitService
     try {
       getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
     } catch (e) {
       print('Error setting ChatBloc to LivekitService: $e');
     }
-    
-    // Initialize once
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!_hasInitialized) {
         _initializeChatRoom();
@@ -50,23 +45,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   void _initializeChatRoom() {
-    print('🚀 Initializing chat room: ${widget.chatRoomId}');
-    
-    // Kiểm tra current state
-    final currentState = context.read<ChatBloc>().state;
-    print('🔍 Current ChatBloc state: ${currentState.runtimeType}');
-    
+    final currentState = context.read<ChatBloc>().state;    
     if (currentState is ChatLoaded && currentState.chatRoomId == widget.chatRoomId) {
-      print('✅ Room already loaded with ${currentState.messages.length} messages');
       return;
     }
-    
-    // Load messages first
     context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
     
-    // Then check if we need to connect LiveKit
     if (currentState is! LiveKitConnected) {
-      print('🔗 Connecting to LiveKit...');
       context.read<ChatBloc>().add(ConnectLiveKit(
         chatRoomId: widget.chatRoomId,
         userId: widget.userId,
@@ -77,7 +62,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    // Don't disconnect LiveKit here - keep global connection
     super.dispose();
   }
 
@@ -85,12 +69,31 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.userName),
+        // Tùy chỉnh back arrow
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFB0F847)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        // Tùy chỉnh title (room name)
+        title: Text(
+          widget.userName,
+          style: const TextStyle(
+            color: Color(0xFFB0F847),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        
+        // Tùy chỉnh background và elevation
+        backgroundColor: Color(0xFF202328),
+        elevation: 2,
+        shadowColor: Colors.grey.withOpacity(0.1),
+        
+        // Tùy chỉnh actions (connection status)
         actions: [
           BlocBuilder<ChatBloc, ChatState>(
             builder: (context, state) {
               if (state is LiveKitConnected || state is ChatStatusChanged) {
-                // Check if connected from status message
                 if (state is ChatStatusChanged && 
                     (state.status.contains('✅') || state.status.contains('Đã kết nối'))) {
                   return const Padding(
@@ -107,7 +110,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               return const SizedBox.shrink();
             },
           ),
+          // menu nút actions
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Color(0xFFB0F847)),
+            onPressed: () {
+              // Handle menu action
+            },
+          ),
         ],
+        
+        // Tùy chỉnh bottom border
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.grey.withOpacity(0.2),
+          ),
+        ),
       ),
       body: BlocListener<ChatBloc, ChatState>(
         listener: (context, state) {
@@ -120,7 +139,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           }
           
           if (state is LiveKitConnected) {
-            print('🔄 LiveKit connected, loading messages...');
             Future.delayed(const Duration(milliseconds: 500), () {
               context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
             });
@@ -128,7 +146,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         },
         child: BlocBuilder<ChatBloc, ChatState>(
           builder: (context, state) {
-            print('🔍 ChatDetailPage - Current state: ${state.runtimeType}');
             
             if (state is ChatLoading) {
               return const Center(
@@ -162,8 +179,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
               );
             }
-            
-            // FIX: Handle ChatStatusChanged state
             if (state is ChatStatusChanged) {
               if (state.status.contains('🔄') || state.status.contains('Đang')) {
                 return const Center(
@@ -209,18 +224,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             }
             
             if (state is ChatLoaded) {
-              // Kiểm tra xem có đúng room không
               if (state.chatRoomId != null && state.chatRoomId != widget.chatRoomId) {
-                print('🔍 Wrong room loaded. Expected: ${widget.chatRoomId}, Got: ${state.chatRoomId}');
-                // Load correct room
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
                 });
                 return const Center(child: CircularProgressIndicator());
-              }
-              
-              print('🔍 ChatDetailPage - Showing ${state.messages.length} messages for room: ${widget.chatRoomId}');
-              
+              }       
               return Column(
                 children: [
                   Expanded(
@@ -251,7 +260,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             }
             
             // Default case - try to load messages
-            print('🔍 Unknown state: ${state.runtimeType}, trying to load messages...');
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
             });

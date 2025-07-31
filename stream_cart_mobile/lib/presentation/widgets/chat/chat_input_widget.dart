@@ -1,8 +1,5 @@
 // Cho phép người dùng nhập và gửi tin nhắn.
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
-import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 
 class ChatInputWidget extends StatefulWidget {
 

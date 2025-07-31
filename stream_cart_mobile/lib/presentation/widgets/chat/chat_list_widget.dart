@@ -29,7 +29,7 @@ class ChatListWidget extends StatelessWidget {
             ),
           ),
           title: Text(
-            chatRoom.shopName ?? 'Không tên',
+            chatRoom.shopName,
             style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
           ),
           subtitle: Text(
@@ -53,9 +53,6 @@ class ChatListWidget extends StatelessWidget {
                 )
               : null,
           onTap: () {
-            print('🎯 Tapping on chat room: ${chatRoom.id} - ${chatRoom.shopName}');
-            
-            // Lấy thông tin user hiện tại
             final authState = context.read<AuthBloc>().state;
             String? userId;
             String? userName;
@@ -64,16 +61,9 @@ class ChatListWidget extends StatelessWidget {
               userId = authState.loginResponse.account.id;
               userName = authState.loginResponse.account.username;
             }
-
-            // Đảm bảo có đủ thông tin
             if (userId == null || chatRoom.id.isEmpty) {
-              print('❌ Missing userId or chatRoomId');
               return;
             }
-
-            print('🎯 Switching to chat room: ${chatRoom.id} with user: $userName');
-            
-            // Sử dụng SwitchChatRoom để chuyển room
             context.read<ChatBloc>().add(SwitchChatRoom(
               chatRoomId: chatRoom.id,
               userId: userId,
@@ -87,8 +77,8 @@ class ChatListWidget extends StatelessWidget {
                   value: BlocProvider.of<ChatBloc>(context),
                   child: ChatDetailPage(
                     chatRoomId: chatRoom.id,
-                    userId: chatRoom.userId ?? userId.toString(),
-                    userName: chatRoom.userName ?? userName.toString(),
+                    userId: chatRoom.userId,
+                    userName: chatRoom.userName,
                   ),
                 ),
               ),

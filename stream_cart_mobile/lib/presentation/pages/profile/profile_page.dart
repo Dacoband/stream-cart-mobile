@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/routing/app_router.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../blocs/auth/auth_bloc.dart';
