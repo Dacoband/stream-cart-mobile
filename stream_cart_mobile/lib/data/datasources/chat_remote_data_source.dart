@@ -144,7 +144,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     try {
       final url = ApiUrlHelper.getFullUrl(
           '${ApiConstants.chatRoomMarkAsReadEndpoint.replaceFirst('{chatRoomId}', chatRoomId)}');
-      final response = await dio.post(url);
+      final response = await dio.patch(url);
       final responseData = response.data;
       if (responseData['success'] == false) {
         final errors = responseData['errors'] as List<dynamic>? ?? [];
