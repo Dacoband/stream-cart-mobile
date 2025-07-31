@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stream_cart_mobile/domain/entities/account_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 
+import '../../../core/models/user.dart';
+import '../../../domain/entities/chat_entity.dart';
 import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
@@ -16,6 +19,8 @@ import '../../../domain/usecases/chat/send_message_usecase.dart';
 import '../../../core/services/livekit_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/di/dependency_injection.dart';
+import '../auth/auth_bloc.dart';
+import '../auth/auth_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final LoadChatRoomUseCase loadChatRoomUseCase;
@@ -29,6 +34,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final DisconnectLiveKitUseCase disconnectLiveKitUseCase;
   String? _currentGlobalChatRoomId;
   bool _isGlobalConnectionActive = false;
+  
+  // Thêm biến cho reconnection
+  Timer? _reconnectTimer;
+  int _reconnectAttempts = 0;
+  static const int _maxReconnectAttempts = 5;
+  static const Duration _baseReconnectDelay = Duration(seconds: 2);
 
   ChatBloc({
     required this.loadChatRoomUseCase,
@@ -56,23 +67,97 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<DisconnectGlobalLiveKit>(_onDisconnectGlobalLiveKit);
     on<SwitchChatRoom>(_onSwitchChatRoom);
 
-    // Listen to LivekitService status if available
+    // Setup listener cho LivekitService
     final livekitService = _tryGetLivekitService();
     if (livekitService != null) {
       livekitService.onStatusChanged = (status) {
         add(ChatLiveKitStatusChanged(status));
+        
+        // Handle specific disconnect reasons
+        if (status.contains('DisconnectReason.joinFailure')) {
+          print('🔴 Phát hiện joinFailure - sẽ được xử lý bởi LivekitService');
+          // LivekitService sẽ tự động reconnect
+        } else if (status.contains('Đã kết nối')) {
+          _reconnectAttempts = 0;
+          _reconnectTimer?.cancel();
+          print('✅ Kết nối thành công - reset reconnect attempts');
+        }
       };
     }
   }
 
+  void _handleDisconnection() {
+    // Chỉ handle khi LivekitService không tự reconnect được
+    if (!_isGlobalConnectionActive || _currentGlobalChatRoomId == null) return;
+    
+    print('🔄 ChatBloc handling disconnection...');
+    add(ChatErrorEvent('🔄 Đang kết nối lại...'));
+    _startAutoReconnect();
+  }
+
+  // Giảm logic reconnect ở ChatBloc vì LivekitService đã handle
+  void _startAutoReconnect() {
+    if (_reconnectAttempts >= 2) { // Giảm xuống 2 attempts cho ChatBloc
+      add(ChatErrorEvent('❌ LivekitService reconnect failed'));
+      return;
+    }
+
+    _reconnectAttempts++;
+    final delay = Duration(seconds: 5 * _reconnectAttempts); // Tăng delay
+    
+    print('🔄 ChatBloc thử kết nối lại lần $_reconnectAttempts sau ${delay.inSeconds}s...');
+    
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(delay, () {
+      if (_isGlobalConnectionActive && _currentGlobalChatRoomId != null) {
+        _attemptReconnect();
+      }
+    });
+  }
+
+  void _attemptReconnect() async {
+    try {
+      // Sử dụng AuthBloc thay vì AuthService
+      final authBloc = getIt<AuthBloc>();
+      final authState = authBloc.state;
+      
+      if (authState is AuthSuccess && _currentGlobalChatRoomId != null) {
+        final currentUser = authState.loginResponse.account;
+        print('🔄 ChatBloc attempting reconnect to: $_currentGlobalChatRoomId');
+        
+        add(ConnectGlobalLiveKit(
+          chatRoomId: _currentGlobalChatRoomId!,
+          userId: currentUser.id,
+          userName: currentUser.username,
+        ));
+      } else {
+        print('❌ User not authenticated, cannot reconnect');
+        add(ChatErrorEvent('User not authenticated'));
+      }
+    } catch (e) {
+      print('❌ ChatBloc reconnect error: $e');
+      _startAutoReconnect();
+    }
+  }
+
   Future<void> _onConnectGlobalLiveKit(ConnectGlobalLiveKit event, Emitter<ChatState> emit) async {
+    print('🔗 _onConnectGlobalLiveKit called with chatRoomId: ${event.chatRoomId}');
+    
+    // Nếu đã kết nối cùng room, chỉ load messages
     if (_isGlobalConnectionActive && _currentGlobalChatRoomId == event.chatRoomId) {
-      // Đã kết nối rồi, chỉ load messages
+      print('🔗 Already connected to same room, just loading messages...');
       add(LoadChatRoom(event.chatRoomId));
       return;
     }
 
-    emit(ChatLoading());
+    // Show appropriate loading state
+    if (_reconnectAttempts == 0) {
+      emit(ChatLoading());
+    } else {
+      emit(ChatReconnecting('🔄 Đang kết nối lại... (${_reconnectAttempts}/$_maxReconnectAttempts)'));
+    }
+    
+    print('🔗 Attempting to connect to LiveKit for room: ${event.chatRoomId}');
     final result = await connectLiveKitUseCase(
       chatRoomId: event.chatRoomId,
       userId: event.userId,
@@ -80,83 +165,65 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
     
     result.fold(
-      (failure) => emit(ChatError(failure.message)),
+      (failure) {
+        print('❌ Connect failed: ${failure.message}');
+        if (_reconnectAttempts > 0) {
+          _startAutoReconnect();
+        } else {
+          emit(ChatError(failure.message));
+        }
+      },
       (_) {
+        print('✅ Connected successfully to room: ${event.chatRoomId}');
         _currentGlobalChatRoomId = event.chatRoomId;
         _isGlobalConnectionActive = true;
+        _reconnectAttempts = 0; 
+        _reconnectTimer?.cancel();
         
         final livekitService = _tryGetLivekitService();
         livekitService?.setChatBloc(this);
         
         emit(LiveKitConnected(event.chatRoomId));
+        
+        // Đảm bảo load messages ngay sau khi connect
+        print('🔗 Now loading messages for room: ${event.chatRoomId}');
         add(LoadChatRoom(event.chatRoomId));
       },
     );
   }
 
-  Future<void> _onSwitchChatRoom(SwitchChatRoom event, Emitter<ChatState> emit) async {
-    if (_isGlobalConnectionActive) {
-      // Chỉ load messages của room mới, không disconnect LiveKit
-      add(LoadChatRoom(event.chatRoomId));
-    } else {
-      // Chưa có kết nối global, tạo mới
-      add(ConnectGlobalLiveKit(
-        chatRoomId: event.chatRoomId,
-        userId: event.userId,
-        userName: event.userName,
-      ));
-    }
-  }
-
-  Future<void> _onDisconnectGlobalLiveKit(DisconnectGlobalLiveKit event, Emitter<ChatState> emit) async {
-    if (!_isGlobalConnectionActive) return;
-
-    emit(ChatLoading());
-    final result = await disconnectLiveKitUseCase();
-    result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (_) {
-        _isGlobalConnectionActive = false;
-        _currentGlobalChatRoomId = null;
-        emit(LiveKitDisconnected());
-      },
-    );
-  }
-
-  LivekitService? _tryGetLivekitService() {
-    try {
-      // Sử dụng getIt để lấy LivekitService
-      return getIt<LivekitService>();
-    } catch (e) {
-      print('⚠️ Không thể lấy LivekitService: $e');
-      return null;
-    }
-  }
-
-  void _onLiveKitStatusChanged(ChatLiveKitStatusChanged event, Emitter<ChatState> emit) {
-    final status = event.status;
-    if (status.contains('Đang kết nối lại')) {
-      emit(ChatReconnecting(status));
-    } else if (status.contains('Reconnect thất bại') || status.contains('Kết nối thất bại')) {
-      emit(ChatReconnectFailed(status));
-    } else if (status.contains('Đã kết nối')) {
-      emit(ChatStatusChanged(status));
-    } else if (status.contains('Lỗi kết nối')) {
-      emit(ChatError(status));
-    } else {
-      emit(ChatStatusChanged(status));
-    }
-  }
-
   Future<void> _onLoadChatRoom(LoadChatRoom event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
+    print('📥 _onLoadChatRoom called for chatRoomId: ${event.chatRoomId}');
+    
+    // Không emit ChatLoading nếu đang trong global connection flow
+    if (!_isGlobalConnectionActive) {
+      emit(ChatLoading());
+    }
+    
     final result = await loadChatRoomUseCase(event.chatRoomId);
     result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (messages) => emit(ChatLoaded(
-        messages: messages, 
-        chatRoomId: event.chatRoomId,
-      )),
+      (failure) {
+        print('❌ Load messages failed: ${failure.message}');
+        emit(ChatError(failure.message));
+      },
+      (messages) {
+        print('✅ Loaded ${messages.length} messages for room: ${event.chatRoomId}');
+        
+        // Giữ chat rooms nếu có
+        List<ChatEntity> currentChatRooms = [];
+        if (state is ChatLoaded) {
+          currentChatRooms = (state as ChatLoaded).chatRooms;
+        } else if (state is ChatRoomsLoaded) {
+          currentChatRooms = (state as ChatRoomsLoaded).chatRooms;
+        }
+        
+        emit(ChatLoaded(
+          messages: messages, 
+          chatRoomId: event.chatRoomId,
+          chatRooms: currentChatRooms,
+          hasReachedMax: false,
+        ));
+      },
     );
   }
 
@@ -245,6 +312,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
   }
 
+  // Helper method để lấy current user
+  AccountEntity? _getCurrentUser() {
+    try {
+      final authBloc = getIt<AuthBloc>();
+      final authState = authBloc.state;
+      
+      if (authState is AuthSuccess) {
+        return authState.loginResponse.account;
+      }
+      return null;
+    } catch (e) {
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
+
   Future<void> _onReceiveMessage(ReceiveMessage event, Emitter<ChatState> emit) async {
     print('📨 _onReceiveMessage được gọi với: ${event.message}');
     print('📨 Current state: ${state.runtimeType}');
@@ -279,9 +362,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         }
       }
     }
+    
     if (isFromLiveKit) {
-      final authService = getIt<AuthService>();
-      final currentUserId = await authService.getCurrentUserId();
+      // FIX: Sử dụng helper method để lấy current user ID
+      final currentUser = _getCurrentUser();
+      final currentUserId = currentUser?.id;
+      
       isMine = currentUserId != null && currentUserId == senderUserId;
       print('📨 LiveKit - Current userId: $currentUserId, senderUserId: $senderUserId, isMine: $isMine');
     } else {
@@ -304,10 +390,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           final currentState = state as ChatLoaded;
           print('📋 Current messages count: ${currentState.messages.length}');
           final isDuplicate = currentState.messages.any((msg) => 
-            msg.content == newMessage.content && 
-            msg.senderUserId == newMessage.senderUserId &&
-            msg.sentAt.difference(newMessage.sentAt).abs().inSeconds < 5
-          );
+          msg.content.trim() == newMessage.content.trim() && 
+          msg.senderUserId == newMessage.senderUserId &&
+          msg.sentAt.difference(newMessage.sentAt).abs().inSeconds < 10
+        );
           
           print('🔍 Is duplicate: $isDuplicate');
           
@@ -324,10 +410,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           }
         } else {
           print('📋 State không phải ChatLoaded, tạo mới với 1 tin nhắn');
+          
+          // Giữ chat rooms nếu có
+          List<ChatEntity> currentChatRooms = [];
+          if (state is ChatRoomsLoaded) {
+            currentChatRooms = (state as ChatRoomsLoaded).chatRooms;
+          }
+          
           emit(ChatLoaded(
             messages: [newMessage],
             chatRoomId: event.chatRoomId,
-            chatRooms: const [],
+            chatRooms: currentChatRooms,
             hasReachedMax: false,
           ));
         }
@@ -374,10 +467,82 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatError(event.message));
   }
 
+  // Thêm method _tryGetLivekitService
+  LivekitService? _tryGetLivekitService() {
+    try {
+      return getIt<LivekitService>();
+    } catch (e) {
+      print('❌ LivekitService not found: $e');
+      return null;
+    }
+  }
+
+  // Thêm method _onLiveKitStatusChanged
+  void _onLiveKitStatusChanged(ChatLiveKitStatusChanged event, Emitter<ChatState> emit) {
+    print('📡 LiveKit status changed: ${event.status}');
+    
+    emit(ChatStatusChanged(event.status));
+    
+    // FIX: Auto load messages khi reconnect thành công
+    if (event.status.contains('✅') || event.status.contains('Đã kết nối')) {
+      if (_currentGlobalChatRoomId != null) {
+        print('🔄 Auto loading messages after reconnect...');
+        add(LoadChatRoom(_currentGlobalChatRoomId!));
+      }
+    }
+  }
+
+  // Thêm method _onSwitchChatRoom
+  Future<void> _onSwitchChatRoom(SwitchChatRoom event, Emitter<ChatState> emit) async {
+    print('🔄 Switching to chat room: ${event.chatRoomId}');
+    
+    if (_isGlobalConnectionActive) {
+      // Đã có kết nối global, chỉ load messages của room mới
+      print('🔄 Already connected globally, just loading new room messages...');
+      _currentGlobalChatRoomId = event.chatRoomId;
+      add(LoadChatRoom(event.chatRoomId));
+    } else {
+      // Chưa có kết nối global, tạo mới
+      print('🔄 No global connection, creating new connection...');
+      add(ConnectGlobalLiveKit(
+        chatRoomId: event.chatRoomId,
+        userId: event.userId,
+        userName: event.userName,
+      ));
+    }
+  }
+
+  // Thêm method _onDisconnectGlobalLiveKit
+  Future<void> _onDisconnectGlobalLiveKit(DisconnectGlobalLiveKit event, Emitter<ChatState> emit) async {
+    if (!_isGlobalConnectionActive) return;
+
+    print('🔌 Disconnecting global LiveKit...');
+    emit(ChatLoading());
+    
+    final result = await disconnectLiveKitUseCase();
+    result.fold(
+      (failure) => emit(ChatError(failure.message)),
+      (_) {
+        _isGlobalConnectionActive = false;
+        _currentGlobalChatRoomId = null;
+        _reconnectAttempts = 0;
+        _reconnectTimer?.cancel();
+        
+        emit(LiveKitDisconnected());
+        print('✅ Global LiveKit disconnected');
+      },
+    );
+  }
+
   @override
   Future<void> close() async {
+    _reconnectTimer?.cancel();
     if (_isGlobalConnectionActive) {
-      await disconnectLiveKitUseCase();
+      try {
+        await disconnectLiveKitUseCase();
+      } catch (e) {
+        print('Error disconnecting LiveKit on close: $e');
+      }
     }
     return super.close();
   }

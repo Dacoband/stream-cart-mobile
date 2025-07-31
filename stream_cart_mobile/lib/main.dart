@@ -6,6 +6,7 @@ import 'core/config/firebase_config.dart';
 import 'core/config/env.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
+import 'core/services/livekit_service.dart';
 import 'core/services/search_history_service.dart';
 import 'core/services/notification_signalr_manager.dart';
 import 'core/services/firebase_notification_service.dart';
@@ -87,13 +88,46 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     
-    if (state == AppLifecycleState.detached || state == AppLifecycleState.paused) {
-      try {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        print('📱 App resumed - checking connection');
+        _checkAndReconnectIfNeeded();
+        break;
+      case AppLifecycleState.paused:
+        print('📱 App paused - keeping connection active');
+        break;
+      case AppLifecycleState.detached:
+        print('📱 App detached - disconnecting LiveKit');
+        _disconnectLiveKit();
+        break;
+      case AppLifecycleState.inactive:
+        print('📱 App inactive');
+        break;
+      case AppLifecycleState.hidden:
+        print('📱 App hidden');
+        break;
+    }
+  }
+
+  void _checkAndReconnectIfNeeded() {
+    try {
+      final livekitService = getIt<LivekitService>();
+      if (!livekitService.isConnected) {
+        print('🔄 LiveKit not connected, triggering status check');
         final chatBloc = getIt<ChatBloc>();
-        chatBloc.add(const DisconnectGlobalLiveKit());
-      } catch (e) {
-        print('Error disconnecting LiveKit: $e');
+        chatBloc.add(const ChatLiveKitStatusChanged('🔄 App resumed - checking connection'));
       }
+    } catch (e) {
+      print('Error checking connection: $e');
+    }
+  }
+
+  void _disconnectLiveKit() {
+    try {
+      final chatBloc = getIt<ChatBloc>();
+      chatBloc.add(const DisconnectGlobalLiveKit());
+    } catch (e) {
+      print('Error disconnecting LiveKit: $e');
     }
   }
 
@@ -102,9 +136,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) {
-            return getIt<AuthBloc>();
-          },
+          create: (context) => getIt<AuthBloc>(),
         ),
         BlocProvider.value(
           value: getIt<CartBloc>(),
@@ -113,11 +145,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           create: (context) => getIt<NotificationBloc>(),
         ),
         BlocProvider(
+          create: (context) => getIt<AddressBloc>(),
+        ),
+        BlocProvider(
           create: (context) => ChatBloc(
             loadChatRoomUseCase: getIt<LoadChatRoomUseCase>(),
+            loadChatRoomsUseCase: getIt<LoadChatRoomsUseCase>(),
             loadChatRoomsByShopUseCase: getIt<LoadChatRoomsByShopUseCase>(),
             loadShopChatRoomsUseCase: getIt<LoadShopChatRoomsUseCase>(),
-            loadChatRoomsUseCase: getIt<LoadChatRoomsUseCase>(),
             sendMessageUseCase: getIt<SendMessageUseCase>(),
             receiveMessageUseCase: getIt<ReceiveMessageUseCase>(),
             markChatRoomAsReadUseCase: getIt<MarkChatRoomAsReadUseCase>(),
@@ -125,20 +160,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             disconnectLiveKitUseCase: getIt<DisconnectLiveKitUseCase>(),
           ),
         ),
-        BlocProvider(
-          create: (context) => getIt<AddressBloc>(),
-        ),
       ],
       child: MaterialApp(
-        title: 'Stream Cart Mobile',
+        debugShowCheckedModeBanner: false,
+        title: 'Stream Cart',
+        onGenerateRoute: AppRouter.generateRoute,
+        navigatorObservers: [routeObserver],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
         home: const AuthWrapper(),
-        onGenerateRoute: AppRouter.generateRoute,
-        navigatorObservers: [routeObserver],
-        debugShowCheckedModeBanner: false,
       ),
     );
   }

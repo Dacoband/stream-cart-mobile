@@ -4,20 +4,37 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 
-class ChatInputWidget extends StatelessWidget {
-  final String chatRoomId;
-  final String userName;
+class ChatInputWidget extends StatefulWidget {
+
 
   const ChatInputWidget({
     super.key,
-    required this.chatRoomId,
-    required this.userName,
+    required this.onSend, 
   });
+
+  final Function(String) onSend; 
+
+  @override
+  State<ChatInputWidget> createState() => _ChatInputWidgetState();
+}
+
+class _ChatInputWidgetState extends State<ChatInputWidget> {
+  late TextEditingController textController;
+
+  @override
+  void initState() {
+    super.initState();
+    textController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final textController = TextEditingController();
-
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -43,10 +60,7 @@ class ChatInputWidget extends StatelessWidget {
             onPressed: () {
               final message = textController.text.trim();
               if (message.isNotEmpty) {
-                context.read<ChatBloc>().add(SendMessage(
-                      chatRoomId: chatRoomId,
-                      message: message,
-                    ));
+                widget.onSend(message);
                 textController.clear();
               }
             },

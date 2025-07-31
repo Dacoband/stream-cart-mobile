@@ -9,9 +9,7 @@ import '../../../core/di/dependency_injection.dart';
 import '../../../core/services/livekit_service.dart';
 import '../../widgets/chat/chat_input_widget.dart';
 import '../../widgets/chat/chat_message_list_widget.dart';
-import '../../widgets/chat/livekit_status_widget.dart';
-import '../../widgets/common/auth_guard.dart';
-
+import '../../widgets/chat/chat_message_widget.dart';
 class ChatDetailPage extends StatefulWidget {
   final String chatRoomId;
   final String userId;
@@ -29,104 +27,246 @@ class ChatDetailPage extends StatefulWidget {
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  bool _hasConnected = false;
+  bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
+    
+    // Set ChatBloc to LivekitService
+    try {
+      getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
+    } catch (e) {
+      print('Error setting ChatBloc to LivekitService: $e');
+    }
+    
+    // Initialize once
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (!_hasConnected) {
-        // Load chat room messages trước
-        context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
-        
-        // Sau đó connect LiveKit
-        context.read<ChatBloc>().add(ConnectLiveKit(
-          chatRoomId: widget.chatRoomId,
-          userId: widget.userId,
-          userName: widget.userName,
-        ));
-        _hasConnected = true;
+      if (!_hasInitialized) {
+        _initializeChatRoom();
+        _hasInitialized = true;
       }
     });
   }
 
+  void _initializeChatRoom() {
+    print('🚀 Initializing chat room: ${widget.chatRoomId}');
+    
+    // Kiểm tra current state
+    final currentState = context.read<ChatBloc>().state;
+    print('🔍 Current ChatBloc state: ${currentState.runtimeType}');
+    
+    if (currentState is ChatLoaded && currentState.chatRoomId == widget.chatRoomId) {
+      print('✅ Room already loaded with ${currentState.messages.length} messages');
+      return;
+    }
+    
+    // Load messages first
+    context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+    
+    // Then check if we need to connect LiveKit
+    if (currentState is! LiveKitConnected) {
+      print('🔗 Connecting to LiveKit...');
+      context.read<ChatBloc>().add(ConnectLiveKit(
+        chatRoomId: widget.chatRoomId,
+        userId: widget.userId,
+        userName: widget.userName,
+      ));
+    }
+  }
+
   @override
   void dispose() {
-    // context.read<ChatBloc>().add(const DisconnectLiveKit());
+    // Don't disconnect LiveKit here - keep global connection
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AuthGuard(
-      message: 'Vui lòng đăng nhập để vào phòng chat',
-      child: PopScope(
-        onPopInvoked: (didPop) {
-          if (didPop) {
-            context.read<ChatBloc>().add(DisconnectLiveKit());
-          }
-        },
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Phòng Chat', style: TextStyle(fontSize: 16))),
-          body: BlocBuilder<ChatBloc, ChatState>(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.userName),
+        actions: [
+          BlocBuilder<ChatBloc, ChatState>(
             builder: (context, state) {
-              return Column(
-                children: [
-                  // Hiển thị loading khi đang kết nối
-                  if (state is ChatLoading)
-                    const LinearProgressIndicator(),
-                  
-                  Expanded(child: ChatMessageListWidget()),
-                  
-                  // Hiển thị nút Thử lại khi gặp lỗi kết nối hoặc reconnect failed
-                  if (state is ChatError && state.message.contains('LiveKit'))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withOpacity(0.3)),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              '⚠️ ${state.message}',
-                              style: const TextStyle(color: Colors.red, fontSize: 12),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed: () {
-                                context.read<ChatBloc>().add(
-                                  ConnectLiveKit(
-                                    chatRoomId: widget.chatRoomId,
-                                    userId: widget.userId,
-                                    userName: widget.userName,
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                              ),
-                              child: const Text('🔄 Thử lại kết nối'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  
-                  LiveKitStatusWidget(),
-                  ChatInputWidget(chatRoomId: widget.chatRoomId, userName: widget.userName),
-                ],
-              );
+              if (state is LiveKitConnected || state is ChatStatusChanged) {
+                // Check if connected from status message
+                if (state is ChatStatusChanged && 
+                    (state.status.contains('✅') || state.status.contains('Đã kết nối'))) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(Icons.circle, color: Colors.green, size: 12),
+                  );
+                } else if (state is LiveKitConnected) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(Icons.circle, color: Colors.green, size: 12),
+                  );
+                }
+              }
+              return const SizedBox.shrink();
             },
           ),
+        ],
+      ),
+      body: BlocListener<ChatBloc, ChatState>(
+        listener: (context, state) {
+          if (state is ChatStatusChanged && 
+              (state.status.contains('✅') || state.status.contains('Đã kết nối'))) {
+            print('🔄 Connection successful, loading messages...');
+            Future.delayed(const Duration(milliseconds: 500), () {
+              context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+            });
+          }
+          
+          if (state is LiveKitConnected) {
+            print('🔄 LiveKit connected, loading messages...');
+            Future.delayed(const Duration(milliseconds: 500), () {
+              context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+            });
+          }
+        },
+        child: BlocBuilder<ChatBloc, ChatState>(
+          builder: (context, state) {
+            print('🔍 ChatDetailPage - Current state: ${state.runtimeType}');
+            
+            if (state is ChatLoading) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Đang tải tin nhắn...'),
+                  ],
+                ),
+              );
+            }
+            
+            if (state is ChatError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error, size: 64, color: Colors.red),
+                    SizedBox(height: 16),
+                    Text('Lỗi: ${state.message}'),
+                    SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+                      },
+                      child: const Text('Thử lại'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            
+            // FIX: Handle ChatStatusChanged state
+            if (state is ChatStatusChanged) {
+              if (state.status.contains('🔄') || state.status.contains('Đang')) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang kết nối...'),
+                    ],
+                  ),
+                );
+              } else if (state.status.contains('✅') || state.status.contains('Đã kết nối')) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Đang tải tin nhắn...'),
+                    ],
+                  ),
+                );
+              } else {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.warning, size: 64, color: Colors.orange),
+                      SizedBox(height: 16),
+                      Text(state.status),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+                        },
+                        child: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }
+            
+            if (state is ChatLoaded) {
+              // Kiểm tra xem có đúng room không
+              if (state.chatRoomId != null && state.chatRoomId != widget.chatRoomId) {
+                print('🔍 Wrong room loaded. Expected: ${widget.chatRoomId}, Got: ${state.chatRoomId}');
+                // Load correct room
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+                });
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              print('🔍 ChatDetailPage - Showing ${state.messages.length} messages for room: ${widget.chatRoomId}');
+              
+              return Column(
+                children: [
+                  Expanded(
+                    child: state.messages.isEmpty 
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                              SizedBox(height: 16),
+                              Text('Chưa có tin nhắn nào'),
+                              Text('Hãy bắt đầu cuộc trò chuyện!'),
+                            ],
+                          ),
+                        )
+                      : const ChatMessageListWidget(),
+                  ),
+                  ChatInputWidget(
+                    onSend: (content) {
+                      context.read<ChatBloc>().add(SendMessage(
+                        chatRoomId: widget.chatRoomId,
+                        message: content,
+                      ));
+                    },
+                  ),
+                ],
+              );
+            }
+            
+            // Default case - try to load messages
+            print('🔍 Unknown state: ${state.runtimeType}, trying to load messages...');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
+            });
+            
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Đang khởi tạo...'),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

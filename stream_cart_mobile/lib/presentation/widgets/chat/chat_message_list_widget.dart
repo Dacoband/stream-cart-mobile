@@ -18,6 +18,7 @@ class ChatMessageListWidget extends StatefulWidget {
 
 class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
   final ScrollController _scrollController = ScrollController();
+  bool _hasScrolledToBottom = false;
 
   @override
   void dispose() {
@@ -25,21 +26,27 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
     super.dispose();
   }
 
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<ChatBloc, ChatState>(
       listener: (context, state) {
         if (state is ChatLoaded) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Scroll to bottom (latest message) smoother
-            if (_scrollController.hasClients) {
-              _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          });
+          _hasScrolledToBottom = false;
+          if (state.messages.isNotEmpty) {
+            _scrollToBottom();
+          }
         }
       },
       child: BlocBuilder<ChatBloc, ChatState>(
@@ -60,10 +67,17 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
             if (state.messages.isEmpty) {
               return const Center(child: Text('Chưa có tin nhắn. Hãy gửi tin nhắn đầu tiên!'));
             }
-            
-            // Sắp xếp tin nhắn theo thời gian: cũ -> mới (tin nhắn mới nhất ở cuối)
+
             final sortedMessages = List<ChatMessage>.from(state.messages)
               ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+            
+            // Auto scroll khi build xong
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!_hasScrolledToBottom && _scrollController.hasClients) {
+                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                _hasScrolledToBottom = true;
+              }
+            });
             
             return ListView.builder(
               controller: _scrollController,
@@ -94,65 +108,112 @@ class ChatMessageItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMine = message.isMine;
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isMine ? const Color(0xFF2196F3) : const Color(0xFF424242),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(12),
-            topRight: const Radius.circular(12),
-            bottomLeft: Radius.circular(isMine ? 12 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 12),
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isMine) ...[
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: message.senderAvatarUrl != null && message.senderAvatarUrl!.isNotEmpty
+                  ? NetworkImage(message.senderAvatarUrl!)
+                  : null,
+              child: message.senderAvatarUrl == null || message.senderAvatarUrl!.isEmpty
+                  ? Text(
+                      message.senderName.isNotEmpty 
+                          ? message.senderName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 8),
+          ],
+
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+              minWidth: 60, 
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isMine 
+                    ? const Color(0xFFB0F847)
+                    : Colors.grey[200],
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(isMine ? 16 : 4),
+                  bottomRight: Radius.circular(isMine ? 4 : 16),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Message content
+                  Text(
+                    message.content,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isMine ? Colors.black : Colors.black87,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    softWrap: true,
+                  ),
+                  const SizedBox(height: 4),
+                  // Timestamp
+                  Row(
+                    mainAxisSize: MainAxisSize.min, 
+                    mainAxisAlignment: isMine 
+                        ? MainAxisAlignment.end 
+                        : MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatTime(message.sentAt),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isMine 
+                              ? Colors.black.withOpacity(0.6)
+                              : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Sender name
-            Text(
-              message.senderName,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: isMine ? Colors.white.withOpacity(0.8) : Colors.white.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Message content
-            Text(
-              message.content,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w400,
-              ),
-              softWrap: true,
-            ),
-            const SizedBox(height: 4),
-            // Timestamp
-            Text(
-              _formatTime(message.sentAt),
-              style: TextStyle(
-                fontSize: 11,
-                color: isMine ? Colors.white.withOpacity(0.7) : Colors.white.withOpacity(0.5),
-              ),
-            ),
-          ],
-        ),
+          
+          // Avatar bên phải cho tin nhắn của mình
+          // if (isMine) ...[
+          //   const SizedBox(width: 8),
+          //   CircleAvatar(
+          //     radius: 16,
+          //     backgroundColor: const Color(0xFFB0F847),
+          //     backgroundImage: message.senderAvatarUrl != null && message.senderAvatarUrl!.isNotEmpty
+          //         ? NetworkImage(message.senderAvatarUrl!)
+          //         : null,
+          //     child: message.senderAvatarUrl == null || message.senderAvatarUrl!.isEmpty
+          //         ? Text(
+          //             message.senderName.isNotEmpty 
+          //                 ? message.senderName[0].toUpperCase()
+          //                 : 'M',
+          //             style: const TextStyle(
+          //               fontSize: 12, 
+          //               fontWeight: FontWeight.bold,
+          //               color: Colors.black,
+          //             ),
+          //           )
+          //         : null,
+          //   ),
+          // ],
+        ],
       ),
     );
   }
@@ -163,10 +224,8 @@ class ChatMessageItemWidget extends StatelessWidget {
     final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
     
     if (messageDate == today) {
-      // Today - show only time
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     } else {
-      // Other days - show date and time
       return '${dateTime.day}/${dateTime.month} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
   }

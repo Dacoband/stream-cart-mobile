@@ -159,17 +159,20 @@ class DisconnectLiveKit extends ChatEvent {
   List<Object?> get props => []; 
 }
 
-class ChatErrorEvent extends ChatEvent {
-  final String message;
-  const ChatErrorEvent(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
 class ChatLiveKitStatusChanged extends ChatEvent {
   final String status;
+  
   const ChatLiveKitStatusChanged(this.status);
+  
   @override
   List<Object?> get props => [status];
+}
+
+class ChatErrorEvent extends ChatEvent {
+  final String message;
+  
+  const ChatErrorEvent(this.message);
+  
+  @override
+  List<Object?> get props => [message];
 }
