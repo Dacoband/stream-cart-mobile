@@ -7,11 +7,11 @@ import '../../core/services/storage_service.dart';
 import '../../core/services/http_service.dart';
 import '../../core/services/search_history_service.dart';
 import '../../core/services/image_upload_service.dart';
-import '../../data/datasources/auth_local_data_source.dart';
-import '../../data/datasources/auth_remote_data_source.dart';
-import '../../data/datasources/search_remote_data_source.dart';
-import '../../data/datasources/cart_remote_data_source.dart';
-import '../../data/datasources/shop_remote_data_source.dart';
+import '../../data/datasources/auth/auth_local_data_source.dart';
+import '../../data/datasources/auth/auth_remote_data_source.dart';
+import '../../data/datasources/search/search_remote_data_source.dart';
+import '../../data/datasources/cart/cart_remote_data_source.dart';
+import '../../data/datasources/shop/shop_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/search_repository_impl.dart';
 import '../../data/repositories/cart_repository_impl.dart';
@@ -21,46 +21,46 @@ import '../../domain/repositories/search_repository.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/shop_repository.dart';
 import '../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
-import '../../domain/usecases/login_usecase.dart';
-import '../../domain/usecases/register_usecase.dart';
-import '../../domain/usecases/otp_usecases.dart';
-import '../../domain/usecases/get_category_detail_usecase.dart';
-import '../../domain/usecases/get_products_by_category_usecase.dart';
-import '../../domain/usecases/get_categories_usecase.dart';
-import '../../domain/usecases/get_products_usecase.dart';
-import '../../domain/usecases/search_products_usecase.dart' as search;
-import '../../domain/usecases/search_products_advanced_usecase.dart';
-import '../../domain/usecases/get_user_profile_usecase.dart';
-import '../../domain/usecases/update_user_profile.dart';
-import '../../domain/usecases/get_product_detail_usecase.dart';
-import '../../domain/usecases/get_product_images_usecase.dart';
-import '../../domain/usecases/get_product_primary_images_usecase.dart';
-import '../../domain/usecases/get_flash_sales.dart';
-import '../../domain/usecases/get_flash_sale_products.dart';
-import '../../domain/usecases/add_to_cart_usecase.dart';
-import '../../domain/usecases/get_cart_items_usecase.dart';
-import '../../domain/usecases/update_cart_item_usecase.dart';
-import '../../domain/usecases/remove_from_cart_usecase.dart';
-import '../../domain/usecases/remove_cart_item_usecase.dart';
-import '../../domain/usecases/remove_multiple_cart_items_usecase.dart';
-import '../../domain/usecases/clear_cart_usecase.dart';
-import '../../domain/usecases/get_cart_preview_usecase.dart';
-import '../../domain/usecases/get_preview_order_usecase.dart';
-import '../../domain/usecases/get_shops_usecase.dart';
-import '../../domain/usecases/get_notifications_usecase.dart';
-import '../../domain/usecases/mark_notification_as_read_usecase.dart';
-import '../../domain/usecases/get_unread_notification_count_usecase.dart';
-import '../../data/datasources/home_remote_data_source.dart';
-import '../../data/datasources/flash_sale_remote_data_source.dart';
-import '../../data/datasources/flash_sale_remote_data_source_impl.dart';
-import '../../data/datasources/notification_remote_data_source.dart';
+import '../../domain/usecases/auth/login_usecase.dart';
+import '../../domain/usecases/auth/register_usecase.dart';
+import '../../domain/usecases/auth/otp_usecases.dart';
+import '../../domain/usecases/category/get_category_detail_usecase.dart';
+import '../../domain/usecases/product/get_products_by_category_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/product/get_products_usecase.dart';
+import '../../domain/usecases/search/search_products_usecase.dart' as search;
+import '../../domain/usecases/search/search_products_advanced_usecase.dart';
+import '../../domain/usecases/account/get_user_profile_usecase.dart';
+import '../../domain/usecases/account/update_user_profile.dart';
+import '../../domain/usecases/product/get_product_detail_usecase.dart';
+import '../../domain/usecases/product/get_product_images_usecase.dart';
+import '../../domain/usecases/product/get_product_primary_images_usecase.dart';
+import '../../domain/usecases/flash-sale/get_flash_sales.dart';
+import '../../domain/usecases/flash-sale/get_flash_sale_products.dart';
+import '../../domain/usecases/cart/add_to_cart_usecase.dart';
+import '../../domain/usecases/cart/get_cart_items_usecase.dart';
+import '../../domain/usecases/cart/update_cart_item_usecase.dart';
+import '../../domain/usecases/cart/remove_from_cart_usecase.dart';
+import '../../domain/usecases/cart/remove_cart_item_usecase.dart';
+import '../../domain/usecases/cart/remove_multiple_cart_items_usecase.dart';
+import '../../domain/usecases/cart/clear_cart_usecase.dart';
+import '../../domain/usecases/cart/get_cart_preview_usecase.dart';
+import '../../domain/usecases/order/get_preview_order_usecase.dart';
+import '../../domain/usecases/shop/get_shops_usecase.dart';
+import '../../domain/usecases/notification/get_notifications_usecase.dart';
+import '../../domain/usecases/notification/mark_notification_as_read_usecase.dart';
+import '../../domain/usecases/notification/get_unread_notification_count_usecase.dart';
+import '../../data/datasources/home/home_remote_data_source.dart';
+import '../../data/datasources/flash-sale/flash_sale_remote_data_source.dart';
+import '../../data/datasources/flash-sale/flash_sale_remote_data_source_impl.dart';
+import '../../data/datasources/notification/notification_remote_data_source.dart';
 import '../../data/repositories/home_repository_impl.dart';
 import '../../data/repositories/flash_sale_repository_impl.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../domain/repositories/flash_sale_repository.dart';
 import '../../domain/repositories/notification_repository.dart';
-import '../../data/datasources/profile_remote_data_source.dart';
+import '../../data/datasources/account/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
@@ -74,7 +74,7 @@ import '../../presentation/blocs/cart/cart_bloc.dart';
 import '../../presentation/blocs/category_detail/category_detail_bloc.dart';
 import '../../presentation/blocs/notification/notification_bloc.dart';
 import '../../presentation/blocs/shop/shop_bloc.dart';
-import '../../data/datasources/chat_remote_data_source.dart';
+import '../../data/datasources/chat/chat_remote_data_source.dart';
 import '../../data/repositories/chat_repository_impl.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../../domain/usecases/chat/load_chat_rooms_usecase.dart';
@@ -88,7 +88,7 @@ import '../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../presentation/blocs/chat/chat_bloc.dart';
 import '../services/livekit_service.dart';
 import '../../core/services/address_external_service.dart';
-import '../../data/datasources/address_remote_data_source.dart';
+import '../../data/datasources/address/address_remote_data_source.dart';
 import '../../data/repositories/address_repository_impl.dart';
 import '../../domain/repositories/address_repository.dart';
 import '../../domain/usecases/address/get_addresses_usecase.dart';
@@ -105,6 +105,16 @@ import '../../domain/usecases/address/get_provinces_usecase.dart';
 import '../../domain/usecases/address/get_districts_usecase.dart';
 import '../../domain/usecases/address/get_wards_usecase.dart';
 import '../../presentation/blocs/address/address_bloc.dart';
+import '../../data/datasources/products/product_variants_remote_data_source.dart';
+import '../../data/repositories/product/product_variants_repository_impl.dart';
+import '../../domain/repositories/product/product_variants_repository.dart';
+import '../../domain/usecases/product_variants/get_product_variants_by_product_id.dart';
+import '../../domain/usecases/product_variants/get_product_variant_by_id.dart';
+import '../../domain/usecases/product_variants/check_variant_availability.dart';
+import '../../domain/usecases/product_variants/get_cheapest_variant.dart';
+import '../../domain/usecases/product_variants/get_available_variants.dart';
+import '../../presentation/blocs/product_variants/product_variants_bloc.dart';
+
 
 
 final getIt = GetIt.instance;
@@ -169,6 +179,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
   
   // Advanced Search dependencies
   getIt.registerLazySingleton<SearchRemoteDataSource>(
@@ -262,6 +273,34 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt()));
   getIt.registerLazySingleton(() => ConnectLiveKitUseCase(getIt<LivekitService>()));
   getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
+
+  // === PRODUCT VARIANTS DEPENDENCIES ===
+  // Data sources
+  getIt.registerLazySingleton<ProductVariantsRemoteDataSource>(
+    () => ProductVariantsRemoteDataSourceImpl(dio: getIt()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<ProductVariantsRepository>(
+    () => ProductVariantsRepositoryImpl(getIt()),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
+  getIt.registerLazySingleton(() => GetProductVariantById(getIt()));
+  getIt.registerLazySingleton(() => CheckVariantAvailability(getIt()));
+  getIt.registerLazySingleton(() => GetCheapestVariant(getIt()));
+  getIt.registerLazySingleton(() => GetAvailableVariants(getIt()));
+
+  // Blocs
+  getIt.registerFactory(() => ProductVariantsBloc(
+    getProductVariantsByProductId: getIt(),
+    getProductVariantById: getIt(),
+    checkVariantAvailability: getIt(),
+    getCheapestVariant: getIt(),
+    getAvailableVariants: getIt(),
+  ));
+
 
   // Register ChatBloc
   getIt.registerLazySingleton<ChatBloc>(() => ChatBloc(

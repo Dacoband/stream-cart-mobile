@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../domain/usecases/search_products_advanced_usecase.dart';
-import '../../../domain/entities/search_filters.dart';
+import '../../../domain/usecases/search/search_products_advanced_usecase.dart';
+import '../../../domain/entities/search/search_filters.dart';
 import 'advanced_search_event.dart';
 import 'advanced_search_state.dart';
 

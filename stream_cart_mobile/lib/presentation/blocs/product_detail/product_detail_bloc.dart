@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/get_product_detail_usecase.dart';
-import '../../../domain/usecases/get_product_images_usecase.dart';
-import '../../../domain/usecases/add_to_cart_usecase.dart';
+import '../../../domain/usecases/product/get_product_detail_usecase.dart';
+import '../../../domain/usecases/product/get_product_images_usecase.dart';
+import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../cart/cart_bloc.dart';
 import '../cart/cart_event.dart' as cart_events;
 import 'product_detail_event.dart';
@@ -29,21 +29,18 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
     LoadProductDetailEvent event,
     Emitter<ProductDetailState> emit,
   ) async {
-    print('[ProductDetailBloc] Loading product detail for ID: ${event.productId}');
     emit(ProductDetailLoading());
 
     final result = await getProductDetailUseCase(event.productId);
     
     result.fold(
       (failure) {
-        print('[ProductDetailBloc] Error loading product detail: ${failure.message}');
         emit(ProductDetailError(failure.message));
       },
       (productDetail) {
-        print('[ProductDetailBloc] Successfully loaded product detail: ${productDetail.productName}');
         emit(ProductDetailLoaded(
           productDetail: productDetail,
-          selectedVariantId: productDetail.variants.isNotEmpty ? productDetail.variants.first.variantId : null,
+          selectedVariantId: productDetail.variants.isNotEmpty ? productDetail.variants.first.id : null,
         ));
         add(LoadProductImagesEvent(event.productId));
       },
@@ -83,8 +80,7 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
         return;
       }
     } else {
-      // Sản phẩm không có variant - có thể để variantId rỗng hoặc null
-      variantId = '';
+      variantId = ''; 
     }
     
     final params = AddToCartParams(

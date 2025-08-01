@@ -1,19 +1,19 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import '../../domain/entities/login_request_entity.dart';
-import '../../domain/entities/login_response_entity.dart';
-import '../../domain/entities/register_request_entity.dart';
-import '../../domain/entities/register_response_entity.dart';
-import '../../domain/entities/otp_entities.dart';
+import '../../domain/entities/auth/login_request_entity.dart';
+import '../../domain/entities/auth/login_response_entity.dart';
+import '../../domain/entities/auth/register_request_entity.dart';
+import '../../domain/entities/auth/register_response_entity.dart';
+import '../../domain/entities/auth/otp_entities.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../core/error/failures.dart';
 import '../../core/utils/api_url_helper.dart';
 import '../../core/constants/api_constants.dart';
-import '../datasources/auth_remote_data_source.dart';
-import '../datasources/auth_local_data_source.dart';
-import '../models/login_request_model.dart';
-import '../models/register_request_model.dart';
-import '../models/otp_models.dart';
+import '../datasources/auth/auth_remote_data_source.dart';
+import '../datasources/auth/auth_local_data_source.dart';
+import '../models/auth/login_request_model.dart';
+import '../models/auth/register_request_model.dart';
+import '../models/auth/otp_models.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;

@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/login_request_entity.dart';
-import '../../../domain/entities/register_request_entity.dart';
-import '../../../domain/entities/otp_entities.dart';
-import '../../../domain/usecases/login_usecase.dart';
-import '../../../domain/usecases/register_usecase.dart';
-import '../../../domain/usecases/otp_usecases.dart';
+import '../../../domain/entities/auth/login_request_entity.dart';
+import '../../../domain/entities/auth/register_request_entity.dart';
+import '../../../domain/entities/auth/otp_entities.dart';
+import '../../../domain/usecases/auth/login_usecase.dart';
+import '../../../domain/usecases/auth/register_usecase.dart';
+import '../../../domain/usecases/auth/otp_usecases.dart';
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../core/error/failures.dart';
 import 'auth_event.dart';

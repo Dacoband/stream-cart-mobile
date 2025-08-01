@@ -3,9 +3,9 @@ import 'package:dartz/dartz.dart';
 import '../../core/enums/address_type.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
-import '../../domain/entities/address_entity.dart';
+import '../../domain/entities/address/address_entity.dart';
 import '../../domain/repositories/address_repository.dart';
-import '../datasources/address_remote_data_source.dart';
+import '../datasources/address/address_remote_data_source.dart';
 
 class AddressRepositoryImpl implements AddressRepository {
   final AddressRemoteDataSource remoteDataSource;

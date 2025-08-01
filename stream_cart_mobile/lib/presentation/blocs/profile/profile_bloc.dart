@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/get_user_profile_usecase.dart';
-import '../../../domain/usecases/update_user_profile.dart';
+import '../../../domain/usecases/account/get_user_profile_usecase.dart';
+import '../../../domain/usecases/account/update_user_profile.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 

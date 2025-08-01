@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/product_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
 import '../../../core/routing/app_router.dart';
 
 class CategoryProductGrid extends StatelessWidget {

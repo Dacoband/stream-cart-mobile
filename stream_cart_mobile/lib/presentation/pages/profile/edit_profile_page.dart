@@ -4,8 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../blocs/profile/profile_bloc.dart';
 import '../../blocs/profile/profile_event.dart';
 import '../../blocs/profile/profile_state.dart';
-import '../../../data/models/update_profile_model.dart';
-import '../../../domain/entities/user_profile_entity.dart';
+import '../../../data/models/account/update_profile_model.dart';
+import '../../../domain/entities/account/user_profile_entity.dart';
 import '../../../core/services/image_upload_service.dart';
 import '../../../core/di/dependency_injection.dart';
 

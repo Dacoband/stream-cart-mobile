@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
-import '../entities/category_entity.dart';
-import '../entities/product_entity.dart';
-import '../entities/product_detail_entity.dart';
-import '../entities/product_image_entity.dart';
+import '../entities/category/category_entity.dart';
+import '../entities/products/product_entity.dart';
+import '../entities/products/product_detail_entity.dart';
+import '../entities/products/product_image_entity.dart';
 import '../../core/error/failures.dart';
 
 abstract class HomeRepository {

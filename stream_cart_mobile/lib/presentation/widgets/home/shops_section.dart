@@ -5,7 +5,7 @@ import '../../../core/di/dependency_injection.dart';
 import '../../blocs/shop/shop_bloc.dart';
 import '../../blocs/shop/shop_event.dart';
 import '../../blocs/shop/shop_state.dart';
-import '../../../domain/entities/shop.dart';
+import '../../../domain/entities/shop/shop.dart';
 
 class ShopsSection extends StatelessWidget {
   const ShopsSection({super.key});

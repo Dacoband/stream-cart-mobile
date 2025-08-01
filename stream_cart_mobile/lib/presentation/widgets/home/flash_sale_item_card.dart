@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/flash_sale_entity.dart';
-import '../../../domain/entities/product_entity.dart';
+import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
 
 class FlashSaleItemCard extends StatelessWidget {
   final FlashSaleEntity flashSale;

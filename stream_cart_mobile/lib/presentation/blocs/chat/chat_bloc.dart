@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stream_cart_mobile/domain/entities/account_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/account/account_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 
-import '../../../domain/entities/chat_entity.dart';
+import '../../../domain/entities/chat/chat_entity.dart';
 import '../../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';

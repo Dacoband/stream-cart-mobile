@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../data/models/address_model.dart';
+import '../../data/models/address/address_model.dart';
 
 class AddressExternalService {
   final Dio _dio;

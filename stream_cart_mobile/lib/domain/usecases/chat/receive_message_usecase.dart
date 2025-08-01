@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 
 import '../../../core/error/failures.dart';
 import '../../repositories/chat_repository.dart';

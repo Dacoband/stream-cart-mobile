@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 import '../../blocs/chat/chat_event.dart';

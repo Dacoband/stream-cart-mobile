@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/category_entity.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../domain/usecases/get_categories_usecase.dart';
-import '../../../domain/usecases/get_products_usecase.dart';
-import '../../../domain/usecases/get_product_primary_images_usecase.dart';
-import '../../../domain/usecases/get_flash_sales.dart';
-import '../../../domain/usecases/get_flash_sale_products.dart';
+import '../../../domain/entities/category/category_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/product/get_products_usecase.dart';
+import '../../../domain/usecases/product/get_product_primary_images_usecase.dart';
+import '../../../domain/usecases/flash-sale/get_flash_sales.dart';
+import '../../../domain/usecases/flash-sale/get_flash_sale_products.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 

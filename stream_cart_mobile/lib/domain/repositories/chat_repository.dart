@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import '../entities/chat_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
+import '../entities/chat/chat_entity.dart';
 import '../../core/error/failures.dart';
 
 abstract class ChatRepository {

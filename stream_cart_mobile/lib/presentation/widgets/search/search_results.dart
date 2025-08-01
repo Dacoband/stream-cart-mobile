@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../domain/entities/category/category_entity.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
 

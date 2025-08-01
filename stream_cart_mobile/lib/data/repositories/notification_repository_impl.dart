@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import '../../domain/entities/notification_entity.dart';
+import '../../domain/entities/notification/notification_entity.dart';
 import '../../domain/repositories/notification_repository.dart';
-import '../datasources/notification_remote_data_source.dart';
-import '../models/notification_model.dart';
+import '../datasources/notification/notification_remote_data_source.dart';
+import '../models/notification/notification_model.dart';
 import '../../core/error/failures.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
