@@ -466,7 +466,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           'Giá phiên bản đã chọn',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: Color(0xFF202328),
           ),
         ),
@@ -599,7 +599,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           'Giá sản phẩm',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: Color(0xFF202328),
           ),
         ),
@@ -715,7 +715,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           'Mô tả sản phẩm',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: Color(0xFF202328),
           ),
         ),

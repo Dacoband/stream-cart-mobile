@@ -179,7 +179,6 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
-  getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
   
   // Advanced Search dependencies
   getIt.registerLazySingleton<SearchRemoteDataSource>(
