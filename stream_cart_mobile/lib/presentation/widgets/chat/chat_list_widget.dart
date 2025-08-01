@@ -21,37 +21,93 @@ class ChatListWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         final chatRoom = chatRooms[index];
         return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: const Color(0xFFB0F847).withOpacity(0.2),
-            child: Text(
-              chatRoom.shopName?.substring(0, 1).toUpperCase() ?? '?',
-              style: const TextStyle(color: Color(0xFFB0F847)),
-            ),
+          leading: Stack(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFFB0F847).withOpacity(0.2),
+                child: Text(
+                  chatRoom.shopName?.substring(0, 1).toUpperCase() ?? '?',
+                  style: const TextStyle(color: Color(0xFFB0F847)),
+                ),
+              ),
+              // Unread indicator 
+              if (chatRoom.hasUnreadMessages)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          title: Text(
-            chatRoom.shopName,
-            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  chatRoom.shopName,
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: chatRoom.hasUnreadMessages 
+                        ? FontWeight.bold 
+                        : FontWeight.w600, 
+                  ),
+                ),
+              ),
+              // Unread count badge
+              if (chatRoom.unreadCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    chatRoom.unreadCount > 99 ? '99+' : '${chatRoom.unreadCount}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
           subtitle: Text(
             chatRoom.lastMessage?.content ?? 'Chưa có tin nhắn',
             style: TextStyle(
-              color: Colors.black54, 
-              fontSize: 12, 
-              fontStyle: FontStyle.italic
-              ),
+              color: chatRoom.hasUnreadMessages ? Colors.black87 : Colors.black54,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+              fontWeight: chatRoom.hasUnreadMessages ? FontWeight.w500 : FontWeight.normal,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: chatRoom.unreadCount != null && chatRoom.unreadCount! > 0
-              ? CircleAvatar(
-                  radius: 10,
-                  backgroundColor: Colors.red,
-                  child: Text(
-                    chatRoom.unreadCount! > 99 ? '99+' : chatRoom.unreadCount.toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (chatRoom.lastMessage != null)
+                Text(
+                  _formatTime(chatRoom.lastMessageAt),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: chatRoom.hasUnreadMessages 
+                        ? Colors.black87 
+                        : Colors.grey[500],
+                    fontWeight: chatRoom.hasUnreadMessages 
+                        ? FontWeight.w500 
+                        : FontWeight.normal,
                   ),
-                )
-              : null,
+                ),
+            ],
+          ),
           onTap: () {
             final authState = context.read<AuthBloc>().state;
             String? userId;
@@ -87,5 +143,20 @@ class ChatListWidget extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inDays == 0) {
+      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays == 1) {
+      return 'Hôm qua';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} ngày';
+    } else {
+      return '${dateTime.day}/${dateTime.month}';
+    }
   }
 }

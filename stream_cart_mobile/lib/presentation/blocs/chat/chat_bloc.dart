@@ -376,12 +376,44 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onMarkChatRoomAsRead(MarkChatRoomAsRead event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
-    final result = await markChatRoomAsReadUseCase(event.chatRoomId);
-    result.fold(
-      (failure) => emit(ChatError(failure.message)),
-      (_) => emit(state),
-    );
+    try {
+      print('📖 Marking messages as read for room: ${event.chatRoomId}');
+      
+      final result = await markChatRoomAsReadUseCase(event.chatRoomId);
+      result.fold(
+        (failure) {
+          print('❌ Failed to mark messages as read: ${failure.message}');
+        },
+        (_) {
+          print('✅ Messages marked as read for room: ${event.chatRoomId}');
+          
+          final currentState = state;
+          if (currentState is ChatLoaded && currentState.chatRoomId == event.chatRoomId) {
+            emit(currentState.copyWith(hasUnreadMessages: false));
+          }
+          if (currentState is ChatRoomsLoaded) {
+            final updatedChatRooms = currentState.chatRooms.map((chatRoom) {
+              if (chatRoom.id == event.chatRoomId) {
+                return chatRoom.copyWith(
+                  unreadCount: 0,
+                  hasUnreadMessages: false,
+                );
+              }
+              return chatRoom;
+            }).toList();
+            final newTotalUnreadCount = updatedChatRooms
+                .fold(0, (sum, room) => sum + room.unreadCount);
+            
+            emit(currentState.copyWith(
+              chatRooms: updatedChatRooms,
+              totalUnreadCount: newTotalUnreadCount,
+            ));
+          }
+        },
+      );
+    } catch (e) {
+      print('❌ Error marking messages as read: $e');
+    }
   }
 
   Future<void> _onConnectLiveKit(ConnectLiveKit event, Emitter<ChatState> emit) async {

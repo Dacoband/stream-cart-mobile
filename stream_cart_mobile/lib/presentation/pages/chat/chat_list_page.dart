@@ -37,8 +37,6 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     final userRole = UserRole.fromValue(roleValue ?? 1);
 
     print('🚀 Initializing chat for role: $userRole');
-
-    // Load chat rooms
     if (userRole == UserRole.seller) {
       context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
     } else {
@@ -88,7 +86,34 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
       message: 'Vui lòng đăng nhập để xem danh sách phòng chat',
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Danh sách phòng chat'),
+          title: BlocBuilder<ChatBloc, ChatState>(
+            builder: (context, state) {
+              if (state is ChatRoomsLoaded && state.totalUnreadCount > 0) {
+                return Row(
+                  children: [
+                    const Text('Danh sách phòng chat'),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${state.totalUnreadCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return const Text('Danh sách phòng chat');
+            },
+          ),
           actions: [
             BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {

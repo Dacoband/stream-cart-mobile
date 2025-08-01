@@ -18,12 +18,14 @@ class ChatLoaded extends ChatState {
   final List<ChatEntity> chatRooms;
   final bool hasReachedMax;
   final String? chatRoomId;
+  final bool hasUnreadMessages;
 
   const ChatLoaded({
     this.messages = const [],
     this.chatRooms = const [],
     this.hasReachedMax = false,
     this.chatRoomId,
+    this.hasUnreadMessages = false,
   });
 
   ChatLoaded copyWith({
@@ -31,12 +33,14 @@ class ChatLoaded extends ChatState {
     List<ChatEntity>? chatRooms,
     bool? hasReachedMax,
     String? chatRoomId,
+    bool? hasUnreadMessages,
   }) {
     return ChatLoaded(
       messages: messages ?? this.messages,
       chatRooms: chatRooms ?? this.chatRooms,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       chatRoomId: chatRoomId ?? this.chatRoomId,
+      hasUnreadMessages: hasUnreadMessages ?? this.hasUnreadMessages,
     );
   }
 
@@ -46,11 +50,21 @@ class ChatLoaded extends ChatState {
 
 class ChatRoomsLoaded extends ChatState {
   final List<ChatEntity> chatRooms;
+  final int totalUnreadCount;
 
-  const ChatRoomsLoaded({this.chatRooms = const []});
+  const ChatRoomsLoaded({this.chatRooms = const [], this.totalUnreadCount = 0});
+  ChatRoomsLoaded copyWith({
+    List<ChatEntity>? chatRooms,
+    int? totalUnreadCount,
+  }) {
+    return ChatRoomsLoaded(
+      chatRooms: chatRooms ?? this.chatRooms,
+      totalUnreadCount: totalUnreadCount ?? this.totalUnreadCount,
+    );
+  }
 
   @override
-  List<Object?> get props => [chatRooms];
+  List<Object?> get props => [chatRooms, totalUnreadCount];
 }
 
 class ChatError extends ChatState {
