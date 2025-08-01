@@ -9,6 +9,7 @@ import '../../../core/di/dependency_injection.dart';
 import '../../../core/services/livekit_service.dart';
 import '../../widgets/chat/chat_input_widget.dart';
 import '../../widgets/chat/chat_message_list_widget.dart';
+
 class ChatDetailPage extends StatefulWidget {
   final String chatRoomId;
   final String userId;
@@ -25,17 +26,20 @@ class ChatDetailPage extends StatefulWidget {
   State<ChatDetailPage> createState() => _ChatDetailPageState();
 }
 
-class _ChatDetailPageState extends State<ChatDetailPage> {
+class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObserver {
   bool _hasInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this); 
+    
     try {
       getIt<LivekitService>().setChatBloc(context.read<ChatBloc>());
     } catch (e) {
       print('Error setting ChatBloc to LivekitService: $e');
     }
+    
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!_hasInitialized) {
         _initializeChatRoom();
@@ -44,11 +48,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); 
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<ChatBloc>().add(MarkChatRoomAsRead(widget.chatRoomId));
+    }
+  }
+
   void _initializeChatRoom() {
     final currentState = context.read<ChatBloc>().state;    
     if (currentState is ChatLoaded && currentState.chatRoomId == widget.chatRoomId) {
+      context.read<ChatBloc>().add(MarkChatRoomAsRead(widget.chatRoomId));
       return;
     }
+    
     context.read<ChatBloc>().add(LoadChatRoom(widget.chatRoomId));
     
     if (currentState is! LiveKitConnected) {
@@ -58,11 +78,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         userName: widget.userName,
       ));
     }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -130,6 +145,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       ),
       body: BlocListener<ChatBloc, ChatState>(
         listener: (context, state) {
+          // Auto mark as read khi load chat thành công
+          if (state is ChatLoaded && 
+              state.chatRoomId == widget.chatRoomId && 
+              state.hasUnreadMessages) {
+            context.read<ChatBloc>().add(MarkChatRoomAsRead(widget.chatRoomId));
+          }
+          
           if (state is ChatStatusChanged && 
               (state.status.contains('✅') || state.status.contains('Đã kết nối'))) {
             print('🔄 Connection successful, loading messages...');
