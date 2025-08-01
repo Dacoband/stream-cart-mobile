@@ -47,7 +47,7 @@ class VariantSelector extends StatelessWidget {
               'Phiên bản',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: Color(0xFF202328),
               ),
             ),
