@@ -8,7 +8,7 @@ class ProductDetailEntity {
   final double discountPrice;
   final double finalPrice;
   final int stockQuantity;
-  final int quantitySold;
+  final int quantitySold; 
   final String weight;
   final String dimension;
   final List<String> primaryImage;

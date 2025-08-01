@@ -49,6 +49,13 @@ class ApiConstants {
   static const String productsByShopEndpoint = '/api/products/shop/{shopId}'; // Lấy tất cả sản phẩm của shop đó
   static const String productFlashSaleEndpoint = '/api/products/flash-sale';
   
+  // Product Variant endpoints
+  static const String productVariantsEndpoint = '/api/product-variants';
+  static const String productVariantDetailEndpoint = '/api/product-variants/{id}';
+  static const String productVariantByProductEndpoint = '/api/product-variants/product/{productId}';
+  static const String productVariantsPriceEndpoint = '/api/product-variants/{id}/price'; //Patch
+  static const String productVariantsStockEndpoint = '/api/product-variants/{id}/stock'; //Patch
+
   // Flash Sale endpoints
   static const String flashSalesEndpoint = '/api/flashsales';
   static const String flashSaleDetailEndpoint = '/api/flashsales/{id}';
