@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as badges;
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/di/dependency_injection.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../blocs/product_detail/product_detail_bloc.dart';
@@ -13,6 +15,9 @@ import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
 import '../../widgets/product_detail/add_to_cart_button.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_event.dart';
+import '../../blocs/cart/cart_state.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -41,6 +46,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           create: (context) => getIt<ProductVariantsBloc>()
             ..add(GetProductVariantsByProductIdEvent(widget.productId)),
         ),
+        BlocProvider(
+          create: (context) => getIt<CartBloc>()
+            ..add(LoadCartEvent()),
+        ),
       ],
       child: Scaffold(
         appBar: AppBar(
@@ -55,18 +64,50 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           foregroundColor: Color(0xFFB0F847),
           elevation: 0,
           actions: [
+            BlocBuilder<CartBloc, CartState>(
+              builder: (context, cartState) {
+                int itemCount = 0;
+                if (cartState is CartLoaded) {
+                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                }
+                
+                return badges.Badge(
+                  isLabelVisible: itemCount > 0,
+                  label: Text(
+                    itemCount > 99 ? '99+' : itemCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  offset: const Offset(4, -4), 
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/cart');
+                    },
+                    icon: const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 24,
+                      color: Color(0xFFB0F847),
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Chat Button
             IconButton(
               onPressed: () {
-                // TODO: Add to favorites
+                _showChatBottomSheet(context);
               },
-              icon: const Icon(Icons.favorite_border),
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                size: 24,
+              ),
             ),
-            IconButton(
-              onPressed: () {
-                // TODO: Share product
-              },
-              icon: const Icon(Icons.share),
-            ),
+            const SizedBox(width: 8), 
           ],
         ),
         body: BlocConsumer<ProductDetailBloc, ProductDetailState>(
@@ -1161,6 +1202,166 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showChatBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFB0F847),
+                    child: const Icon(
+                      Icons.store,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        BlocBuilder<ProductDetailBloc, ProductDetailState>(
+                          builder: (context, state) {
+                            if (state is ProductDetailLoaded) {
+                              return Text(
+                                state.productDetail.shopName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              );
+                            }
+                            return const Text('Shop');
+                          },
+                        ),
+                        Text(
+                          'Đang hoạt động',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Chat Area
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Chức năng chat đang được phát triển',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Bạn có thể liên hệ shop qua số điện thoại hoặc email',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              // Launch phone call
+                              // await launchUrl(Uri.parse('tel:+84123456789'));
+                            },
+                            icon: const Icon(Icons.phone),
+                            label: const Text('Gọi điện'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              // Launch email
+                              // await launchUrl(Uri.parse('mailto:shop@example.com'));
+                            },
+                            icon: const Icon(Icons.email),
+                            label: const Text('Email'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFB0F847),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
