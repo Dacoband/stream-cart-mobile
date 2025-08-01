@@ -26,11 +26,13 @@ class ChatListWidget extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: const Color(0xFFB0F847).withOpacity(0.2),
                 child: Text(
-                  chatRoom.shopName?.substring(0, 1).toUpperCase() ?? '?',
+                  chatRoom.shopName.isNotEmpty 
+                      ? chatRoom.shopName.substring(0, 1).toUpperCase() 
+                      : '?',
                   style: const TextStyle(color: Color(0xFFB0F847)),
                 ),
               ),
-              // Unread indicator 
+              // Unread indicator
               if (chatRoom.hasUnreadMessages)
                 Positioned(
                   right: 0,
@@ -55,11 +57,10 @@ class ChatListWidget extends StatelessWidget {
                     color: Colors.black87,
                     fontWeight: chatRoom.hasUnreadMessages 
                         ? FontWeight.bold 
-                        : FontWeight.w600, 
+                        : FontWeight.w600,
                   ),
                 ),
               ),
-              // Unread count badge
               if (chatRoom.unreadCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -79,7 +80,9 @@ class ChatListWidget extends StatelessWidget {
             ],
           ),
           subtitle: Text(
-            chatRoom.lastMessage?.content ?? 'Chưa có tin nhắn',
+            chatRoom.lastMessage?.content.isNotEmpty == true 
+                ? chatRoom.lastMessage!.content 
+                : 'Chưa có tin nhắn', 
             style: TextStyle(
               color: chatRoom.hasUnreadMessages ? Colors.black87 : Colors.black54,
               fontSize: 12,
@@ -93,19 +96,18 @@ class ChatListWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (chatRoom.lastMessage != null)
-                Text(
-                  _formatTime(chatRoom.lastMessageAt),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: chatRoom.hasUnreadMessages 
-                        ? Colors.black87 
-                        : Colors.grey[500],
-                    fontWeight: chatRoom.hasUnreadMessages 
-                        ? FontWeight.w500 
-                        : FontWeight.normal,
-                  ),
+              Text(
+                _formatTime(chatRoom.lastMessageAt),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: chatRoom.hasUnreadMessages 
+                      ? Colors.black87 
+                      : Colors.grey[500],
+                  fontWeight: chatRoom.hasUnreadMessages 
+                      ? FontWeight.w500 
+                      : FontWeight.normal,
                 ),
+              ),
             ],
           ),
           onTap: () {

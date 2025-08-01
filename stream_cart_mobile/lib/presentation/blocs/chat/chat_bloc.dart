@@ -233,7 +233,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   );
   result.fold(
     (failure) => emit(ChatError(failure.message)),
-    (chatRooms) => emit(ChatRoomsLoaded(chatRooms: chatRooms)),
+    (chatRooms) {
+      print('✅ Loaded shop chat rooms: ${chatRooms.length}');
+      for (final room in chatRooms) {
+        print('Room: ${room.shopName} - Last message: ${room.lastMessage?.content ?? "No message"} - Unread: ${room.unreadCount}');
+      }
+      final totalUnreadCount = chatRooms.fold(0, (sum, room) => sum + room.unreadCount);
+      
+      emit(ChatRoomsLoaded(
+        chatRooms: chatRooms,
+        totalUnreadCount: totalUnreadCount,
+      ));
+    },
   );
 }
 
