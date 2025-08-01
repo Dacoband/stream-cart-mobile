@@ -6,6 +6,7 @@ import '../../models/products/product_detail_model.dart';
 import '../../models/products/product_image_model.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_url_helper.dart';
+import '../../models/products/product_variants_model.dart';
 
 abstract class HomeRemoteDataSource {
   Future<CategoryResponseModel> getCategories();
@@ -16,6 +17,8 @@ abstract class HomeRemoteDataSource {
   Future<ProductDetailModel> getProductDetail(String productId);
   Future<List<ProductImageModel>> getProductImages(String productId);
   Future<List<ProductImageModel>> getAllProductImages();
+  Future<List<ProductVariantsModel>> getProductVariants(String productId);
+
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -112,8 +115,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<ProductDetailModel> getProductDetail(String productId) async {
     try {
       final url = ApiConstants.productDetailEndpoint.replaceAll('{id}', productId);
-      final response = await dio.get(url);
+      final endpoint = ApiUrlHelper.getEndpoint(url); 
+      final response = await dio.get(endpoint);
       final responseData = response.data;
+    
       if (responseData['success'] == true && responseData['data'] != null) {
         return ProductDetailModel.fromJson(responseData['data']);
       } else {
@@ -166,6 +171,26 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     } catch (e) {
       print('❌ DataSource: Error getting all product images: $e');
       rethrow;
+    }
+  }
+
+  @override
+  Future<List<ProductVariantsModel>> getProductVariants(String productId) async {
+    try {
+      final url = ApiConstants.productVariantByProductEndpoint.replaceAll('{productId}', productId);
+      final endpoint = ApiUrlHelper.getEndpoint(url);
+      final response = await dio.get(endpoint);
+      final responseData = response.data;
+      
+      if (responseData['success'] == true && responseData['data'] != null) {
+        final List<dynamic> variantsData = responseData['data'] as List<dynamic>;
+        return variantsData.map((json) => ProductVariantsModel.fromJson(json)).toList(); 
+      } else {
+        return []; 
+      }
+    } catch (e) {
+      print('❌ DataSource: Error getting product variants: $e');
+      return [];
     }
   }
 }

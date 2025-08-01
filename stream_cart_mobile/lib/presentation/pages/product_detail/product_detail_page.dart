@@ -5,6 +5,9 @@ import '../../../core/constants/app_constants.dart';
 import '../../blocs/product_detail/product_detail_bloc.dart';
 import '../../blocs/product_detail/product_detail_event.dart';
 import '../../blocs/product_detail/product_detail_state.dart';
+import '../../blocs/product_variants/product_variants_bloc.dart';
+import '../../blocs/product_variants/product_variants_event.dart';
+import '../../blocs/product_variants/product_variants_state.dart';
 import '../../widgets/product_detail/image_carousel.dart';
 import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
@@ -28,9 +31,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<ProductDetailBloc>()
-        ..add(LoadProductDetailEvent(widget.productId)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => getIt<ProductDetailBloc>()
+            ..add(LoadProductDetailEvent(widget.productId)),
+        ),
+        BlocProvider(
+          create: (context) => getIt<ProductVariantsBloc>()
+            ..add(GetProductVariantsByProductIdEvent(widget.productId)),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -181,6 +192,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         context.read<ProductDetailBloc>().add(
                           LoadProductDetailEvent(widget.productId),
                         );
+                        context.read<ProductVariantsBloc>().add(
+                          GetProductVariantsByProductIdEvent(widget.productId),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF202328),
@@ -206,18 +220,29 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             return const SizedBox.shrink();
           },
         ),
-        bottomNavigationBar: BlocBuilder<ProductDetailBloc, ProductDetailState>(
-          builder: (context, state) {
-            if (state is ProductDetailLoaded) {
-              return Container(
-                height: 70, // Reduced height to match new compact design
-                child: AddToCartButton(
-                  product: state.productDetail,
-                  selectedVariantId: state.selectedVariantId,
-                ),
-              );
-            }
-            return const SizedBox.shrink();
+        bottomNavigationBar: BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
+          builder: (context, variantState) {
+            return BlocBuilder<ProductDetailBloc, ProductDetailState>(
+              builder: (context, detailState) {
+                if (detailState is ProductDetailLoaded) {
+                  String? selectedVariantId;
+                  
+                  // Lấy selected variant từ ProductVariantsBloc
+                  if (variantState is ProductVariantsLoaded && variantState.selectedVariant != null) {
+                    selectedVariantId = variantState.selectedVariant!.id;
+                  }
+                  
+                  return Container(
+                    height: 70,
+                    child: AddToCartButton(
+                      product: detailState.productDetail,
+                      selectedVariantId: selectedVariantId,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            );
           },
         ),
       ),
@@ -265,7 +290,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
                 const SizedBox(height: 12),
                 
-                // Price Section Container
+                // Price Section Container với Product Variants
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -281,7 +306,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ],
                   ),
-                  child: _buildPriceSection(product),
+                  child: _buildPriceSectionWithVariants(product),
                 ),
                 const SizedBox(height: 12),
                 
@@ -325,27 +350,75 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
                 const SizedBox(height: 16),
                 
-                // Variants
-                if (product.variants.isNotEmpty) ...[
-                  BlocBuilder<ProductDetailBloc, ProductDetailState>(
-                    builder: (context, state) {
-                      final selectedVariantId = state is ProductDetailLoaded 
-                          ? state.selectedVariantId 
-                          : null;
-                      
-                      return VariantSelector(
-                        variants: product.variants,
-                        selectedVariantId: selectedVariantId,
-                        onVariantSelected: (variantId) {
-                          context.read<ProductDetailBloc>().add(
-                            SelectVariantEvent(variantId),
-                          );
-                        },
+                // Product Variants Section
+                BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
+                  builder: (context, state) {
+                    if (state is ProductVariantsLoading) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    }
+                    
+                    if (state is ProductVariantsLoaded && state.variants.isNotEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const VariantSelector(),
+                      );
+                    }
+                    
+                    if (state is ProductVariantsError) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Lỗi tải variants: ${state.message}',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      );
+                    }
+                    
+                    return const SizedBox.shrink();
+                  },
+                ),
+                const SizedBox(height: 16),
                 
                 // Shop Info
                 _buildShopInfo(product),
@@ -364,16 +437,149 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildPriceSectionWithVariants(ProductDetailEntity product) {
+    return BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
+      builder: (context, state) {
+        if (state is ProductVariantsLoaded) {
+          // Nếu có variant được chọn, hiển thị giá của variant đó
+          if (state.selectedVariant != null) {
+            return _buildVariantPriceSection(state.selectedVariant!);
+          }
+          
+          // Nếu có cheapest variant, hiển thị price range
+          if (state.cheapestVariant != null) {
+            return _buildPriceRangeSection(state.variants);
+          }
+        }
+        
+        // Fallback về giá gốc của product
+        return _buildPriceSection(product);
+      },
+    );
+  }
+
+  Widget _buildVariantPriceSection(dynamic selectedVariant) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Giá phiên bản đã chọn',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF202328),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              '${(selectedVariant.flashSalePrice > 0 ? selectedVariant.flashSalePrice : selectedVariant.price).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 115, 175, 24),
+              ),
+            ),
+            if (selectedVariant.flashSalePrice > 0) ...[
+              const SizedBox(width: 8),
+              Text(
+                '${selectedVariant.price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+                style: const TextStyle(
+                  fontSize: 14,
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Flash Sale',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Kho: ${selectedVariant.stock}',
+          style: TextStyle(
+            fontSize: 14,
+            color: selectedVariant.stock > 0 ? Colors.green : Colors.red,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceRangeSection(List<dynamic> variants) {
+    final prices = variants.map((v) => 
+      v.flashSalePrice > 0 ? v.flashSalePrice : v.price
+    ).toList();
+    prices.sort();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Giá sản phẩm',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF202328),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (prices.first == prices.last)
+          Text(
+            '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 115, 175, 24),
+            ),
+          )
+        else
+          Text(
+            '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫ - ${prices.last.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 115, 175, 24),
+            ),
+          ),
+        const SizedBox(height: 4),
+        const Text(
+          'Chọn phiên bản để xem giá cụ thể',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildProductImages(ProductDetailEntity product) {
     return BlocBuilder<ProductDetailBloc, ProductDetailState>(
       builder: (context, state) {
         List<String> imageUrls = [];
         
         if (state is ProductDetailLoaded && state.productImages != null) {
-          // Use API images if available
           imageUrls = state.productImages!.map((img) => img.imageUrl).toList();
         } else {
-          // Fallback to primaryImage from product detail
           imageUrls = product.primaryImage;
         }
         
@@ -460,7 +666,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(width: 14),
             Flexible(child: _buildStatItem('Kho', '${product.stockQuantity}')),
             const SizedBox(width: 14),
-            Flexible(child: _buildStatItem('Cân nặng', product.weight)),
+            Flexible(child: _buildStatItem('Cân nặng', '${product.weight}g')), 
           ],
         ),
       ],
@@ -517,7 +723,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             height: 1.5,
           ),
         ),
-        if (description.length > 200) // Hiển thị nút chỉ khi mô tả dài
+        if (description.length > 200)
           const SizedBox(height: 12),
         if (description.length > 200)
           GestureDetector(
@@ -643,8 +849,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
             const SizedBox(height: 12),
             _buildDetailRow('Danh mục', product.categoryName),
-            _buildDetailRow('Kích thước', product.dimension),
-            _buildDetailRow('Cân nặng', product.weight),
+            _buildDetailRow('Kích thước', product.dimension), 
+            _buildDetailRow('Cân nặng', '${product.weight}g'), 
+            _buildDetailRow('Chiều dài', '${product.length}cm'), 
+            _buildDetailRow('Chiều rộng', '${product.width}cm'), 
+            _buildDetailRow('Chiều cao', '${product.height}cm'), 
             _buildDetailRow('Mã sản phẩm', product.productId),
           ],
         ),
@@ -652,33 +861,42 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildDetailRow(String label, dynamic value) {
+  String displayValue;
+  if (value is double) {
+    displayValue = value.toString();
+  } else if (value is int) {
+    displayValue = value.toString();
+  } else {
+    displayValue = value.toString();
   }
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            displayValue,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

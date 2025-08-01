@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/products/product_variants_entity.dart';
 import '../../../domain/usecases/product_variants/get_product_variants_by_product_id.dart';
 import '../../../domain/usecases/product_variants/get_product_variant_by_id.dart';
 import '../../../domain/usecases/product_variants/check_variant_availability.dart';
@@ -33,27 +32,62 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
     GetProductVariantsByProductIdEvent event,
     Emitter<ProductVariantsState> emit,
   ) async {
+    print('[ProductVariantsBloc] Loading variants for product: ${event.productId}');
     emit(ProductVariantsLoading());
-
-    final result = await getProductVariantsByProductId(event.productId);
-
-    result.fold(
-      (failure) => emit(ProductVariantsError(failure.message)),
-      (variants) async {
-        final cheapestResult = await getCheapestVariant(event.productId);
-        ProductVariantEntity? cheapestVariant;
-        
-        cheapestResult.fold(
-          (failure) => cheapestVariant = null,
-          (variant) => cheapestVariant = variant,
-        );
-
-        emit(ProductVariantsLoaded(
-          variants: variants,
-          cheapestVariant: cheapestVariant,
-        ));
-      },
-    );
+    
+    try {
+      final result = await getProductVariantsByProductId(event.productId);
+      
+      print('[ProductVariantsBloc] Variants result type: ${result.runtimeType}');
+      
+      await result.fold(
+        (failure) async {
+          print('[ProductVariantsBloc] Error: ${failure.message}');
+          if (!emit.isDone) { 
+            emit(ProductVariantsError(failure.message));
+          }
+        },
+        (variants) async {
+          print('[ProductVariantsBloc] Loaded ${variants.length} variants');
+          print('[ProductVariantsBloc] First variant type: ${variants.isNotEmpty ? variants.first.runtimeType : 'empty'}');
+          
+          if (!emit.isDone) { 
+            if (variants.isEmpty) {
+              emit(const ProductVariantsLoaded(
+                variants: [],
+                selectedVariant: null,
+                cheapestVariant: null,
+              ));
+            } else {
+              // Debug: print variant details
+              for (var variant in variants) {
+                print('[ProductVariantsBloc] Variant: id=${variant.id}, price=${variant.price}, stock=${variant.stock}');
+              }
+              
+              final cheapestVariant = variants.reduce((a, b) {
+                final priceA = a.flashSalePrice > 0 ? a.flashSalePrice : a.price;
+                final priceB = b.flashSalePrice > 0 ? b.flashSalePrice : b.price;
+                return priceA < priceB ? a : b;
+              });
+              
+              print('[ProductVariantsBloc] Cheapest variant: ${cheapestVariant.id}');
+              
+              emit(ProductVariantsLoaded(
+                variants: variants,
+                selectedVariant: null,
+                cheapestVariant: cheapestVariant,
+              ));
+            }
+          }
+        },
+      );
+    } catch (e, stackTrace) {
+      print('[ProductVariantsBloc] Exception: $e');
+      print('[ProductVariantsBloc] StackTrace: $stackTrace');
+      if (!emit.isDone) {
+        emit(ProductVariantsError('Unexpected error: $e'));
+      }
+    }
   }
 
   Future<void> _onGetProductVariantById(
@@ -62,33 +96,26 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
   ) async {
     emit(ProductVariantsLoading());
 
-    final result = await getProductVariantById(event.variantId);
+    try {
+      final result = await getProductVariantById(event.variantId);
 
-    result.fold(
-      (failure) => emit(ProductVariantsError(failure.message)),
-      (variant) => emit(ProductVariantSelected(variant)),
-    );
-  }
-
-  Future<void> _onCheckVariantAvailability(
-    CheckVariantAvailabilityEvent event,
-    Emitter<ProductVariantsState> emit,
-  ) async {
-    final params = CheckVariantAvailabilityParams(
-      variantId: event.variantId,
-      requestedQuantity: event.requestedQuantity,
-    );
-
-    final result = await checkVariantAvailability(params);
-
-    result.fold(
-      (failure) => emit(ProductVariantsError(failure.message)),
-      (isAvailable) => emit(VariantAvailabilityChecked(
-        isAvailable: isAvailable,
-        variantId: event.variantId,
-        requestedQuantity: event.requestedQuantity,
-      )),
-    );
+      await result.fold(
+        (failure) async {
+          if (!emit.isDone) {
+            emit(ProductVariantsError(failure.message));
+          }
+        },
+        (variant) async {
+          if (!emit.isDone) {
+            emit(ProductVariantSelected(variant));
+          }
+        },
+      );
+    } catch (e) {
+      if (!emit.isDone) {
+        emit(ProductVariantsError('Unexpected error: $e'));
+      }
+    }
   }
 
   Future<void> _onSelectVariant(
@@ -99,10 +126,12 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
       final currentState = state as ProductVariantsLoaded;
       final selectedVariant = currentState.variants.firstWhere(
         (variant) => variant.id == event.variantId,
-        orElse: () => currentState.variants.first,
+        orElse: () => throw Exception('Variant not found'),
       );
 
-      emit(currentState.copyWith(selectedVariant: selectedVariant));
+      if (!emit.isDone) {
+        emit(currentState.copyWith(selectedVariant: selectedVariant));
+      }
     }
   }
 
@@ -112,7 +141,44 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
   ) async {
     if (state is ProductVariantsLoaded) {
       final currentState = state as ProductVariantsLoaded;
-      emit(currentState.copyWith(clearSelectedVariant: true));
+      if (!emit.isDone) {
+        emit(currentState.copyWith(clearSelectedVariant: true));
+      }
+    }
+  }
+
+  Future<void> _onCheckVariantAvailability(
+    CheckVariantAvailabilityEvent event,
+    Emitter<ProductVariantsState> emit,
+  ) async {
+    try {
+      final result = await checkVariantAvailability(
+        CheckVariantAvailabilityParams(
+          variantId: event.variantId,
+          requestedQuantity: event.requestedQuantity,
+        ),
+      );
+      
+      await result.fold(
+        (failure) async {
+          if (!emit.isDone) {
+            emit(ProductVariantsError(failure.message));
+          }
+        },
+        (isAvailable) async {
+          if (!emit.isDone) {
+            emit(VariantAvailabilityChecked(
+              isAvailable: isAvailable,
+              variantId: event.variantId,
+              requestedQuantity: event.requestedQuantity,
+            ));
+          }
+        },
+      );
+    } catch (e) {
+      if (!emit.isDone) {
+        emit(ProductVariantsError('Failed to check availability: $e'));
+      }
     }
   }
 }

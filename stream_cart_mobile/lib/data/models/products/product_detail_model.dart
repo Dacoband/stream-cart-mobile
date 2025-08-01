@@ -1,5 +1,5 @@
 import '../../../domain/entities/products/product_detail_entity.dart';
-
+import 'product_variants_model.dart'; 
 class ProductDetailModel {
   final String productId;
   final String productName;
@@ -11,8 +11,10 @@ class ProductDetailModel {
   final double finalPrice;
   final int stockQuantity;
   final int quantitySold;
-  final String weight;
-  final String dimension;
+  final double weight;        
+  final double length;        
+  final double width;           
+  final double height;        
   final List<String> primaryImage;
   final String shopId;
   final String shopName;
@@ -23,7 +25,7 @@ class ProductDetailModel {
   final String shopLogo;
   final int shopTotalProduct;
   final List<ProductAttributeModel> attributes;
-  final List<ProductVariantModel> variants;
+  final List<ProductVariantsModel> variants; 
 
   const ProductDetailModel({
     required this.productId,
@@ -37,7 +39,10 @@ class ProductDetailModel {
     required this.stockQuantity,
     required this.quantitySold,
     required this.weight,
-    required this.dimension,
+    required this.length,
+    required this.width,
+    required this.height,
+
     required this.primaryImage,
     required this.shopId,
     required this.shopName,
@@ -53,33 +58,35 @@ class ProductDetailModel {
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
     return ProductDetailModel(
-      productId: json['productId'] ?? '',
-      productName: json['productName'] ?? '',
-      description: json['description'] ?? '',
-      categoryId: json['categoryId'] ?? '',
-      categoryName: json['categoryName'] ?? '',
-      basePrice: (json['basePrice'] ?? 0).toDouble(),
-      discountPrice: (json['discountPrice'] ?? 0).toDouble(),
-      finalPrice: (json['finalPrice'] ?? 0).toDouble(),
-      stockQuantity: json['stockQuantity'] ?? 0,
-      quantitySold: json['quantitySold'] ?? 0,
-      weight: json['weight'] ?? '',
-      dimension: json['dimension'] ?? '',
+      productId: json['productId']?.toString() ?? '',
+      productName: json['productName']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      categoryId: json['categoryId']?.toString() ?? '',
+      categoryName: json['categoryName']?.toString() ?? '',
+      basePrice: (json['basePrice'] as num?)?.toDouble() ?? 0.0,
+      discountPrice: (json['discountPrice'] as num?)?.toDouble() ?? 0.0,
+      finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0.0,
+      stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
+      quantitySold: (json['quantitySold'] as num?)?.toInt() ?? 0,
+      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
+      length: (json['length'] as num?)?.toDouble() ?? 0.0,
+      width: (json['width'] as num?)?.toDouble() ?? 0.0,
+      height: (json['height'] as num?)?.toDouble() ?? 0.0,
       primaryImage: List<String>.from(json['primaryImage'] ?? []),
-      shopId: json['shopId'] ?? '',
-      shopName: json['shopName'] ?? '',
-      shopStartTime: json['shopStartTime'] ?? '',
-      shopCompleteRate: (json['shopCompleteRate'] ?? 0).toDouble(),
-      shopTotalReview: json['shopTotalReview'] ?? 0,
-      shopRatingAverage: (json['shopRatingAverage'] ?? 0).toDouble(),
-      shopLogo: json['shopLogo'] ?? '',
-      shopTotalProduct: json['shopTotalProduct'] ?? 0,
-      attributes: (json['attributes'] as List? ?? [])
-          .map((attr) => ProductAttributeModel.fromJson(attr))
-          .toList(),
-      variants: (json['variants'] as List? ?? [])
-          .map((variant) => ProductVariantModel.fromJson(variant))
-          .toList(),
+      shopId: json['shopId']?.toString() ?? '',
+      shopName: json['shopName']?.toString() ?? '',
+      shopStartTime: json['shopStartTime']?.toString() ?? '',
+      shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
+      shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
+      shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
+      shopLogo: json['shopLogo']?.toString() ?? '',
+      shopTotalProduct: (json['shopTotalProduct'] as num?)?.toInt() ?? 0,
+      attributes: (json['attributes'] as List<dynamic>?)
+          ?.map((attr) => ProductAttributeModel.fromJson(attr as Map<String, dynamic>))
+          .toList() ?? [],
+      variants: (json['variants'] as List<dynamic>?)
+          ?.map((variant) => ProductVariantsModel.fromJson(variant as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -96,7 +103,9 @@ class ProductDetailModel {
       stockQuantity: stockQuantity,
       quantitySold: quantitySold,
       weight: weight,
-      dimension: dimension,
+      length: length,
+      width: width,
+      height: height,
       primaryImage: primaryImage,
       shopId: shopId,
       shopName: shopName,
@@ -107,7 +116,7 @@ class ProductDetailModel {
       shopLogo: shopLogo,
       shopTotalProduct: shopTotalProduct,
       attributes: attributes.map((attr) => attr.toEntity()).toList(),
-      variants: variants.map((variant) => variant.toEntity()).toList(),
+      variants: variants.map((variant) => variant.toEntity()).toList(), 
     );
   }
 }
@@ -136,46 +145,6 @@ class ProductAttributeModel {
       attributeId: attributeId,
       attributeName: attributeName,
       attributeValue: attributeValue,
-    );
-  }
-}
-
-class ProductVariantModel {
-  final String variantId;
-  final Map<String, dynamic> attributeValues;
-  final int stock;
-  final double price;
-  final double flashSalePrice;
-  final String? variantImage;
-
-  const ProductVariantModel({
-    required this.variantId,
-    required this.attributeValues,
-    required this.stock,
-    required this.price,
-    required this.flashSalePrice,
-    this.variantImage,
-  });
-
-  factory ProductVariantModel.fromJson(Map<String, dynamic> json) {
-    return ProductVariantModel(
-      variantId: json['variantId'] ?? '',
-      attributeValues: Map<String, dynamic>.from(json['attributeValues'] ?? {}),
-      stock: json['stock'] ?? 0,
-      price: (json['price'] ?? 0).toDouble(),
-      flashSalePrice: (json['flashSalePrice'] ?? 0).toDouble(),
-      variantImage: json['variantImage'],
-    );
-  }
-
-  ProductVariant toEntity() {
-    return ProductVariant(
-      variantId: variantId,
-      attributeValues: attributeValues,
-      stock: stock,
-      price: price,
-      flashSalePrice: flashSalePrice,
-      variantImage: variantImage,
     );
   }
 }

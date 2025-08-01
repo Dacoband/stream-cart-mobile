@@ -16,18 +16,18 @@ class ProductVariantsModel extends ProductVariantEntity {
 
   factory ProductVariantsModel.fromJson(Map<String, dynamic> json) {
     return ProductVariantsModel(
-      id: json['id'] as String,
-      productId: json['productId'] as String,
-      sku: json['sku'] as String,
-      price: (json['price'] as num).toDouble(),
-      flashSalePrice: (json['flashSalePrice'] as num).toDouble(),
-      stock: json['stock'] as int,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      createdBy: json['createdBy'] as String,
+      id: json['id']?.toString() ?? '', 
+      productId: json['productId']?.toString() ?? '',
+      sku: json['sku']?.toString() ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      flashSalePrice: (json['flashSalePrice'] as num?)?.toDouble() ?? 0.0,
+      stock: (json['stock'] as num?)?.toInt() ?? 0,
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(), 
+      createdBy: json['createdBy']?.toString() ?? 'Anonymous',
       lastModifiedAt: json['lastModifiedAt'] != null 
-          ? DateTime.parse(json['lastModifiedAt'] as String) 
+          ? DateTime.tryParse(json['lastModifiedAt'].toString()) 
           : null,
-      lastModifiedBy: json['lastModifiedBy'] as String?,
+      lastModifiedBy: json['lastModifiedBy']?.toString(),
     );
   }
 
@@ -71,4 +71,19 @@ class ProductVariantsModel extends ProductVariantEntity {
       lastModifiedBy: lastModifiedBy ?? this.lastModifiedBy,
     );
   }
+
+  ProductVariantEntity toEntity() {
+  return ProductVariantEntity(
+    id: id,
+    productId: productId,
+    sku: sku,
+    price: price,
+    flashSalePrice: flashSalePrice,
+    stock: stock,
+    createdAt: createdAt,
+    createdBy: createdBy,
+    lastModifiedAt: lastModifiedAt,
+    lastModifiedBy: lastModifiedBy,
+  );
+}
 }

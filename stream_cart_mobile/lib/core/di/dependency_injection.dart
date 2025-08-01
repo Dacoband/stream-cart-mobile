@@ -105,6 +105,16 @@ import '../../domain/usecases/address/get_provinces_usecase.dart';
 import '../../domain/usecases/address/get_districts_usecase.dart';
 import '../../domain/usecases/address/get_wards_usecase.dart';
 import '../../presentation/blocs/address/address_bloc.dart';
+import '../../data/datasources/products/product_variants_remote_data_source.dart';
+import '../../data/repositories/product/product_variants_repository_impl.dart';
+import '../../domain/repositories/product/product_variants_repository.dart';
+import '../../domain/usecases/product_variants/get_product_variants_by_product_id.dart';
+import '../../domain/usecases/product_variants/get_product_variant_by_id.dart';
+import '../../domain/usecases/product_variants/check_variant_availability.dart';
+import '../../domain/usecases/product_variants/get_cheapest_variant.dart';
+import '../../domain/usecases/product_variants/get_available_variants.dart';
+import '../../presentation/blocs/product_variants/product_variants_bloc.dart';
+
 
 
 final getIt = GetIt.instance;
@@ -169,6 +179,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
   
   // Advanced Search dependencies
   getIt.registerLazySingleton<SearchRemoteDataSource>(
@@ -262,6 +273,34 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt()));
   getIt.registerLazySingleton(() => ConnectLiveKitUseCase(getIt<LivekitService>()));
   getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
+
+  // === PRODUCT VARIANTS DEPENDENCIES ===
+  // Data sources
+  getIt.registerLazySingleton<ProductVariantsRemoteDataSource>(
+    () => ProductVariantsRemoteDataSourceImpl(dio: getIt()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<ProductVariantsRepository>(
+    () => ProductVariantsRepositoryImpl(getIt()),
+  );
+
+  // Use cases
+  getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
+  getIt.registerLazySingleton(() => GetProductVariantById(getIt()));
+  getIt.registerLazySingleton(() => CheckVariantAvailability(getIt()));
+  getIt.registerLazySingleton(() => GetCheapestVariant(getIt()));
+  getIt.registerLazySingleton(() => GetAvailableVariants(getIt()));
+
+  // Blocs
+  getIt.registerFactory(() => ProductVariantsBloc(
+    getProductVariantsByProductId: getIt(),
+    getProductVariantById: getIt(),
+    checkVariantAvailability: getIt(),
+    getCheapestVariant: getIt(),
+    getAvailableVariants: getIt(),
+  ));
+
 
   // Register ChatBloc
   getIt.registerLazySingleton<ChatBloc>(() => ChatBloc(

@@ -1,10 +1,9 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/products/product_variants_entity.dart';
-import '../../../domain/entities/products/product_variants_entity.dart';
+import '../../../domain/entities/products/product_variants_entity.dart'; 
 
 abstract class ProductVariantsState extends Equatable {
   const ProductVariantsState();
-
+  
   @override
   List<Object?> get props => [];
 }
@@ -14,7 +13,7 @@ class ProductVariantsInitial extends ProductVariantsState {}
 class ProductVariantsLoading extends ProductVariantsState {}
 
 class ProductVariantsLoaded extends ProductVariantsState {
-  final List<ProductVariantEntity> variants;
+  final List<ProductVariantEntity> variants; 
   final ProductVariantEntity? selectedVariant;
   final ProductVariantEntity? cheapestVariant;
 
@@ -23,9 +22,6 @@ class ProductVariantsLoaded extends ProductVariantsState {
     this.selectedVariant,
     this.cheapestVariant,
   });
-
-  @override
-  List<Object?> get props => [variants, selectedVariant, cheapestVariant];
 
   ProductVariantsLoaded copyWith({
     List<ProductVariantEntity>? variants,
@@ -39,6 +35,18 @@ class ProductVariantsLoaded extends ProductVariantsState {
       cheapestVariant: cheapestVariant ?? this.cheapestVariant,
     );
   }
+
+  @override
+  List<Object?> get props => [variants, selectedVariant, cheapestVariant];
+}
+
+class ProductVariantsError extends ProductVariantsState {
+  final String message;
+
+  const ProductVariantsError(this.message);
+
+  @override
+  List<Object> get props => [message];
 }
 
 class ProductVariantSelected extends ProductVariantsState {
@@ -63,13 +71,4 @@ class VariantAvailabilityChecked extends ProductVariantsState {
 
   @override
   List<Object> get props => [isAvailable, variantId, requestedQuantity];
-}
-
-class ProductVariantsError extends ProductVariantsState {
-  final String message;
-
-  const ProductVariantsError(this.message);
-
-  @override
-  List<Object> get props => [message];
 }

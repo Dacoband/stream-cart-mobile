@@ -1,24 +1,41 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/products/product_detail_entity.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/entities/products/product_variants_entity.dart';
+import '../../blocs/product_variants/product_variants_bloc.dart';
+import '../../blocs/product_variants/product_variants_event.dart';
+import '../../blocs/product_variants/product_variants_state.dart';
 
 class VariantSelector extends StatelessWidget {
-  final List<ProductVariant> variants;
-  final String? selectedVariantId;
-  final Function(String variantId) onVariantSelected;
-
-  const VariantSelector({
-    super.key,
-    required this.variants,
-    required this.selectedVariantId,
-    required this.onVariantSelected,
-  });
+  const VariantSelector({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (variants.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    return BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
+      builder: (context, state) {
+        if (state is ProductVariantsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (state is ProductVariantsLoaded && state.variants.isNotEmpty) {
+          return _buildVariantSelector(context, state);
+        }
+        
+        if (state is ProductVariantsError) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Lỗi tải variants: ${state.message}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+        
+        return const SizedBox.shrink();
+      },
+    );
+  }
 
+  Widget _buildVariantSelector(BuildContext context, ProductVariantsLoaded state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -33,12 +50,16 @@ class VariantSelector extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: variants.map((variant) {
-            final isSelected = variant.variantId == selectedVariantId;
+          children: state.variants.map((variant) {
+            final isSelected = state.selectedVariant?.id == variant.id;
             final isOutOfStock = variant.stock <= 0;
             
             return GestureDetector(
-              onTap: isOutOfStock ? null : () => onVariantSelected(variant.variantId),
+              onTap: isOutOfStock ? null : () {
+                context.read<ProductVariantsBloc>().add(
+                  SelectVariantEvent(variant.id),
+                );
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
@@ -61,7 +82,7 @@ class VariantSelector extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '${variant.price.toStringAsFixed(0)} ₫',
+                          '${(variant.flashSalePrice > 0 ? variant.flashSalePrice : variant.price).toStringAsFixed(0)} ₫',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -78,7 +99,7 @@ class VariantSelector extends StatelessWidget {
                               color: Colors.orange,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Flash Sale',
                               style: TextStyle(
                                 color: Colors.white,
@@ -91,6 +112,15 @@ class VariantSelector extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
+                    Text(
+                      'SKU: ${variant.sku}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isSelected
+                            ? Colors.white70
+                            : (isOutOfStock ? Colors.grey : Colors.grey.shade600),
+                      ),
+                    ),
                     Text(
                       'Kho: ${variant.stock}',
                       style: TextStyle(
@@ -117,19 +147,15 @@ class VariantSelector extends StatelessWidget {
             );
           }).toList(),
         ),
-        if (selectedVariantId != null) ...[
+        if (state.selectedVariant != null) ...[
           const SizedBox(height: 12),
-          _buildSelectedVariantInfo(),
+          _buildSelectedVariantInfo(context, state.selectedVariant!),
         ],
       ],
     );
   }
 
-  Widget _buildSelectedVariantInfo() {
-    final selectedVariant = variants.firstWhere(
-      (variant) => variant.variantId == selectedVariantId,
-    );
-
+  Widget _buildSelectedVariantInfo(BuildContext context, ProductVariantEntity selectedVariant) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -158,7 +184,7 @@ class VariantSelector extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${selectedVariant.price.toStringAsFixed(0)} ₫ (Kho: ${selectedVariant.stock})',
+                  'SKU: ${selectedVariant.sku} - ${(selectedVariant.flashSalePrice > 0 ? selectedVariant.flashSalePrice : selectedVariant.price).toStringAsFixed(0)} ₫ (Kho: ${selectedVariant.stock})',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.blue.shade800,
@@ -166,6 +192,18 @@ class VariantSelector extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              context.read<ProductVariantsBloc>().add(
+                const ClearSelectedVariantEvent(),
+              );
+            },
+            child: Icon(
+              Icons.close,
+              color: Colors.blue.shade600,
+              size: 18,
             ),
           ),
         ],

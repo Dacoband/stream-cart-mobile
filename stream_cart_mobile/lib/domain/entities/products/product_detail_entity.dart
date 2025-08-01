@@ -1,4 +1,7 @@
-class ProductDetailEntity {
+import 'package:equatable/equatable.dart';
+import 'product_variants_entity.dart';
+
+class ProductDetailEntity extends Equatable {
   final String productId;
   final String productName;
   final String description;
@@ -8,9 +11,11 @@ class ProductDetailEntity {
   final double discountPrice;
   final double finalPrice;
   final int stockQuantity;
-  final int quantitySold; 
-  final String weight;
-  final String dimension;
+  final int quantitySold;
+  final double weight;
+  final double length;
+  final double width;
+  final double height;
   final List<String> primaryImage;
   final String shopId;
   final String shopName;
@@ -21,7 +26,7 @@ class ProductDetailEntity {
   final String shopLogo;
   final int shopTotalProduct;
   final List<ProductAttribute> attributes;
-  final List<ProductVariant> variants;
+  final List<ProductVariantEntity> variants;
 
   const ProductDetailEntity({
     required this.productId,
@@ -35,7 +40,9 @@ class ProductDetailEntity {
     required this.stockQuantity,
     required this.quantitySold,
     required this.weight,
-    required this.dimension,
+    required this.length,
+    required this.width,
+    required this.height,
     required this.primaryImage,
     required this.shopId,
     required this.shopName,
@@ -48,6 +55,94 @@ class ProductDetailEntity {
     required this.attributes,
     required this.variants,
   });
+
+  // Computed property để tạo dimension string
+  String get dimension => '${length}x${width}x${height}cm';
+
+  ProductDetailEntity copyWith({
+    String? productId,
+    String? productName,
+    String? description,
+    String? categoryId,
+    String? categoryName,
+    double? basePrice,
+    double? discountPrice,
+    double? finalPrice,
+    int? stockQuantity,
+    int? quantitySold,
+    double? weight,
+    double? length,
+    double? width,
+    double? height,
+    List<String>? primaryImage,
+    String? shopId,
+    String? shopName,
+    DateTime? shopStartTime,
+    double? shopCompleteRate,
+    int? shopTotalReview,
+    double? shopRatingAverage,
+    String? shopLogo,
+    int? shopTotalProduct,
+    List<ProductAttribute>? attributes,
+    List<ProductVariantEntity>? variants,
+  }) {
+    return ProductDetailEntity(
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      description: description ?? this.description,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      basePrice: basePrice ?? this.basePrice,
+      discountPrice: discountPrice ?? this.discountPrice,
+      finalPrice: finalPrice ?? this.finalPrice,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
+      quantitySold: quantitySold ?? this.quantitySold,
+      weight: weight ?? this.weight,
+      length: length ?? this.length,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      primaryImage: primaryImage ?? this.primaryImage,
+      shopId: shopId ?? this.shopId,
+      shopName: shopName ?? this.shopName,
+      shopStartTime: shopStartTime ?? this.shopStartTime,
+      shopCompleteRate: shopCompleteRate ?? this.shopCompleteRate,
+      shopTotalReview: shopTotalReview ?? this.shopTotalReview,
+      shopRatingAverage: shopRatingAverage ?? this.shopRatingAverage,
+      shopLogo: shopLogo ?? this.shopLogo,
+      shopTotalProduct: shopTotalProduct ?? this.shopTotalProduct,
+      attributes: attributes ?? this.attributes,
+      variants: variants ?? this.variants,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    productId,
+    productName,
+    description,
+    categoryId,
+    categoryName,
+    basePrice,
+    discountPrice,
+    finalPrice,
+    stockQuantity,
+    quantitySold,
+    weight,
+    length,
+    width,
+    height,
+    primaryImage,
+    shopId,
+    shopName,
+    shopStartTime,
+    shopCompleteRate,
+    shopTotalReview,
+    shopRatingAverage,
+    shopLogo,
+    shopTotalProduct,
+    attributes,
+    variants,
+  ];
 }
 
 class ProductAttribute {
@@ -62,20 +157,4 @@ class ProductAttribute {
   });
 }
 
-class ProductVariant {
-  final String variantId;
-  final Map<String, dynamic> attributeValues;
-  final int stock;
-  final double price;
-  final double flashSalePrice;
-  final String? variantImage;
 
-  const ProductVariant({
-    required this.variantId,
-    required this.attributeValues,
-    required this.stock,
-    required this.price,
-    required this.flashSalePrice,
-    this.variantImage,
-  });
-}

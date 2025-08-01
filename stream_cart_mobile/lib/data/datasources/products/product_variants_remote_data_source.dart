@@ -1,14 +1,15 @@
 import 'package:dio/dio.dart';
+import '../../../domain/entities/products/product_variants_entity.dart';
+import '../../models/products/product_variants_model.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_url_helper.dart';
-import '../../models/products/product_variants_model.dart';
 
 abstract class ProductVariantsRemoteDataSource {
-  Future<List<ProductVariantsModel>> getProductVariants();
-  Future<ProductVariantsModel> getProductVariantById(String id);
-  Future<List<ProductVariantsModel>> getProductVariantsByProductId(String productId);
-  Future<ProductVariantsModel> updateProductVariantPrice(String id, double price);
-  Future<ProductVariantsModel> updateProductVariantStock(String id, int stock);
+  Future<List<ProductVariantEntity>> getProductVariantsByProductId(String productId); 
+  Future<ProductVariantEntity> getProductVariantById(String variantId);
+  Future<List<ProductVariantEntity>> getProductVariants();
+  Future<ProductVariantEntity> updateProductVariantPrice(String id, double price);
+  Future<ProductVariantEntity> updateProductVariantStock(String id, int stock);
 }
 
 class ProductVariantsRemoteDataSourceImpl implements ProductVariantsRemoteDataSource {
@@ -17,104 +18,87 @@ class ProductVariantsRemoteDataSourceImpl implements ProductVariantsRemoteDataSo
   ProductVariantsRemoteDataSourceImpl({required this.dio});
 
   @override
-  Future<List<ProductVariantsModel>> getProductVariants() async {
+  Future<List<ProductVariantEntity>> getProductVariantsByProductId(String productId) async {
     try {
-      final response = await dio.get(
-        ApiUrlHelper.getEndpoint(ApiConstants.productVariantsEndpoint),
-      );
-
-      if (response.statusCode == ApiConstants.successCode) {
-        final List<dynamic> data = response.data['data'] as List<dynamic>;
-        return data.map((json) => ProductVariantsModel.fromJson(json as Map<String, dynamic>)).toList();
+      final url = ApiConstants.productVariantByProductEndpoint.replaceAll('{productId}', productId);
+      final endpoint = ApiUrlHelper.getEndpoint(url);
+      final response = await dio.get(endpoint);
+      final responseData = response.data;
+      
+      if (responseData['success'] == true && responseData['data'] != null) {
+        final List<dynamic> variantsData = responseData['data'] as List<dynamic>;
+        final models = variantsData.map((json) => ProductVariantsModel.fromJson(json)).toList();
+        final entities = models.map((model) {
+          return ProductVariantEntity(
+            id: model.id,
+            productId: model.productId,
+            sku: model.sku,
+            price: model.price,
+            flashSalePrice: model.flashSalePrice,
+            stock: model.stock,
+            createdAt: model.createdAt,
+            createdBy: model.createdBy,
+            lastModifiedAt: model.lastModifiedAt,
+            lastModifiedBy: model.lastModifiedBy,
+          );
+        }).toList();
+        return entities;
       } else {
-        throw Exception('Failed to get product variants: ${response.statusMessage}');
+        print('[DataSource] No variants found for product: $productId');
+        return [];
       }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      print('[DataSource] Error getting product variants: $e');
+      throw Exception('Failed to get product variants: $e');
     }
   }
 
   @override
-  Future<ProductVariantsModel> getProductVariantById(String id) async {
+  Future<ProductVariantEntity> getProductVariantById(String variantId) async {
     try {
-      final response = await dio.get(
-        ApiUrlHelper.getEndpoint(ApiConstants.productVariantDetailEndpoint.replaceAll('{id}', id)),
-      );
-
-      if (response.statusCode == ApiConstants.successCode) {
-        final Map<String, dynamic> data = response.data['data'] as Map<String, dynamic>;
-        return ProductVariantsModel.fromJson(data);
+      final url = ApiConstants.productVariantDetailEndpoint.replaceAll('{variantId}', variantId);
+      final endpoint = ApiUrlHelper.getEndpoint(url);
+      final response = await dio.get(endpoint);
+      final responseData = response.data;
+      
+      if (responseData['success'] == true && responseData['data'] != null) {
+        final model = ProductVariantsModel.fromJson(responseData['data']);
+        return ProductVariantEntity(
+          id: model.id,
+          productId: model.productId,
+          sku: model.sku,
+          price: model.price,
+          flashSalePrice: model.flashSalePrice,
+          stock: model.stock,
+          createdAt: model.createdAt,
+          createdBy: model.createdBy,
+          lastModifiedAt: model.lastModifiedAt,
+          lastModifiedBy: model.lastModifiedBy,
+        );
       } else {
-        throw Exception('Failed to get product variant: ${response.statusMessage}');
+        throw Exception('Product variant not found');
       }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      print('[DataSource] Error getting variant by ID: $e');
+      throw Exception('Failed to get product variant: $e');
     }
   }
 
   @override
-  Future<List<ProductVariantsModel>> getProductVariantsByProductId(String productId) async {
-    try {
-      final response = await dio.get(
-        ApiUrlHelper.getEndpoint(ApiConstants.productVariantByProductEndpoint.replaceAll('{productId}', productId)),
-      );
-
-      if (response.statusCode == ApiConstants.successCode) {
-        final List<dynamic> data = response.data['data'] as List<dynamic>;
-        return data.map((json) => ProductVariantsModel.fromJson(json as Map<String, dynamic>)).toList();
-      } else {
-        throw Exception('Failed to get product variants by product ID: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
-    } catch (e) {
-      throw Exception('Unexpected error: $e');
-    }
+  Future<List<ProductVariantEntity>> getProductVariants() async {
+    // cho get all variants nếu cần
+    throw UnimplementedError();
   }
 
   @override
-  Future<ProductVariantsModel> updateProductVariantPrice(String id, double price) async {
-    try {
-      final response = await dio.patch(
-        ApiUrlHelper.getEndpoint(ApiConstants.productVariantsPriceEndpoint.replaceAll('{id}', id)),
-        data: {'price': price},
-      );
-
-      if (response.statusCode == ApiConstants.successCode) {
-        final Map<String, dynamic> data = response.data['data'] as Map<String, dynamic>;
-        return ProductVariantsModel.fromJson(data);
-      } else {
-        throw Exception('Failed to update product variant price: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
-    } catch (e) {
-      throw Exception('Unexpected error: $e');
-    }
+  Future<ProductVariantEntity> updateProductVariantPrice(String id, double price) async {
+    // cho update price nếu cần
+    throw UnimplementedError();
   }
 
   @override
-  Future<ProductVariantsModel> updateProductVariantStock(String id, int stock) async {
-    try {
-      final response = await dio.patch(
-        ApiUrlHelper.getEndpoint(ApiConstants.productVariantsStockEndpoint.replaceAll('{id}', id)),
-        data: {'stock': stock},
-      );
-
-      if (response.statusCode == ApiConstants.successCode) {
-        final Map<String, dynamic> data = response.data['data'] as Map<String, dynamic>;
-        return ProductVariantsModel.fromJson(data);
-      } else {
-        throw Exception('Failed to update product variant stock: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      throw Exception('Network error: ${e.message}');
-    } catch (e) {
-      throw Exception('Unexpected error: $e');
-    }
+  Future<ProductVariantEntity> updateProductVariantStock(String id, int stock) async {
+    // cho update stock nếu cần
+    throw UnimplementedError();
   }
 }

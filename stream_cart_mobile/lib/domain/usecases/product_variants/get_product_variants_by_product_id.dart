@@ -9,6 +9,7 @@ class GetProductVariantsByProductId {
   GetProductVariantsByProductId(this.repository);
 
   Future<Either<Failure, List<ProductVariantEntity>>> call(String productId) async {
-    return await repository.getProductVariantsByProductId(productId);
+    final result = await repository.getProductVariantsByProductId(productId);
+    return result;
   }
 }
