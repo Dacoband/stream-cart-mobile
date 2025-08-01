@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import '../../core/constants/api_constants.dart';
-import '../../core/utils/api_url_helper.dart';
-import '../models/product_variants_model.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/api_url_helper.dart';
+import '../../models/products/product_variants_model.dart';
 
 abstract class ProductVariantsRemoteDataSource {
   Future<List<ProductVariantsModel>> getProductVariants();

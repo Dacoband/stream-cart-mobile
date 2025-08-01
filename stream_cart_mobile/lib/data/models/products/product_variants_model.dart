@@ -1,4 +1,4 @@
-import '../../domain/entities/product_variants_entity.dart';
+import '../../../domain/entities/products/product_variants_entity.dart';
 
 class ProductVariantsModel extends ProductVariantEntity {
   const ProductVariantsModel({

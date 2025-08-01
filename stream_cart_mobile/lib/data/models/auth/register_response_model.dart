@@ -1,4 +1,4 @@
-import '../../domain/entities/register_response_entity.dart';
+import '../../../domain/entities/auth/register_response_entity.dart';
 
 class RegisterResponseModel {
   final bool success;

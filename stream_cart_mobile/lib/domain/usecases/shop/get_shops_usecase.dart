@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../entities/shop.dart';
-import '../entities/product_entity.dart';
-import '../repositories/shop_repository.dart';
-import '../../data/models/shop_model.dart';
+import '../../../core/error/failures.dart';
+import '../../entities/shop/shop.dart';
+import '../../entities/products/product_entity.dart';
+import '../../repositories/shop_repository.dart';
+import '../../../data/models/shop/shop_model.dart';
 
 class GetShopsUseCase {
   final ShopRepository repository;

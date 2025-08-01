@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../entities/search_response_entity.dart';
-import '../repositories/search_repository.dart';
-import '../../core/error/failures.dart';
+import '../../entities/search/search_response_entity.dart';
+import '../../repositories/search_repository.dart';
+import '../../../core/error/failures.dart';
 
 class SearchProductsAdvancedUseCase {
   final SearchRepository repository;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/product_detail_entity.dart';
+import '../../../domain/entities/products/product_detail_entity.dart';
 
 class VariantSelector extends StatelessWidget {
   final List<ProductVariant> variants;

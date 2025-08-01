@@ -1,5 +1,5 @@
-import '../models/flash_sale_model.dart';
-import '../models/product_model.dart';
+import '../../models/flash-sale/flash_sale_model.dart';
+import '../../models/products/product_model.dart';
 
 abstract class FlashSaleRemoteDataSource {
   Future<List<FlashSaleModel>> getFlashSales();

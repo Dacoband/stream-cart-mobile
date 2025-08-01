@@ -1,4 +1,4 @@
-import '../../domain/entities/product_detail_entity.dart';
+import '../../../domain/entities/products/product_detail_entity.dart';
 
 class ProductDetailModel {
   final String productId;

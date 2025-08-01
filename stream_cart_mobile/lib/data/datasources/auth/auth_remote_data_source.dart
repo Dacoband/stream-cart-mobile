@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import '../models/login_request_model.dart';
-import '../models/login_response_model.dart';
-import '../models/register_request_model.dart';
-import '../models/register_response_model.dart';
-import '../models/otp_models.dart';
-import '../../core/constants/api_constants.dart';
-import '../../core/utils/api_url_helper.dart';
+import '../../models/auth/login_request_model.dart';
+import '../../models/auth/login_response_model.dart';
+import '../../models/auth/register_request_model.dart';
+import '../../models/auth/register_response_model.dart';
+import '../../models/auth/otp_models.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/api_url_helper.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);

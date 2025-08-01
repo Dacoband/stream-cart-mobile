@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/add_to_cart_usecase.dart';
-import '../../../domain/usecases/get_cart_items_usecase.dart';
-import '../../../domain/usecases/update_cart_item_usecase.dart';
-import '../../../domain/usecases/remove_from_cart_usecase.dart';
-import '../../../domain/usecases/remove_cart_item_usecase.dart';
-import '../../../domain/usecases/remove_multiple_cart_items_usecase.dart';
-import '../../../domain/usecases/clear_cart_usecase.dart';
-import '../../../domain/usecases/get_cart_preview_usecase.dart';
-import '../../../domain/usecases/get_preview_order_usecase.dart';
+import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
+import '../../../domain/usecases/cart/get_cart_items_usecase.dart';
+import '../../../domain/usecases/cart/update_cart_item_usecase.dart';
+import '../../../domain/usecases/cart/remove_from_cart_usecase.dart';
+import '../../../domain/usecases/cart/remove_cart_item_usecase.dart';
+import '../../../domain/usecases/cart/remove_multiple_cart_items_usecase.dart';
+import '../../../domain/usecases/cart/clear_cart_usecase.dart';
+import '../../../domain/usecases/cart/get_cart_preview_usecase.dart';
+import '../../../domain/usecases/order/get_preview_order_usecase.dart';
 import 'cart_event.dart';
 import 'cart_state.dart';
 

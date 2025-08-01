@@ -1,4 +1,4 @@
-import '../../domain/entities/notification_entity.dart';
+import '../../../domain/entities/notification/notification_entity.dart';
 
 class NotificationModel {
   final String notificationId;

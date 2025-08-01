@@ -1,4 +1,4 @@
-import '../../domain/entities/search_response_entity.dart';
+import '../../../domain/entities/search/search_response_entity.dart';
 
 class SearchResponseModel {
   final bool success;

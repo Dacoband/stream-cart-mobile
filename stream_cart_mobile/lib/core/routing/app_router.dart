@@ -26,7 +26,7 @@ import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/notification/notification_bloc.dart';
-import '../../domain/entities/user_profile_entity.dart';
+import '../../domain/entities/account/user_profile_entity.dart';
 
 class AppRouter {
   static const String login = '/login';

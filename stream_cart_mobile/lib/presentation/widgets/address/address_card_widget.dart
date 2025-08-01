@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/address_entity.dart';
+import '../../../domain/entities/address/address_entity.dart';
 import '../../../core/enums/address_type.dart';
 
 class AddressCard extends StatelessWidget {

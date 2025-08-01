@@ -1,4 +1,4 @@
-import '../../domain/entities/category_entity.dart';
+import '../../../domain/entities/category/category_entity.dart';
 import 'category_model.dart';
 
 class CategoryDetailResponseModel {

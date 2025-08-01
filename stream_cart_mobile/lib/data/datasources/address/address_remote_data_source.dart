@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import '../../core/enums/address_type.dart';
-import '../../core/error/exceptions.dart';
-import '../../core/services/address_external_service.dart';
-import '../models/address_model.dart';
+import '../../../core/enums/address_type.dart';
+import '../../../core/error/exceptions.dart';
+import '../../../core/services/address_external_service.dart';
+import '../../models/address/address_model.dart';
 
 abstract class AddressRemoteDataSource {
   // CRUD operations for addresses

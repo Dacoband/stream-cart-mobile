@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:stream_cart_mobile/core/error/failures.dart';
-import '../../entities/chat_message_entity.dart';
+import '../../entities/chat/chat_message_entity.dart';
 import '../../repositories/chat_repository.dart';
 
 class SendMessageUseCase {

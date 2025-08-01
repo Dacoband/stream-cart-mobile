@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import '../models/user_profile_model.dart';
-import '../models/update_profile_model.dart';
+import '../../models/account/user_profile_model.dart';
+import '../../models/account/update_profile_model.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<UserProfileModel> getUserProfile();

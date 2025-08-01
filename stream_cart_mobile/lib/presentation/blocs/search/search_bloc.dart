@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../domain/entities/category_entity.dart';
-import '../../../domain/usecases/search_products_usecase.dart' as search;
-import '../../../domain/usecases/get_categories_usecase.dart';
-import '../../../domain/usecases/get_product_primary_images_usecase.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../domain/entities/category/category_entity.dart';
+import '../../../domain/usecases/search/search_products_usecase.dart' as search;
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/product/get_product_primary_images_usecase.dart';
 import '../../../core/services/search_history_service.dart';
 import '../../../core/error/failures.dart';
 import 'search_event.dart';

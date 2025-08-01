@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../domain/entities/category_entity.dart';
-import '../../../domain/entities/livestream_entity.dart';
-import '../../../domain/entities/user_profile_entity.dart';
-import '../../../domain/entities/flash_sale_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../domain/entities/category/category_entity.dart';
+import '../../../domain/entities/livestream/livestream_entity.dart';
+import '../../../domain/entities/account/user_profile_entity.dart';
+import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
 
 abstract class HomeState extends Equatable {
   const HomeState();

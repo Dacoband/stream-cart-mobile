@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../entities/otp_entities.dart';
-import '../repositories/auth_repository.dart';
-import '../../core/error/failures.dart';
+import '../../entities/auth/otp_entities.dart';
+import '../../repositories/auth_repository.dart';
+import '../../../core/error/failures.dart';
 
 class VerifyOtpUseCase {
   final AuthRepository repository;

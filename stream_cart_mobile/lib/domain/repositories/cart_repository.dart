@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../entities/cart_entity.dart';
+import '../entities/cart/cart_entity.dart';
 import '../../core/error/failures.dart';
 
 abstract class CartRepository {

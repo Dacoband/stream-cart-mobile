@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/usecases/get_product_detail_usecase.dart';
-import '../../../domain/usecases/get_product_images_usecase.dart';
-import '../../../domain/usecases/add_to_cart_usecase.dart';
+import '../../../domain/usecases/product/get_product_detail_usecase.dart';
+import '../../../domain/usecases/product/get_product_images_usecase.dart';
+import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../cart/cart_bloc.dart';
 import '../cart/cart_event.dart' as cart_events;
 import 'product_detail_event.dart';

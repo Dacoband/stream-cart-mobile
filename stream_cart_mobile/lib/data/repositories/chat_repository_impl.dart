@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
-import 'package:stream_cart_mobile/data/datasources/chat_remote_data_source.dart';
+import 'package:stream_cart_mobile/data/datasources/chat/chat_remote_data_source.dart';
 import 'package:stream_cart_mobile/core/error/failures.dart';
 import 'package:stream_cart_mobile/core/error/exceptions.dart';
 

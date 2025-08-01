@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../repositories/home_repository.dart';
-import '../../core/error/failures.dart';
+import '../../repositories/home_repository.dart';
+import '../../../core/error/failures.dart';
 
 class GetProductPrimaryImagesUseCase {
   final HomeRepository repository;

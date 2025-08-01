@@ -9,7 +9,7 @@ import '../../widgets/product_detail/image_carousel.dart';
 import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
 import '../../widgets/product_detail/add_to_cart_button.dart';
-import '../../../domain/entities/product_detail_entity.dart';
+import '../../../domain/entities/products/product_detail_entity.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;

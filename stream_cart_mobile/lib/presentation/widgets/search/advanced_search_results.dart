@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/search_response_entity.dart';
-import '../../../domain/entities/search_filters.dart';
+import '../../../domain/entities/search/search_response_entity.dart';
+import '../../../domain/entities/search/search_filters.dart';
 import '../../../core/routing/app_router.dart';
 
 class AdvancedSearchResults extends StatelessWidget {

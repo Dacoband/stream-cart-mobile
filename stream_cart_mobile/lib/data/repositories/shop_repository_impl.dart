@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
-import '../../domain/entities/shop.dart';
-import '../../domain/entities/product_entity.dart';
+import '../../domain/entities/shop/shop.dart';
+import '../../domain/entities/products/product_entity.dart';
 import '../../domain/repositories/shop_repository.dart';
-import '../datasources/shop_remote_data_source.dart';
-import '../models/shop_model.dart';
+import '../datasources/shop/shop_remote_data_source.dart';
+import '../models/shop/shop_model.dart';
 
 class ShopRepositoryImpl implements ShopRepository {
   final ShopRemoteDataSource remoteDataSource;

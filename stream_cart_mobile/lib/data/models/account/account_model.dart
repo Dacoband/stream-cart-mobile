@@ -1,4 +1,4 @@
-import '../../domain/entities/account_entity.dart';
+import '../../../domain/entities/account/account_entity.dart';
 
 class AccountModel {
   final String id;

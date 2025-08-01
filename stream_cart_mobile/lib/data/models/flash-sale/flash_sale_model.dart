@@ -1,4 +1,4 @@
-import '../../domain/entities/flash_sale_entity.dart';
+import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
 
 class FlashSaleModel extends FlashSaleEntity {
   const FlashSaleModel({

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'account_entity.dart';
+import '../account/account_entity.dart';
 
 class LoginResponseEntity extends Equatable {
   final bool success;

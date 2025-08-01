@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../domain/entities/search_response_entity.dart';
+import '../entities/search/search_response_entity.dart';
 import '../../core/error/failures.dart';
 
 abstract class SearchRepository {

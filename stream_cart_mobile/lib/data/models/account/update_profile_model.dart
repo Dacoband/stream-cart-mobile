@@ -1,4 +1,4 @@
-import '../../domain/entities/user_profile_entity.dart';
+import '../../../domain/entities/account/user_profile_entity.dart';
 import 'user_profile_model.dart';
 
 class UpdateProfileRequestModel {

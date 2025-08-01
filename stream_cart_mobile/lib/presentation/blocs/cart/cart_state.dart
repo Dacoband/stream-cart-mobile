@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/cart_entity.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 
 abstract class CartState extends Equatable {
   const CartState();

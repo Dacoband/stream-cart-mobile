@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../core/enums/address_type.dart';
+import '../../../core/enums/address_type.dart';
 
 class AddressEntity extends Equatable {
   static const String defaultCountry = 'Việt Nam';

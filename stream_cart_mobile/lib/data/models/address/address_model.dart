@@ -1,6 +1,6 @@
-import 'package:stream_cart_mobile/domain/entities/address_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/address/address_entity.dart';
 
-import '../../core/enums/address_type.dart';
+import '../../../core/enums/address_type.dart';
 
 class AddressModel extends AddressEntity {
   const AddressModel({

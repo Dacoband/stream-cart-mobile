@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/address_entity.dart';
+import '../../../domain/entities/address/address_entity.dart';
 
 class LocationPicker extends StatefulWidget {
   final String? initialProvinceId;

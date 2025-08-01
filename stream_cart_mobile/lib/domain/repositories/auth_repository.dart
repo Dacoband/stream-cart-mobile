@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
-import '../entities/login_request_entity.dart';
-import '../entities/login_response_entity.dart';
-import '../entities/register_request_entity.dart';
-import '../entities/register_response_entity.dart';
-import '../entities/otp_entities.dart';
+import '../entities/auth/login_request_entity.dart';
+import '../entities/auth/login_response_entity.dart';
+import '../entities/auth/register_request_entity.dart';
+import '../entities/auth/register_response_entity.dart';
+import '../entities/auth/otp_entities.dart';
 import '../../core/error/failures.dart';
 
 abstract class AuthRepository {

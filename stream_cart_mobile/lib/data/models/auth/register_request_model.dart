@@ -1,4 +1,4 @@
-import '../../domain/entities/register_request_entity.dart';
+import '../../../domain/entities/auth/register_request_entity.dart';
 
 class RegisterRequestModel {
   final String username;

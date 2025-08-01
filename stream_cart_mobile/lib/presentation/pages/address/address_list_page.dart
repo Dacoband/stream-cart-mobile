@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../domain/entities/address_entity.dart';
+import '../../../domain/entities/address/address_entity.dart';
 import '../../blocs/address/address_bloc.dart';
 import '../../blocs/address/address_event.dart';
 import '../../blocs/address/address_state.dart';

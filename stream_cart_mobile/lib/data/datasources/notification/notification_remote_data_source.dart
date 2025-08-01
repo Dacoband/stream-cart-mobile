@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import '../../core/utils/api_url_helper.dart';
-import '../../core/constants/api_constants.dart';
-import '../models/notification_model.dart';
+import '../../../core/utils/api_url_helper.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../models/notification/notification_model.dart';
 
 abstract class NotificationRemoteDataSource {
   Future<NotificationResponseModel> getNotifications({

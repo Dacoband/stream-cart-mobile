@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import '../../core/error/exceptions.dart';
-import '../../core/constants/api_constants.dart';
-import '../datasources/flash_sale_remote_data_source.dart';
-import '../models/flash_sale_model.dart';
-import '../models/product_model.dart';
+import '../../../core/error/exceptions.dart';
+import '../../../core/constants/api_constants.dart';
+import 'flash_sale_remote_data_source.dart';
+import '../../models/flash-sale/flash_sale_model.dart';
+import '../../models/products/product_model.dart';
 
 class FlashSaleRemoteDataSourceImpl implements FlashSaleRemoteDataSource {
   final Dio dio;

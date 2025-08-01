@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../entities/product_detail_entity.dart';
-import '../repositories/home_repository.dart';
-import '../../core/error/failures.dart';
+import '../../entities/products/product_detail_entity.dart';
+import '../../repositories/home_repository.dart';
+import '../../../core/error/failures.dart';
 
 class GetProductDetailUseCase {
   final HomeRepository repository;

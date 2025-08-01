@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
-import '../entities/login_request_entity.dart';
-import '../entities/login_response_entity.dart';
-import '../repositories/auth_repository.dart';
-import '../../core/error/failures.dart';
+import '../../entities/auth/login_request_entity.dart';
+import '../../entities/auth/login_response_entity.dart';
+import '../../repositories/auth_repository.dart';
+import '../../../core/error/failures.dart';
 
 class LoginUseCase {
   final AuthRepository repository;

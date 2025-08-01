@@ -4,7 +4,7 @@ import '../../../core/di/dependency_injection.dart' as di;
 import '../../blocs/shop/shop_bloc.dart';
 import '../../blocs/shop/shop_event.dart';
 import '../../blocs/shop/shop_state.dart';
-import '../../../domain/entities/shop.dart';
+import '../../../domain/entities/shop/shop.dart';
 
 class ShopDetailPage extends StatefulWidget {
   final String shopId;

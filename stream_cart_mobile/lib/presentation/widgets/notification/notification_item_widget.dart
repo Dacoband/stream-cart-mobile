@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../domain/entities/notification_entity.dart';
+import '../../../domain/entities/notification/notification_entity.dart';
 
 class NotificationItemWidget extends StatelessWidget {
   final NotificationEntity notification;

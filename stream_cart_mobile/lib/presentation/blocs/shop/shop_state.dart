@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/shop.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../data/models/shop_model.dart';
+import '../../../domain/entities/shop/shop.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../data/models/shop/shop_model.dart';
 
 abstract class ShopState extends Equatable {
   const ShopState();

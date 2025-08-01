@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import '../../domain/entities/category_entity.dart';
-import '../../domain/entities/product_entity.dart';
-import '../../domain/entities/product_detail_entity.dart';
-import '../../domain/entities/product_image_entity.dart';
+import '../../domain/entities/category/category_entity.dart';
+import '../../domain/entities/products/product_entity.dart';
+import '../../domain/entities/products/product_detail_entity.dart';
+import '../../domain/entities/products/product_image_entity.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../../core/error/failures.dart';
-import '../datasources/home_remote_data_source.dart';
+import '../datasources/home/home_remote_data_source.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   final HomeRemoteDataSource remoteDataSource;

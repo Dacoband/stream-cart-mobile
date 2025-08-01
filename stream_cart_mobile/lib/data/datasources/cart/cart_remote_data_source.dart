@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import '../models/cart_model.dart';
-import '../../core/utils/api_url_helper.dart';
+import '../../models/cart/cart_model.dart';
+import '../../../core/utils/api_url_helper.dart';
 
 abstract class CartRemoteDataSource {
   Future<CartResponseModel> addToCart(CartItemModel cartItem);

@@ -1,5 +1,5 @@
-import '../../domain/entities/login_response_entity.dart';
-import 'account_model.dart';
+import '../../../domain/entities/auth/login_response_entity.dart';
+import '../account/account_model.dart';
 
 class LoginResponseDataModel {
   final bool success;

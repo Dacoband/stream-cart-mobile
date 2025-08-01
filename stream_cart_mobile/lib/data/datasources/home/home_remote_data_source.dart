@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
-import '../models/category_model.dart';
-import '../models/category_detail_model.dart';
-import '../models/product_model.dart';
-import '../models/product_detail_model.dart';
-import '../models/product_image_model.dart';
-import '../../core/constants/api_constants.dart';
-import '../../core/utils/api_url_helper.dart';
+import '../../models/category/category_model.dart';
+import '../../models/category/category_detail_model.dart';
+import '../../models/products/product_model.dart';
+import '../../models/products/product_detail_model.dart';
+import '../../models/products/product_image_model.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/api_url_helper.dart';
 
 abstract class HomeRemoteDataSource {
   Future<CategoryResponseModel> getCategories();

@@ -1,10 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:convert';
-import '../../../domain/usecases/get_notifications_usecase.dart';
-import '../../../domain/usecases/mark_notification_as_read_usecase.dart';
-import '../../../domain/usecases/get_unread_notification_count_usecase.dart';
-import '../../../domain/entities/notification_entity.dart';
-import '../../../data/models/notification_model.dart';
+import '../../../domain/usecases/notification/get_notifications_usecase.dart';
+import '../../../domain/usecases/notification/mark_notification_as_read_usecase.dart';
+import '../../../domain/usecases/notification/get_unread_notification_count_usecase.dart';
+import '../../../domain/entities/notification/notification_entity.dart';
+import '../../../data/models/notification/notification_model.dart';
 import 'notification_event.dart';
 import 'notification_state.dart';
 

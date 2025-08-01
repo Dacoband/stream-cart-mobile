@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/error/failures.dart';
-import '../../../domain/usecases/get_shops_usecase.dart';
-import '../../../domain/entities/shop.dart';
-import '../../../data/models/shop_model.dart';
+import '../../../domain/usecases/shop/get_shops_usecase.dart';
+import '../../../domain/entities/shop/shop.dart';
+import '../../../data/models/shop/shop_model.dart';
 import 'shop_event.dart';
 import 'shop_state.dart';
 

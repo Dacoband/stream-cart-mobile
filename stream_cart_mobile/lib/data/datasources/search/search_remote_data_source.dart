@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import '../models/search_response_model.dart';
-import '../../core/constants/api_constants.dart';
-import '../../core/utils/api_url_helper.dart';
+import '../../models/search/search_response_model.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/api_url_helper.dart';
 
 abstract class SearchRemoteDataSource {
   Future<SearchResponseModel> searchProducts({

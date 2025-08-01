@@ -1,4 +1,4 @@
-import '../../domain/entities/product_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
 
 class ProductResponseModel {
   final bool success;

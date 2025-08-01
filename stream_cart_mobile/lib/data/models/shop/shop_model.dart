@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/shop.dart';
+import '../../../domain/entities/shop/shop.dart';
 
 class ShopResponse extends Equatable {
   final int currentPage;

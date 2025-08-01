@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:stream_cart_mobile/core/constants/api_constants.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import '../../domain/entities/chat_entity.dart';
-import '../models/chat_model.dart';
-import '../../core/utils/api_url_helper.dart';
-import '../../core/error/exceptions.dart'; 
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
+import '../../../domain/entities/chat/chat_entity.dart';
+import '../../models/chat/chat_model.dart';
+import '../../../core/utils/api_url_helper.dart';
+import '../../../core/error/exceptions.dart'; 
 
 abstract class ChatRemoteDataSource {
   Future<List<ChatEntity>> getChatRooms({

@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import '../../domain/entities/cart_entity.dart';
+import '../../domain/entities/cart/cart_entity.dart';
 import '../../domain/repositories/cart_repository.dart';
-import '../datasources/cart_remote_data_source.dart';
-import '../models/cart_model.dart';
+import '../datasources/cart/cart_remote_data_source.dart';
+import '../models/cart/cart_model.dart';
 import '../../core/error/failures.dart';
 import '../../core/error/exceptions.dart';
 

@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 
 class ChatEntity extends Equatable {
   final String id;

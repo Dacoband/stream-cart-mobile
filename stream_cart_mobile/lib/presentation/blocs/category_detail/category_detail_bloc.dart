@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/product_entity.dart';
-import '../../../domain/usecases/get_category_detail_usecase.dart';
-import '../../../domain/usecases/get_products_by_category_usecase.dart';
-import '../../../domain/usecases/get_product_primary_images_usecase.dart';
+import '../../../domain/entities/products/product_entity.dart';
+import '../../../domain/usecases/category/get_category_detail_usecase.dart';
+import '../../../domain/usecases/product/get_products_by_category_usecase.dart';
+import '../../../domain/usecases/product/get_product_primary_images_usecase.dart';
 import 'category_detail_event.dart';
 import 'category_detail_state.dart';
 

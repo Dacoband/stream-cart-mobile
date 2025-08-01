@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/category/category_entity.dart';
 
 class SubcategoryCarousel extends StatelessWidget {
   final List<SubCategoryEntity> subCategories;

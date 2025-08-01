@@ -1,4 +1,4 @@
-import '../../domain/entities/otp_entities.dart';
+import '../../../domain/entities/auth/otp_entities.dart';
 
 class VerifyOtpRequestModel {
   final String accountId; // Changed from email to accountId
