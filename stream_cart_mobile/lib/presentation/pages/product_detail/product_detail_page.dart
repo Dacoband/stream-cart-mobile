@@ -476,9 +476,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               '${(selectedVariant.flashSalePrice > 0 ? selectedVariant.flashSalePrice : selectedVariant.price).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 115, 175, 24),
+                color: Color.fromARGB(255, 116, 168, 38),
               ),
             ),
             if (selectedVariant.flashSalePrice > 0) ...[
@@ -486,7 +486,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               Text(
                 '${selectedVariant.price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   decoration: TextDecoration.lineThrough,
                   color: Colors.grey,
                 ),
@@ -502,7 +502,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   'Flash Sale',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -514,8 +514,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Text(
           'Kho: ${selectedVariant.stock}',
           style: TextStyle(
-            fontSize: 14,
-            color: selectedVariant.stock > 0 ? Colors.green : Colors.red,
+            fontSize: 12,
+            color: selectedVariant.stock > 0 ? Color(0xFFB0F847) : Colors.red,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -536,7 +536,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           'Giá sản phẩm',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: Color(0xFF202328),
           ),
         ),
@@ -545,25 +545,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Text(
             '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 115, 175, 24),
+              color: Color.fromARGB(255, 116, 168, 38),
             ),
           )
         else
           Text(
             '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫ - ${prices.last.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 115, 175, 24),
+              color: Color.fromARGB(255, 116, 168, 38),
             ),
           ),
         const SizedBox(height: 4),
         const Text(
           'Chọn phiên bản để xem giá cụ thể',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 10,
             color: Colors.grey,
             fontStyle: FontStyle.italic,
           ),
@@ -655,18 +655,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           'Thông tin bán hàng',
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: Color(0xFF202328),
           ),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Flexible(child: _buildStatItem('Đã bán', '${product.quantitySold}')),
-            const SizedBox(width: 14),
-            Flexible(child: _buildStatItem('Kho', '${product.stockQuantity}')),
-            const SizedBox(width: 14),
-            Flexible(child: _buildStatItem('Cân nặng', '${product.weight}g')), 
+            Expanded(
+              child: _buildStatItem('Đã bán', '${product.quantitySold}'),
+            ),
+            Container(
+              width: 1,
+              height: 30,
+              color: Colors.grey.shade300,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            Expanded(
+              child: _buildStatItem('Kho', '${product.stockQuantity}'),
+            ),
           ],
         ),
       ],
@@ -675,24 +682,24 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget _buildStatItem(String label, String value) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$label:',
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 2),
         Text(
           value,
           style: const TextStyle(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Color(0xFF202328),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade600,
             fontSize: 14,
           ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -748,155 +755,413 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildShopInfo(ProductDetailEntity product) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Thông tin shop',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF202328),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: product.shopLogo.isNotEmpty
-                      ? NetworkImage(product.shopLogo)
-                      : null,
-                  child: product.shopLogo.isEmpty
-                      ? const Icon(Icons.store)
-                      : null,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB0F847).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.shopName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '${product.shopTotalProduct} sản phẩm',
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
+                child: Icon(
+                  Icons.store_outlined,
+                  color: const Color(0xFFB0F847),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Thông tin cửa hàng',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF202328),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Shop Details
+          Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFB0F847).withOpacity(0.3),
+                    width: 2,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildShopStat('Đánh giá', '${product.shopRatingAverage}/5'),
-                const SizedBox(width: 16),
-                _buildShopStat('Phản hồi', '${(product.shopCompleteRate * 100).toStringAsFixed(0)}%'),
-              ],
-            ),
-          ],
-        ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: product.shopLogo.isNotEmpty
+                      ? Image.network(
+                          product.shopLogo,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey.shade100,
+                              child: const Icon(
+                                Icons.store,
+                                color: Colors.grey,
+                                size: 30,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: Colors.grey.shade100,
+                          child: const Icon(
+                            Icons.store,
+                            color: Colors.grey,
+                            size: 30,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.shopName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Color(0xFF202328),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${product.shopTotalProduct} sản phẩm',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB0F847),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Xem shop',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Stats Cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildShopStatCard(
+                  icon: Icons.star_outlined,
+                  label: 'Đánh giá',
+                  value: '${product.shopRatingAverage}/5',
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildShopStatCard(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'Phản hồi',
+                  value: '${(product.shopCompleteRate * 100).toStringAsFixed(0)}%',
+                  color: Colors.blue,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildShopStat(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
+  Widget _buildShopStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 11,
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 20,
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w400,
+              fontSize: 12,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 9,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildProductDetails(ProductDetailEntity product) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Thông số kỹ thuật',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF202328),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.info_outline,
+                  color: Colors.blue,
+                  size: 20,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            _buildDetailRow('Danh mục', product.categoryName),
-            _buildDetailRow('Kích thước', product.dimension), 
-            _buildDetailRow('Cân nặng', '${product.weight}g'), 
-            _buildDetailRow('Chiều dài', '${product.length}cm'), 
-            _buildDetailRow('Chiều rộng', '${product.width}cm'), 
-            _buildDetailRow('Chiều cao', '${product.height}cm'), 
-            _buildDetailRow('Mã sản phẩm', product.productId),
-          ],
-        ),
+              const SizedBox(width: 12),
+              const Text(
+                'Thông số kỹ thuật',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF202328),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Details Grid
+          Column(
+            children: [
+              _buildDetailRowModern(
+                icon: Icons.category_outlined,
+                label: 'Danh mục',
+                value: product.categoryName,
+                color: Colors.purple,
+              ),
+              const SizedBox(height: 12),
+              _buildDetailRowModern(
+                icon: Icons.straighten,
+                label: 'Kích thước',
+                value: product.dimension,
+                color: Colors.orange,
+              ),
+              const SizedBox(height: 12),
+              _buildDetailRowModern(
+                icon: Icons.monitor_weight_outlined,
+                label: 'Cân nặng',
+                value: '${product.weight}g',
+                color: Colors.green,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildDimensionCard(
+                      'Dài',
+                      '${product.length}cm',
+                      Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildDimensionCard(
+                      'Rộng',
+                      '${product.width}cm',
+                      Colors.teal,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildDimensionCard(
+                      'Cao',
+                      '${product.height}cm',
+                      Colors.indigo,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, dynamic value) {
-  String displayValue;
-  if (value is double) {
-    displayValue = value.toString();
-  } else if (value is int) {
-    displayValue = value.toString();
-  } else {
-    displayValue = value.toString();
-  }
-
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 13,
+  Widget _buildDetailRowModern({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
             ),
           ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF202328),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDimensionCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
         ),
-        Expanded(
-          child: Text(
-            displayValue,
-            style: const TextStyle(
-              fontSize: 13,
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }
