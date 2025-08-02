@@ -60,7 +60,7 @@ class ApiConstants {
   static const String productAttributesEndpoint = '/api/product-attributes';
   static const String productAttributeDetailEndpoint = '/api/product-attributes/{id}';
   static const String productAttributesByProductEndpoint = '/api/product-attributes/products/{productId}';
-  static const String productAttributesValuesEndpoint = '/api/product-attributes/values'; // Lấy tất cả giá trị của thuộc tính sản phẩm
+  static const String productAttributesValuesEndpoint = '/api/product-attributes/{attributeId}/values'; // Lấy tất cả giá trị của thuộc tính sản phẩm
 
   // Attribute Value endpoints
   static const String attributeValuesEndpoint = '/api/attribute-values';

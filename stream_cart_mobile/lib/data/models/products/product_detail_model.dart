@@ -1,59 +1,36 @@
+import '../../../domain/entities/products/product_attribute_entity.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
-import 'product_variants_model.dart'; 
-class ProductDetailModel {
-  final String productId;
-  final String productName;
-  final String description;
-  final String categoryId;
-  final String categoryName;
-  final double basePrice;
-  final double discountPrice;
-  final double finalPrice;
-  final int stockQuantity;
-  final int quantitySold;
-  final double weight;        
-  final double length;        
-  final double width;           
-  final double height;        
-  final List<String> primaryImage;
-  final String shopId;
-  final String shopName;
-  final String shopStartTime;
-  final double shopCompleteRate;
-  final int shopTotalReview;
-  final double shopRatingAverage;
-  final String shopLogo;
-  final int shopTotalProduct;
-  final List<ProductAttributeModel> attributes;
-  final List<ProductVariantsModel> variants; 
+import '../../../domain/entities/products/product_variants_entity.dart';
+import 'product_variants_model.dart';
+import 'product_attribute_model.dart';
 
+class ProductDetailModel extends ProductDetailEntity {
   const ProductDetailModel({
-    required this.productId,
-    required this.productName,
-    required this.description,
-    required this.categoryId,
-    required this.categoryName,
-    required this.basePrice,
-    required this.discountPrice,
-    required this.finalPrice,
-    required this.stockQuantity,
-    required this.quantitySold,
-    required this.weight,
-    required this.length,
-    required this.width,
-    required this.height,
-
-    required this.primaryImage,
-    required this.shopId,
-    required this.shopName,
-    required this.shopStartTime,
-    required this.shopCompleteRate,
-    required this.shopTotalReview,
-    required this.shopRatingAverage,
-    required this.shopLogo,
-    required this.shopTotalProduct,
-    required this.attributes,
-    required this.variants,
+    required super.productId,
+    required super.productName,
+    required super.description,
+    required super.categoryId,
+    required super.categoryName,
+    required super.basePrice,
+    required super.discountPrice,
+    required super.finalPrice,
+    required super.stockQuantity,
+    required super.quantitySold,
+    required super.weight,
+    required super.length,
+    required super.width,
+    required super.height,
+    required super.primaryImage,
+    required super.shopId,
+    required super.shopName,
+    required super.shopStartTime,
+    required super.shopCompleteRate,
+    required super.shopTotalReview,
+    required super.shopRatingAverage,
+    required super.shopLogo,
+    required super.shopTotalProduct,
+    required super.attributes,
+    required super.variants,
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
@@ -75,7 +52,7 @@ class ProductDetailModel {
       primaryImage: List<String>.from(json['primaryImage'] ?? []),
       shopId: json['shopId']?.toString() ?? '',
       shopName: json['shopName']?.toString() ?? '',
-      shopStartTime: json['shopStartTime']?.toString() ?? '',
+      shopStartTime: DateTime.tryParse(json['shopStartTime']?.toString() ?? '') ?? DateTime.now(),
       shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
       shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
       shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
@@ -87,6 +64,66 @@ class ProductDetailModel {
       variants: (json['variants'] as List<dynamic>?)
           ?.map((variant) => ProductVariantsModel.fromJson(variant as Map<String, dynamic>))
           .toList() ?? [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'description': description,
+      'categoryId': categoryId,
+      'categoryName': categoryName,
+      'basePrice': basePrice,
+      'discountPrice': discountPrice,
+      'finalPrice': finalPrice,
+      'stockQuantity': stockQuantity,
+      'quantitySold': quantitySold,
+      'weight': weight,
+      'length': length,
+      'width': width,
+      'height': height,
+      'primaryImage': primaryImage,
+      'shopId': shopId,
+      'shopName': shopName,
+      'shopStartTime': shopStartTime.toIso8601String(),
+      'shopCompleteRate': shopCompleteRate,
+      'shopTotalReview': shopTotalReview,
+      'shopRatingAverage': shopRatingAverage,
+      'shopLogo': shopLogo,
+      'shopTotalProduct': shopTotalProduct,
+      'attributes': attributes.map((attr) => (attr as ProductAttributeModel).toJson()).toList(),
+      'variants': variants.map((variant) => (variant as ProductVariantsModel).toJson()).toList(),
+    };
+  }
+
+  factory ProductDetailModel.fromEntity(ProductDetailEntity entity) {
+    return ProductDetailModel(
+      productId: entity.productId,
+      productName: entity.productName,
+      description: entity.description,
+      categoryId: entity.categoryId,
+      categoryName: entity.categoryName,
+      basePrice: entity.basePrice,
+      discountPrice: entity.discountPrice,
+      finalPrice: entity.finalPrice,
+      stockQuantity: entity.stockQuantity,
+      quantitySold: entity.quantitySold,
+      weight: entity.weight,
+      length: entity.length,
+      width: entity.width,
+      height: entity.height,
+      primaryImage: entity.primaryImage,
+      shopId: entity.shopId,
+      shopName: entity.shopName,
+      shopStartTime: entity.shopStartTime,
+      shopCompleteRate: entity.shopCompleteRate,
+      shopTotalReview: entity.shopTotalReview,
+      shopRatingAverage: entity.shopRatingAverage,
+      shopLogo: entity.shopLogo,
+      shopTotalProduct: entity.shopTotalProduct,
+      attributes: entity.attributes.map((attr) => ProductAttributeModel.fromEntity(attr)).toList(),
+      variants: entity.variants.map((variant) => ProductVariantsModel.fromEntity(variant)).toList(),
     );
   }
 
@@ -109,42 +146,71 @@ class ProductDetailModel {
       primaryImage: primaryImage,
       shopId: shopId,
       shopName: shopName,
-      shopStartTime: DateTime.tryParse(shopStartTime) ?? DateTime.now(),
+      shopStartTime: shopStartTime,
       shopCompleteRate: shopCompleteRate,
       shopTotalReview: shopTotalReview,
       shopRatingAverage: shopRatingAverage,
       shopLogo: shopLogo,
       shopTotalProduct: shopTotalProduct,
-      attributes: attributes.map((attr) => attr.toEntity()).toList(),
-      variants: variants.map((variant) => variant.toEntity()).toList(), 
-    );
-  }
-}
-
-class ProductAttributeModel {
-  final String attributeId;
-  final String attributeName;
-  final String attributeValue;
-
-  const ProductAttributeModel({
-    required this.attributeId,
-    required this.attributeName,
-    required this.attributeValue,
-  });
-
-  factory ProductAttributeModel.fromJson(Map<String, dynamic> json) {
-    return ProductAttributeModel(
-      attributeId: json['attributeId'] ?? '',
-      attributeName: json['attributeName'] ?? '',
-      attributeValue: json['attributeValue'] ?? '',
+      attributes: attributes,
+      variants: variants,
     );
   }
 
-  ProductAttribute toEntity() {
-    return ProductAttribute(
-      attributeId: attributeId,
-      attributeName: attributeName,
-      attributeValue: attributeValue,
+  @override
+  ProductDetailModel copyWith({
+    String? productId,
+    String? productName,
+    String? description,
+    String? categoryId,
+    String? categoryName,
+    double? basePrice,
+    double? discountPrice,
+    double? finalPrice,
+    int? stockQuantity,
+    int? quantitySold,
+    double? weight,
+    double? length,
+    double? width,
+    double? height,
+    List<String>? primaryImage,
+    String? shopId,
+    String? shopName,
+    DateTime? shopStartTime,
+    double? shopCompleteRate,
+    int? shopTotalReview,
+    double? shopRatingAverage,
+    String? shopLogo,
+    int? shopTotalProduct,
+    List<ProductAttributeEntity>? attributes,
+    List<ProductVariantEntity>? variants,
+  }) {
+    return ProductDetailModel(
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      description: description ?? this.description,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      basePrice: basePrice ?? this.basePrice,
+      discountPrice: discountPrice ?? this.discountPrice,
+      finalPrice: finalPrice ?? this.finalPrice,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
+      quantitySold: quantitySold ?? this.quantitySold,
+      weight: weight ?? this.weight,
+      length: length ?? this.length,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      primaryImage: primaryImage ?? this.primaryImage,
+      shopId: shopId ?? this.shopId,
+      shopName: shopName ?? this.shopName,
+      shopStartTime: shopStartTime ?? this.shopStartTime,
+      shopCompleteRate: shopCompleteRate ?? this.shopCompleteRate,
+      shopTotalReview: shopTotalReview ?? this.shopTotalReview,
+      shopRatingAverage: shopRatingAverage ?? this.shopRatingAverage,
+      shopLogo: shopLogo ?? this.shopLogo,
+      shopTotalProduct: shopTotalProduct ?? this.shopTotalProduct,
+      attributes: attributes ?? this.attributes,
+      variants: variants ?? this.variants,
     );
   }
 }
