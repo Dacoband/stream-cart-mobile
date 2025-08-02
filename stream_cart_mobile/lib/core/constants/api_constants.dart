@@ -56,6 +56,18 @@ class ApiConstants {
   static const String productVariantsPriceEndpoint = '/api/product-variants/{id}/price'; //Patch
   static const String productVariantsStockEndpoint = '/api/product-variants/{id}/stock'; //Patch
 
+  // Product Attribute endpoints
+  static const String productAttributesEndpoint = '/api/product-attributes';
+  static const String productAttributeDetailEndpoint = '/api/product-attributes/{id}';
+  static const String productAttributesByProductEndpoint = '/api/product-attributes/products/{productId}';
+  static const String productAttributesValuesEndpoint = '/api/product-attributes/values'; // Lấy tất cả giá trị của thuộc tính sản phẩm
+
+  // Attribute Value endpoints
+  static const String attributeValuesEndpoint = '/api/attribute-values';
+  static const String attributeValueDetailEndpoint = '/api/attribute-values/{id}';
+  static const String attributeValuesByAttributeEndpoint = '/api/attribute-values/attribute/{attributeId}';
+
+
   // Flash Sale endpoints
   static const String flashSalesEndpoint = '/api/flashsales';
   static const String flashSaleDetailEndpoint = '/api/flashsales/{id}';
