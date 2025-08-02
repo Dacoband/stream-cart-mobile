@@ -107,7 +107,7 @@ class ProductAttributeRemoteDataSourceImpl implements ProductAttributeRemoteData
   }
 
   @override
-  Future<List<ProductAttributeEntity>> getProductAttributesWithValues() async {
+  Future<List<ProductAttributeEntity>> getProductAttributesWithValues(String Id) async {
     try {
       final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.productAttributesValuesEndpoint);
       final response = await dio.get(endpoint);
