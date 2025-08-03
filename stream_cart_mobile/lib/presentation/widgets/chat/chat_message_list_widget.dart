@@ -10,7 +10,8 @@ import '../common/error_widget.dart';
 import '../common/loading_widget.dart';
 
 class ChatMessageListWidget extends StatefulWidget {
-  const ChatMessageListWidget({super.key});
+  final String? chatRoomId; 
+  const ChatMessageListWidget({super.key, this.chatRoomId});
 
   @override
   _ChatMessageListWidgetState createState() => _ChatMessageListWidgetState();
@@ -38,40 +39,107 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
     }
   }
 
+  void _retryLoadMessages() {
+    if (widget.chatRoomId != null) {
+      context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
+        chatRoomId: widget.chatRoomId!,
+        pageNumber: 1,
+        pageSize: 50,
+        isRefresh: true,
+      ));
+    } else {
+      // Try to get chatRoomId from current state
+      final currentState = context.read<ChatBloc>().state;
+      String? chatRoomId;
+      
+      // Fix: Check different possible state types
+      if (currentState is ChatRoomDetailLoaded) {
+        // Try different possible property names
+        chatRoomId = (currentState as dynamic).chatRoom?.id ?? 
+                    (currentState as dynamic).detail?.id ??
+                    (currentState as dynamic).roomDetail?.id;
+      } else if (currentState is ChatRoomJoined) {
+        chatRoomId = currentState.chatRoomId;
+      } else if (currentState is ChatMessagesLoaded) {
+        // Get from previous loaded messages context
+        chatRoomId = (currentState as dynamic).chatRoomId;
+      }
+      
+      if (chatRoomId != null) {
+        context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
+          chatRoomId: chatRoomId,
+          pageNumber: 1,
+          pageSize: 50,
+          isRefresh: true,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải lại tin nhắn. Vui lòng thử lại sau.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<ChatBloc, ChatState>(
       listener: (context, state) {
-        if (state is ChatLoaded) {
+        // Auto scroll when messages loaded
+        if (state is ChatMessagesLoaded) {
           _hasScrolledToBottom = false;
           if (state.messages.isNotEmpty) {
             _scrollToBottom();
           }
         }
+        // Auto scroll when new message received
+        if (state is MessageReceived) {
+          _scrollToBottom();
+        }
+        // Auto scroll when typing indicator shows
+        if (state is TypingIndicatorReceived && state.isTyping) {
+          _scrollToBottom();
+        }
       },
       child: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
-          if (state is ChatLoading) return const CustomLoadingWidget();
-          if (state is ChatError) {
+          if (state is ChatMessagesLoading) {
+            return const CustomLoadingWidget();
+          }
+          
+          if (state is ChatMessagesError) {
             return CustomErrorWidget(
               message: state.message,
-              onRetry: () {
-                final chatRoomId = (context.read<ChatBloc>().state is ChatLoaded)
-                    ? (context.read<ChatBloc>().state as ChatLoaded).chatRoomId
-                    : null;
-                if (chatRoomId != null) context.read<ChatBloc>().add(LoadChatRoom(chatRoomId));
-              },
+              onRetry: _retryLoadMessages, // Use the fixed retry method
             );
           }
-          if (state is ChatLoaded) {
+          
+          if (state is ChatMessagesLoaded) {
             if (state.messages.isEmpty) {
-              return const Center(child: Text('Chưa có tin nhắn. Hãy gửi tin nhắn đầu tiên!'));
+              return Column(
+                children: [
+                  const Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text('Chưa có tin nhắn nào'),
+                          Text('Hãy bắt đầu cuộc trò chuyện!'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Typing indicator for empty chat
+                  _buildTypingIndicator(),
+                ],
+              );
             }
 
             final sortedMessages = List<ChatMessage>.from(state.messages)
               ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
             
-            // Auto scroll khi build xong
+            // Auto scroll when build finished
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!_hasScrolledToBottom && _scrollController.hasClients) {
                 _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -79,24 +147,156 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
               }
             });
             
-            return ListView.builder(
-              controller: _scrollController,
-              itemCount: sortedMessages.length,
-              itemBuilder: (context, index) {
-                // Hiển thị tin nhắn theo thứ tự thời gian (cũ -> mới)
-                // Tin nhắn cũ nhất ở trên (index 0), tin nhắn mới nhất ở dưới (index cuối)
-                return ChatMessageItemWidget(message: sortedMessages[index]);
-              },
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: sortedMessages.length,
+                    itemBuilder: (context, index) {
+                      return ChatMessageItemWidget(message: sortedMessages[index]);
+                    },
+                  ),
+                ),
+                // Typing indicator at bottom of messages
+                _buildTypingIndicator(),
+              ],
             );
           }
-          // Handle các state khác như LiveKitConnected, ChatStatusChanged
-          if (state is LiveKitConnected || state is ChatStatusChanged) {
-            return const Center(child: Text('Đang tải tin nhắn...'));
+          
+          // Handle SignalR connection states
+          if (state is SignalRConnected) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Đang tải tin nhắn...'),
+                ],
+              ),
+            );
           }
-          return const Center(child: Text('Không có tin nhắn'));
+          
+          if (state is SignalRConnecting) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Đang kết nối chat...'),
+                ],
+              ),
+            );
+          }
+          
+          return Column(
+            children: [
+              const Expanded(
+                child: Center(child: Text('Chưa có tin nhắn. Hãy gửi tin nhắn đầu tiên!')),
+              ),
+              _buildTypingIndicator(),
+            ],
+          );
         },
       ),
     );
+  }
+
+  // NEW: Typing Indicator Widget
+  Widget _buildTypingIndicator() {
+    return BlocBuilder<ChatBloc, ChatState>(
+      builder: (context, state) {
+        // Show typing indicator when someone else is typing
+        if (state is TypingIndicatorReceived && state.isTyping) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Animated typing dots
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: _buildTypingAnimation(),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${state.userName ?? "Đối phương"} đang nhập...',
+                    style: TextStyle(
+                      color: Colors.grey[600], 
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                // Optional: Show for how long they've been typing
+                Text(
+                  _getTypingDuration(state.timestamp),
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  // Animated typing dots
+  Widget _buildTypingAnimation() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 1500),
+      builder: (context, value, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(3, (index) {
+            final delay = index * 0.2;
+            final animatedValue = (value - delay).clamp(0.0, 1.0);
+            final scale = 0.5 + (0.5 * (1 - (animatedValue - 0.5).abs() * 2).clamp(0.0, 1.0));
+            
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                width: 4,
+                height: 4,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: Colors.grey[600],
+                  shape: BoxShape.circle,
+                ),
+              ),
+            );
+          }),
+        );
+      },
+      onEnd: () {
+        // Restart animation if still typing
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
+  }
+
+  String _getTypingDuration(DateTime? startTime) {
+    if (startTime == null) return '';
+    final duration = DateTime.now().difference(startTime);
+    if (duration.inSeconds < 5) return '';
+    return '${duration.inSeconds}s';
   }
 }
 
@@ -183,36 +383,25 @@ class ChatMessageItemWidget extends StatelessWidget {
                               : Colors.grey[600],
                         ),
                       ),
+                      // Message status indicator for sent messages
+                      if (isMine) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          message.isRead 
+                              ? Icons.done_all 
+                              : Icons.done,
+                          size: 12,
+                          color: message.isRead 
+                              ? Colors.blue 
+                              : Colors.black.withOpacity(0.6),
+                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
           ),
-          
-          // Avatar bên phải cho tin nhắn của mình
-          // if (isMine) ...[
-          //   const SizedBox(width: 8),
-          //   CircleAvatar(
-          //     radius: 16,
-          //     backgroundColor: const Color(0xFFB0F847),
-          //     backgroundImage: message.senderAvatarUrl != null && message.senderAvatarUrl!.isNotEmpty
-          //         ? NetworkImage(message.senderAvatarUrl!)
-          //         : null,
-          //     child: message.senderAvatarUrl == null || message.senderAvatarUrl!.isEmpty
-          //         ? Text(
-          //             message.senderName.isNotEmpty 
-          //                 ? message.senderName[0].toUpperCase()
-          //                 : 'M',
-          //             style: const TextStyle(
-          //               fontSize: 12, 
-          //               fontWeight: FontWeight.bold,
-          //               color: Colors.black,
-          //             ),
-          //           )
-          //         : null,
-          //   ),
-          // ],
         ],
       ),
     );

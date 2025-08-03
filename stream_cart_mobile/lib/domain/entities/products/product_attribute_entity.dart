@@ -1,37 +1,33 @@
 import 'package:equatable/equatable.dart';
 
-class AttributeValueEntity extends Equatable {
+class ProductAttributeEntity extends Equatable {
   final String id;
-  final String attributeId;
-  final String valueName;
+  final String name;
   final DateTime createdAt;
   final String createdBy;
   final DateTime? lastModifiedAt;
   final String? lastModifiedBy;
 
-  const AttributeValueEntity({
+  const ProductAttributeEntity({
     required this.id,
-    required this.attributeId,
-    required this.valueName,
+    required this.name,
     required this.createdAt,
     required this.createdBy,
     this.lastModifiedAt,
     this.lastModifiedBy,
   });
 
-  AttributeValueEntity copyWith({
+  ProductAttributeEntity copyWith({
     String? id,
-    String? attributeId,
-    String? valueName,
+    String? name,
     DateTime? createdAt,
     String? createdBy,
     DateTime? lastModifiedAt,
     String? lastModifiedBy,
   }) {
-    return AttributeValueEntity(
+    return ProductAttributeEntity(
       id: id ?? this.id,
-      attributeId: attributeId ?? this.attributeId,
-      valueName: valueName ?? this.valueName,
+      name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
       lastModifiedAt: lastModifiedAt ?? this.lastModifiedAt,
@@ -42,8 +38,7 @@ class AttributeValueEntity extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        attributeId,
-        valueName,
+        name,
         createdAt,
         createdBy,
         lastModifiedAt,

@@ -8,6 +8,7 @@ import '../../../core/enums/user_role.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../widgets/chat/chat_list_widget.dart';
+import '../../widgets/chat/signalr_status_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
 
@@ -37,11 +38,27 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     final userRole = UserRole.fromValue(roleValue ?? 1);
 
     print('🚀 Initializing chat for role: $userRole');
+    
+    // Connect SignalR first
+    context.read<ChatBloc>().add(const ConnectSignalREvent());
+    
+    // Load chat rooms based on role
     if (userRole == UserRole.seller) {
-      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
+      context.read<ChatBloc>().add(const LoadChatRoomsEvent(
+        pageNumber: 1, 
+        pageSize: 20,
+        isRefresh: true,
+      ));
     } else {
-      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+      context.read<ChatBloc>().add(const LoadChatRoomsEvent(
+        pageNumber: 1, 
+        pageSize: 20,
+        isRefresh: true,
+      ));
     }
+
+    // Load unread count
+    context.read<ChatBloc>().add(const LoadUnreadCountEvent());
   }
 
   @override
@@ -60,17 +77,21 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     final roleValue = authState.loginResponse.account.role;
     final userRole = UserRole.fromValue(roleValue ?? 1);
 
-    if (userRole == UserRole.seller) {
-      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-    } else {
-      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-    }
+    print('🔄 Refreshing chat rooms for role: $userRole');
+    
+    context.read<ChatBloc>().add(const LoadChatRoomsEvent(
+      pageNumber: 1, 
+      pageSize: 20,
+      isRefresh: true,
+    ));
+
+    // Reload unread count
+    context.read<ChatBloc>().add(const LoadUnreadCountEvent());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
@@ -85,12 +106,25 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     return AuthGuard(
       message: 'Vui lòng đăng nhập để xem danh sách phòng chat',
       child: Scaffold(
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: const Color(0xFF202328),
           elevation: 0,
           title: BlocBuilder<ChatBloc, ChatState>(
             builder: (context, state) {
+              int unreadCount = 0;
+              if (state is UnreadCountLoaded) {
+                unreadCount = state.unreadCount.totalUnreadCount;
+              } else if (state is ChatRoomsLoaded) {
+                unreadCount = state.chatRooms
+                    .where((room) => room.hasUnreadMessages)
+                    .fold(0, (sum, room) => sum + room.unreadCount);
+              } else if (state is ShopChatRoomsLoaded) {
+                unreadCount = state.chatRooms
+                    .where((room) => room.hasUnreadMessages)
+                    .fold(0, (sum, room) => sum + room.unreadCount);
+              }
+
               return Row(
                 children: [
                   const Icon(
@@ -99,17 +133,17 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                     size: 22,
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Tin nhắn',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Color(0xFFB0F847),
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  if (state is ChatRoomsLoaded && state.totalUnreadCount > 0)
+                  if (unreadCount > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -117,7 +151,7 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        '${state.totalUnreadCount}',
+                        unreadCount > 99 ? '99+' : '$unreadCount',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -132,7 +166,7 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
           actions: [
             BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                if (state is ChatReconnecting) {
+                if (state is SignalRConnecting) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: SizedBox(
@@ -144,10 +178,15 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                       ),
                     ),
                   );
-                } else if (state is LiveKitConnected) {
+                } else if (state is SignalRConnected) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: Icon(Icons.circle, color: Colors.green, size: 12),
+                  );
+                } else if (state is SignalRConnectionError) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(Icons.circle, color: Colors.red, size: 12),
                   );
                 }
                 return IconButton(
@@ -158,83 +197,119 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
             ),
           ],
         ),
-        body: BlocBuilder<ChatBloc, ChatState>(
-          builder: (context, state) {
-            if (state is ChatLoading) {
-              return const CustomLoadingWidget();
-            }
+        body: Column(
+          children: [
+            // SignalR Status Widget
+            const SignalRStatusWidget(),
             
-            if (state is ChatError) {
-              return CustomErrorWidget(
-                message: state.message,
-                onRetry: () {
-                  final authState = context.read<AuthBloc>().state;
-                  if (authState is AuthSuccess) {
-                    final roleValue = authState.loginResponse.account.role;
-                    final userRole = UserRole.fromValue(roleValue ?? 1);
-                    
-                    if (userRole == UserRole.seller) {
-                      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-                    } else {
-                      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-                    }
+            // Chat Rooms List
+            Expanded(
+              child: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) {
+                  if (state is ChatLoading || state is ChatRoomsLoading) {
+                    return const CustomLoadingWidget();
                   }
-                },
-              );
-            }
-            
-            if (state is ChatRoomsLoaded) {
-              print('🔍 Showing chat rooms: ${state.chatRooms.length}');
-              if (state.chatRooms.isEmpty) {
-                return const Center(child: Text('Không có phòng chat nào'));
-              }
-              return IconTheme(
-                data: const IconThemeData(color: Color(0xFFB0F847)),
-                child: ChatListWidget(chatRooms: state.chatRooms),
-              );
-            }
-            
-            if (state is ChatLoaded) {
-              if (state.chatRooms.isNotEmpty) {
-                return IconTheme(
-                  data: const IconThemeData(color: Color(0xFFB0F847)),
-                  child: ChatListWidget(chatRooms: state.chatRooms),
-                );
-              } else {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final authState = context.read<AuthBloc>().state;
-                  if (authState is AuthSuccess) {
-                    final roleValue = authState.loginResponse.account.role;
-                    final userRole = UserRole.fromValue(roleValue ?? 1);
-                    
-                    if (userRole == UserRole.seller) {
-                      context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-                    } else {
-                      context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-                    }
-                  }
-                });
-                return const CustomLoadingWidget();
-              }
-            }
-            
-            if (state is LiveKitConnected) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                final authState = context.read<AuthBloc>().state;
-                if (authState is AuthSuccess) {
-                  final roleValue = authState.loginResponse.account.role;
-                  final userRole = UserRole.fromValue(roleValue ?? 1);
                   
-                  if (userRole == UserRole.seller) {
-                    context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-                  } else {
-                    context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
+                  if (state is ChatError || state is ChatRoomsError) {
+                    final message = state is ChatError 
+                        ? state.message 
+                        : (state as ChatRoomsError).message;
+                    return CustomErrorWidget(
+                      message: message,
+                      onRetry: () => _refreshChatRooms(),
+                    );
                   }
-                }
-              });
-              return const CustomLoadingWidget();
+                  
+                  if (state is ChatRoomsLoaded) {
+                    print('🔍 Showing customer chat rooms: ${state.chatRooms.length}');
+                    if (state.chatRooms.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'Chưa có cuộc trò chuyện nào',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Hãy bắt đầu mua sắm để chat với shop!',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ChatListWidget(chatRooms: state.chatRooms);
+                  }
+                  
+                  if (state is ShopChatRoomsLoaded) {
+                    print('🏪 Showing shop chat rooms: ${state.chatRooms.length}');
+                    if (state.chatRooms.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.store, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'Chưa có khách hàng nào nhắn tin',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Khách hàng sẽ chat khi quan tâm đến sản phẩm',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ChatListWidget(chatRooms: state.chatRooms);
+                  }
+                  
+                  if (state is SignalRConnected) {
+                    // Auto-load chat rooms when SignalR connects
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        _refreshChatRooms();
+                      }
+                    });
+                    return const CustomLoadingWidget();
+                  }
+                  
+                  return const Center(
+                    child: Text(
+                      'Kéo xuống để tải danh sách chat',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        floatingActionButton: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            if (authState is AuthSuccess) {
+              final roleValue = authState.loginResponse.account.role;
+              final userRole = UserRole.fromValue(roleValue ?? 1);
+              
+              // Only show FAB for customers
+              if (userRole == UserRole.customer) {
+                return FloatingActionButton(
+                  onPressed: () {
+                    // Navigate to shop list to start new chat
+                    Navigator.pushNamed(context, '/shops');
+                  },
+                  backgroundColor: const Color(0xFFB0F847),
+                  child: const Icon(Icons.add_comment, color: Colors.black),
+                );
+              }
             }
-            return const Center(child: Text('Không có dữ liệu'));
+            return const SizedBox.shrink();
           },
         ),
       ),

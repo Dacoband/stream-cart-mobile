@@ -100,7 +100,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             // Chat Button
             IconButton(
               onPressed: () {
-                _showChatBottomSheet(context);
+                // _showChatBottomSheet(context);
               },
               icon: const Icon(
                 Icons.chat_bubble_outline,
@@ -1206,163 +1206,163 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  void _showChatBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+  // void _showChatBottomSheet(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => Container(
+  //       height: MediaQuery.of(context).size.height * 0.8,
+  //       decoration: const BoxDecoration(
+  //         color: Colors.white,
+  //         borderRadius: BorderRadius.only(
+  //           topLeft: Radius.circular(20),
+  //           topRight: Radius.circular(20),
+  //         ),
+  //       ),
+  //       child: Column(
+  //         children: [
+  //           // Handle bar
+  //           Container(
+  //             width: 40,
+  //             height: 4,
+  //             margin: const EdgeInsets.symmetric(vertical: 12),
+  //             decoration: BoxDecoration(
+  //               color: Colors.grey.shade300,
+  //               borderRadius: BorderRadius.circular(2),
+  //             ),
+  //           ),
             
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200),
-                ),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: const Color(0xFFB0F847),
-                    child: const Icon(
-                      Icons.store,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        BlocBuilder<ProductDetailBloc, ProductDetailState>(
-                          builder: (context, state) {
-                            if (state is ProductDetailLoaded) {
-                              return Text(
-                                state.productDetail.shopName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              );
-                            }
-                            return const Text('Shop');
-                          },
-                        ),
-                        Text(
-                          'Đang hoạt động',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            ),
+  //           // Header
+  //           Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+  //             decoration: BoxDecoration(
+  //               border: Border(
+  //                 bottom: BorderSide(color: Colors.grey.shade200),
+  //               ),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 CircleAvatar(
+  //                   radius: 20,
+  //                   backgroundColor: const Color(0xFFB0F847),
+  //                   child: const Icon(
+  //                     Icons.store,
+  //                     color: Colors.white,
+  //                     size: 20,
+  //                   ),
+  //                 ),
+  //                 const SizedBox(width: 12),
+  //                 Expanded(
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       BlocBuilder<ProductDetailBloc, ProductDetailState>(
+  //                         builder: (context, state) {
+  //                           if (state is ProductDetailLoaded) {
+  //                             return Text(
+  //                               state.productDetail.shopName,
+  //                               style: const TextStyle(
+  //                                 fontWeight: FontWeight.w600,
+  //                                 fontSize: 16,
+  //                               ),
+  //                             );
+  //                           }
+  //                           return const Text('Shop');
+  //                         },
+  //                       ),
+  //                       Text(
+  //                         'Đang hoạt động',
+  //                         style: TextStyle(
+  //                           color: Colors.green,
+  //                           fontSize: 12,
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //                 IconButton(
+  //                   onPressed: () => Navigator.pop(context),
+  //                   icon: const Icon(Icons.close),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
             
-            // Chat Area
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 64,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Chức năng chat đang được phát triển',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Bạn có thể liên hệ shop qua số điện thoại hoặc email',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // Launch phone call
-                              // await launchUrl(Uri.parse('tel:+84123456789'));
-                            },
-                            icon: const Icon(Icons.phone),
-                            label: const Text('Gọi điện'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // Launch email
-                              // await launchUrl(Uri.parse('mailto:shop@example.com'));
-                            },
-                            icon: const Icon(Icons.email),
-                            label: const Text('Email'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFB0F847),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  //           // Chat Area
+  //           Expanded(
+  //             child: Container(
+  //               padding: const EdgeInsets.all(20),
+  //               child: Column(
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   Icon(
+  //                     Icons.chat_bubble_outline,
+  //                     size: 64,
+  //                     color: Colors.grey.shade400,
+  //                   ),
+  //                   const SizedBox(height: 16),
+  //                   Text(
+  //                     'Chức năng chat đang được phát triển',
+  //                     style: TextStyle(
+  //                       fontSize: 16,
+  //                       color: Colors.grey.shade600,
+  //                       fontWeight: FontWeight.w500,
+  //                     ),
+  //                     textAlign: TextAlign.center,
+  //                   ),
+  //                   const SizedBox(height: 8),
+  //                   Text(
+  //                     'Bạn có thể liên hệ shop qua số điện thoại hoặc email',
+  //                     style: TextStyle(
+  //                       fontSize: 14,
+  //                       color: Colors.grey.shade500,
+  //                     ),
+  //                     textAlign: TextAlign.center,
+  //                   ),
+  //                   const SizedBox(height: 24),
+  //                   Row(
+  //                     children: [
+  //                       Expanded(
+  //                         child: ElevatedButton.icon(
+  //                           onPressed: () {
+  //                             // Launch phone call
+  //                             // await launchUrl(Uri.parse('tel:+84123456789'));
+  //                           },
+  //                           icon: const Icon(Icons.phone),
+  //                           label: const Text('Gọi điện'),
+  //                           style: ElevatedButton.styleFrom(
+  //                             backgroundColor: Colors.green,
+  //                             foregroundColor: Colors.white,
+  //                             padding: const EdgeInsets.symmetric(vertical: 12),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                       const SizedBox(width: 12),
+  //                       Expanded(
+  //                         child: ElevatedButton.icon(
+  //                           onPressed: () {
+  //                             // Launch email
+  //                             // await launchUrl(Uri.parse('mailto:shop@example.com'));
+  //                           },
+  //                           icon: const Icon(Icons.email),
+  //                           label: const Text('Email'),
+  //                           style: ElevatedButton.styleFrom(
+  //                             backgroundColor: const Color(0xFFB0F847),
+  //                             foregroundColor: Colors.white,
+  //                             padding: const EdgeInsets.symmetric(vertical: 12),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 }

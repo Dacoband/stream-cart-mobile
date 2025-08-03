@@ -56,6 +56,18 @@ class ApiConstants {
   static const String productVariantsPriceEndpoint = '/api/product-variants/{id}/price'; //Patch
   static const String productVariantsStockEndpoint = '/api/product-variants/{id}/stock'; //Patch
 
+  // Product Attribute endpoints
+  static const String productAttributesEndpoint = '/api/product-attributes';
+  static const String productAttributeDetailEndpoint = '/api/product-attributes/{id}';
+  static const String productAttributesByProductEndpoint = '/api/product-attributes/products/{productId}';
+  static const String productAttributesValuesEndpoint = '/api/product-attributes/{attributeId}/values'; // Lấy tất cả giá trị của thuộc tính sản phẩm
+
+  // Attribute Value endpoints
+  static const String attributeValuesEndpoint = '/api/attribute-values';
+  static const String attributeValueDetailEndpoint = '/api/attribute-values/{id}';
+  static const String attributeValuesByAttributeEndpoint = '/api/attribute-values/attribute/{attributeId}';
+
+
   // Flash Sale endpoints
   static const String flashSalesEndpoint = '/api/flashsales';
   static const String flashSaleDetailEndpoint = '/api/flashsales/{id}';
@@ -76,17 +88,20 @@ class ApiConstants {
   static const String notificationEndpoint = '/api/notification';
   static const String markAsReadEndpoint = '/api/notification/mark-as-read';
 
-  //Chat endpoints
-  static const String chatEndpoint = '/api/chat/messages';
-  static const String chatMessageEndpoint = '/api/chat/messages/{messageId}';
-  static const String chatRoomEndpoint = '/api/chat/rooms';
-  static const String chatRoomDetailsEndpoint = '/api/chat/rooms/{chatRoomId}/messages';
-  static const String chatRoomMarkAsReadEndpoint = '/api/chat/rooms/{chatRoomId}/mark-read';
-  static const String chatRoomShopEndpoint = '/api/chat/rooms/shop/{shopId}';
-  static const String shopTokenEndpoint = '/api/chat/rooms/{chatRoomId}/shop-token';
-  static const String chatShopRoomsEndpoint = '/api/chat/shop-rooms';
+  //Chat with SignalR endpoints
+  static const String chatRoomEndpoint = '/api/chatsignalr/rooms'; // GET, POST
+  static const String chatRoomDetailEndpoint = '/api/chatsignalr/rooms/{chatRoomId}'; // GET
+  static const String chatRoomJoinEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/join'; // POST
+  static const String chatRoomLeaveEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/leave'; // POST
+  static const String chatRoomMarkReadEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/mark-read'; // PATCH
+  static const String chatRoomTypingEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/typing'; // POST
+  static const String chatRoomMessagesEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/messages'; // GET
+  static const String chatRoomMessagesSearchEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/messages/search'; // GET
+  static const String chatMessagesEndpoint = '/api/chatsignalr/messages'; // POST
+  static const String chatMessagePutEndpoint = '/api/chatsignalr/messages/{messageId}'; // PUT
+  static const String unReadCountEndpoint = '/api/chatsignalr/unread-count'; // GET
+  static const String chatShopRoomsEndpoint = '/api/chatsignalr/shop-rooms'; // GET những phòng chat của shop
 
-  
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;

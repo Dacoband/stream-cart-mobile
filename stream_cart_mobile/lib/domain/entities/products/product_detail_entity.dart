@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'product_variants_entity.dart';
+import 'product_attribute_entity.dart';
 
 class ProductDetailEntity extends Equatable {
   final String productId;
@@ -25,7 +26,7 @@ class ProductDetailEntity extends Equatable {
   final double shopRatingAverage;
   final String shopLogo;
   final int shopTotalProduct;
-  final List<ProductAttribute> attributes;
+  final List<ProductAttributeEntity> attributes;
   final List<ProductVariantEntity> variants;
 
   const ProductDetailEntity({
@@ -83,7 +84,7 @@ class ProductDetailEntity extends Equatable {
     double? shopRatingAverage,
     String? shopLogo,
     int? shopTotalProduct,
-    List<ProductAttribute>? attributes,
+    List<ProductAttributeEntity>? attributes,
     List<ProductVariantEntity>? variants,
   }) {
     return ProductDetailEntity(
@@ -144,17 +145,3 @@ class ProductDetailEntity extends Equatable {
     variants,
   ];
 }
-
-class ProductAttribute {
-  final String attributeId;
-  final String attributeName;
-  final String attributeValue;
-
-  const ProductAttribute({
-    required this.attributeId,
-    required this.attributeName,
-    required this.attributeValue,
-  });
-}
-
-

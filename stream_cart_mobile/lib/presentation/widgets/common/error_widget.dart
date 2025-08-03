@@ -42,18 +42,19 @@ class CustomErrorWidget extends StatelessWidget {
             if (onRetry != null) ...[
               const SizedBox(height: 20),
               ElevatedButton(
+                onPressed: onRetry!, // Use provided onRetry callback
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4CAF50),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Thử lại'),
+              ),
+            ] else ...[
+              // Default retry logic if no onRetry provided
+              const SizedBox(height: 20),
+              ElevatedButton(
                 onPressed: () {
-                  final authState = context.read<AuthBloc>().state;
-                  int? roleValue;
-                  if (authState is AuthSuccess) {
-                    roleValue = authState.loginResponse.account.role;
-                  }
-                  final userRole = UserRole.fromValue(roleValue ?? 1);
-                  if (userRole == UserRole.seller) {
-                    context.read<ChatBloc>().add(LoadShopChatRooms(pageNumber: 1, pageSize: 20));
-                  } else {
-                    context.read<ChatBloc>().add(LoadChatRooms(pageNumber: 1, pageSize: 20));
-                  }
+                  _handleDefaultRetry(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
@@ -66,5 +67,34 @@ class CustomErrorWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _handleDefaultRetry(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+
+    if (authState is! AuthSuccess) {
+      // If not authenticated, just show message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập lại')),
+      );
+      return;
+    }
+
+    final roleValue = authState.loginResponse.account.role;
+    final userRole = UserRole.fromValue(roleValue);
+    if (userRole == UserRole.seller) {
+      context.read<ChatBloc>().add(const LoadShopChatRoomsEvent(
+        pageNumber: 1,
+        pageSize: 20,
+        isRefresh: true,
+      ));
+    } else {
+      context.read<ChatBloc>().add(const LoadChatRoomsEvent(
+        pageNumber: 1,
+        pageSize: 20,
+        isRefresh: true,
+      ));
+    }
+    context.read<ChatBloc>().add(const ConnectSignalREvent());
   }
 }

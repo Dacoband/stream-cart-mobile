@@ -6,19 +6,10 @@ import 'core/config/firebase_config.dart';
 import 'core/config/env.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
-import 'core/services/livekit_service.dart';
+import 'core/services/signalr_service.dart';
 import 'core/services/search_history_service.dart';
 import 'core/services/notification_signalr_manager.dart';
 import 'core/services/firebase_notification_service.dart';
-import 'domain/usecases/chat/connect_livekit_usecase.dart';
-import 'domain/usecases/chat/disconnect_livekit_usecase.dart';
-import 'domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
-import 'domain/usecases/chat/load_chat_room_usecase.dart';
-import 'domain/usecases/chat/load_chat_rooms_usecase.dart';
-import 'domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
-import 'domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
-import 'domain/usecases/chat/receive_message_usecase.dart';
-import 'domain/usecases/chat/send_message_usecase.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/blocs/chat/chat_bloc.dart';
@@ -90,15 +81,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     
     switch (state) {
       case AppLifecycleState.resumed:
-        print('📱 App resumed - checking connection');
-        _checkAndReconnectIfNeeded();
+        print('📱 App resumed - checking SignalR connection');
+        _checkAndReconnectSignalR();
         break;
       case AppLifecycleState.paused:
-        print('📱 App paused - keeping connection active');
+        print('📱 App paused - keeping SignalR connection active');
         break;
       case AppLifecycleState.detached:
-        print('📱 App detached - disconnecting LiveKit');
-        _disconnectLiveKit();
+        print('📱 App detached - disconnecting SignalR');
+        _disconnectSignalR();
         break;
       case AppLifecycleState.inactive:
         print('📱 App inactive');
@@ -109,25 +100,25 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  void _checkAndReconnectIfNeeded() {
+  void _checkAndReconnectSignalR() {
     try {
-      final livekitService = getIt<LivekitService>();
-      if (!livekitService.isConnected) {
-        print('🔄 LiveKit not connected, triggering status check');
+      final signalRService = getIt<SignalRService>();
+      if (!signalRService.isConnected) {
+        print('🔄 SignalR not connected, attempting reconnection');
         final chatBloc = getIt<ChatBloc>();
-        chatBloc.add(const ChatLiveKitStatusChanged('🔄 App resumed - checking connection'));
+        chatBloc.add(const ConnectSignalREvent());
       }
     } catch (e) {
-      print('Error checking connection: $e');
+      print('Error checking SignalR connection: $e');
     }
   }
 
-  void _disconnectLiveKit() {
+  void _disconnectSignalR() {
     try {
       final chatBloc = getIt<ChatBloc>();
-      chatBloc.add(const DisconnectGlobalLiveKit());
+      chatBloc.add(const DisconnectSignalREvent());
     } catch (e) {
-      print('Error disconnecting LiveKit: $e');
+      print('Error disconnecting SignalR: $e');
     }
   }
 
@@ -147,18 +138,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         BlocProvider(
           create: (context) => getIt<AddressBloc>(),
         ),
-        BlocProvider(
-          create: (context) => ChatBloc(
-            loadChatRoomUseCase: getIt<LoadChatRoomUseCase>(),
-            loadChatRoomsUseCase: getIt<LoadChatRoomsUseCase>(),
-            loadChatRoomsByShopUseCase: getIt<LoadChatRoomsByShopUseCase>(),
-            loadShopChatRoomsUseCase: getIt<LoadShopChatRoomsUseCase>(),
-            sendMessageUseCase: getIt<SendMessageUseCase>(),
-            receiveMessageUseCase: getIt<ReceiveMessageUseCase>(),
-            markChatRoomAsReadUseCase: getIt<MarkChatRoomAsReadUseCase>(),
-            connectLiveKitUseCase: getIt<ConnectLiveKitUseCase>(),
-            disconnectLiveKitUseCase: getIt<DisconnectLiveKitUseCase>(),
-          ),
+        BlocProvider.value(
+          value: getIt<ChatBloc>(),
         ),
       ],
       child: MaterialApp(

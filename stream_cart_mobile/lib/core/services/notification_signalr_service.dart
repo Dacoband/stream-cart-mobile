@@ -1,4 +1,4 @@
-import 'package:signalr_netcore/signalr_client.dart';
+import 'package:signalr_core/signalr_core.dart';
 import '../config/env.dart';
 
 class NotificationSignalRService {
@@ -24,24 +24,29 @@ class NotificationSignalRService {
 
     try {
       final serverUrl = '${Env.baseUrl}/notificationHub';
-      
+
       _hubConnection = HubConnectionBuilder()
-          .withUrl(serverUrl, options: HttpConnectionOptions(
-            accessTokenFactory: () => Future.value(token),
-          ))
+          .withUrl(
+            serverUrl,
+            HttpConnectionOptions(
+              accessTokenFactory: () async => token,
+              transport: HttpTransportType.webSockets,
+            ),
+          )
+          .withAutomaticReconnect()
           .build();
 
       // Handle connection state changes
-      _hubConnection?.onclose(({error}) {
+      _hubConnection?.onclose((error) async {
         print('SignalR connection closed: $error');
         _isConnected = false;
       });
 
-      _hubConnection?.onreconnecting(({error}) {
+      _hubConnection?.onreconnecting((error) async {
         print('SignalR reconnecting: $error');
       });
 
-      _hubConnection?.onreconnected(({connectionId}) {
+      _hubConnection?.onreconnected((connectionId) async {
         print('SignalR reconnected: $connectionId');
         _isConnected = true;
       });

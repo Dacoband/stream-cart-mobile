@@ -72,6 +72,21 @@ class ProductVariantsModel extends ProductVariantEntity {
     );
   }
 
+  factory ProductVariantsModel.fromEntity(ProductVariantEntity entity) {
+    return ProductVariantsModel(
+      id: entity.id,
+      productId: entity.productId,
+      sku: entity.sku,
+      price: entity.price,
+      flashSalePrice: entity.flashSalePrice,
+      stock: entity.stock,
+      createdAt: entity.createdAt,
+      createdBy: entity.createdBy,
+      lastModifiedAt: entity.lastModifiedAt,
+      lastModifiedBy: entity.lastModifiedBy,
+    );
+  }
+
   ProductVariantEntity toEntity() {
   return ProductVariantEntity(
     id: id,
