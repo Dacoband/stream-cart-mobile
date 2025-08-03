@@ -15,17 +15,17 @@ typedef OnConnectionStateChanged = void Function(HubConnectionState state);
 typedef OnError = void Function(String error);
 
 class SignalRService {
-  late final HubConnection _connection;
-  final String baseUrl;
-  final StorageService storageService;
-  final SignalRStatusCallback? onStatusChanged;
-  final OnReceiveMessage? onReceiveMessage;
+  late HubConnection _connection;
+  String baseUrl;
+  StorageService storageService;
+  SignalRStatusCallback? onStatusChanged;
+  OnReceiveMessage? onReceiveMessage;
 
-  final OnUserTyping? onUserTyping;
-  final OnUserJoinedRoom? onUserJoinedRoom;
-  final OnUserLeftRoom? onUserLeftRoom;
-  final OnConnectionStateChanged? onConnectionStateChanged;
-  final OnError? onError;
+  OnUserTyping? onUserTyping;
+  OnUserJoinedRoom? onUserJoinedRoom;
+  OnUserLeftRoom? onUserLeftRoom;
+  OnConnectionStateChanged? onConnectionStateChanged;
+  OnError? onError;
 
   bool _isConnected = false;
 
@@ -241,8 +241,51 @@ class SignalRService {
     throw Exception("Operation failed after $maxRetries retries");
   }
 
-  // Dispose method để cleanup
-  void dispose() {
-    disconnect();
+  /// Remove all listeners để tránh memory leaks
+  void removeListeners() {
+    onReceiveMessage = null;
+    onUserTyping = null;
+    onUserJoinedRoom = null;
+    onUserLeftRoom = null;
+    onConnectionStateChanged = null;
+    onError = null;
+    onStatusChanged = null;
+  }
+
+  /// Cleanup toàn bộ service
+  Future<void> dispose() async {
+    // Remove listeners trước
+    removeListeners();
+    
+    // Disconnect nếu đang connected
+    if (_isConnected) {
+      await disconnect();
+    }
+    
+    // Có thể thêm cleanup khác nếu cần
+    onStatusChanged?.call("🧹 SignalR service đã được dispose");
+  }
+
+  // Thêm method để reset và setup lại listeners
+  void resetListeners({
+    SignalRStatusCallback? onStatusChanged,
+    OnReceiveMessage? onReceiveMessage,
+    OnUserTyping? onUserTyping,
+    OnUserJoinedRoom? onUserJoinedRoom,
+    OnUserLeftRoom? onUserLeftRoom,
+    OnConnectionStateChanged? onConnectionStateChanged,
+    OnError? onError,
+  }) {
+    // Remove old listeners
+    removeListeners();
+    
+    // Set new listeners
+    this.onStatusChanged = onStatusChanged;
+    this.onReceiveMessage = onReceiveMessage;
+    this.onUserTyping = onUserTyping;
+    this.onUserJoinedRoom = onUserJoinedRoom;
+    this.onUserLeftRoom = onUserLeftRoom;
+    this.onConnectionStateChanged = onConnectionStateChanged;
+    this.onError = onError;
   }
 }

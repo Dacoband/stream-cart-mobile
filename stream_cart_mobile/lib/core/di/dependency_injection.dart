@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -64,7 +65,6 @@ import '../../data/datasources/account/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
-import '../../presentation/blocs/chat/chat_event.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
@@ -77,16 +77,23 @@ import '../../presentation/blocs/shop/shop_bloc.dart';
 import '../../data/datasources/chat/chat_remote_data_source.dart';
 import '../../data/repositories/chat_repository_impl.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../presentation/blocs/chat/chat_bloc.dart';
+import '../../core/services/signalr_service.dart';
 import '../../domain/usecases/chat/load_chat_rooms_usecase.dart';
-import '../../domain/usecases/chat/load_chat_room_by_shop_usecase.dart';
-import '../../domain/usecases/chat/load_chat_room_usecase.dart';
+import '../../domain/usecases/chat/load_chat_room_detail_usecase.dart';
+import '../../domain/usecases/chat/load_chat_room_messages_usecase.dart';
+import '../../domain/usecases/chat/search_chat_room_messages_usecase.dart';
+import '../../domain/usecases/chat/create_chat_room_usecase.dart';
 import '../../domain/usecases/chat/send_message_usecase.dart';
+import '../../domain/usecases/chat/update_message_usecase.dart';
 import '../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
-import '../../domain/usecases/chat/connect_livekit_usecase.dart';
-import '../../domain/usecases/chat/disconnect_livekit_usecase.dart';
-import '../../presentation/blocs/chat/chat_bloc.dart';
-import '../services/signalr_service.dart';
+import '../../domain/usecases/chat/send_typing_indicator_usecase.dart';
+import '../../domain/usecases/chat/connect_signalr_usecase.dart';
+import '../../domain/usecases/chat/disconnect_signalr_usecase.dart';
+import '../../domain/usecases/chat/join_chat_room_usecase.dart';
+import '../../domain/usecases/chat/leave_chat_room_usecase.dart';
+import '../../domain/usecases/chat/get_unread_count_usecase.dart';
 import '../../core/services/address_external_service.dart';
 import '../../data/datasources/address/address_remote_data_source.dart';
 import '../../data/repositories/address_repository_impl.dart';
@@ -115,62 +122,32 @@ import '../../domain/usecases/product_variants/get_cheapest_variant.dart';
 import '../../domain/usecases/product_variants/get_available_variants.dart';
 import '../../presentation/blocs/product_variants/product_variants_bloc.dart';
 
-
-
 final getIt = GetIt.instance;
+String signalRChatBaseUrl = dotenv.env['SIGNALR_CHAT_BASE_URL']!;
+String signalRNotificationBaseUrl = dotenv.env['SIGNALR_NOTIFICATION_BASE_URL']!;
 
 Future<void> setupDependencies() async {
-  getIt.registerLazySingleton<FlutterSecureStorage>(() {
-    try {
-      return const FlutterSecureStorage();
-    } catch (e) {
-      
-      rethrow;
-    }  });
-  
+  getIt.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
   getIt.registerLazySingleton<StorageService>(() => StorageService(getIt()));
-  
   HttpService.initialize(storageService: getIt<StorageService>());
-  
   getIt.registerLazySingleton<Dio>(() => NetworkConfig.createDio(storageService: getIt()));
-  
-  getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<AuthLocalDataSource>(
-    () {
-      FlutterSecureStorage? secureStorage;
-      try {
-        secureStorage = getIt<FlutterSecureStorage>();      } catch (e) {
-        
-        secureStorage = null;
-      }      return AuthLocalDataSourceImpl(secureStorage);
-    },
-  );
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      remoteDataSource: getIt(),
-      localDataSource: getIt(),
-    ),
-  );
-    
+
+  // Auth
+  getIt.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<AuthLocalDataSource>(() => AuthLocalDataSourceImpl(getIt<FlutterSecureStorage>()));
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(
+    remoteDataSource: getIt(),
+    localDataSource: getIt(),
+  ));
   getIt.registerLazySingleton<AuthService>(() => AuthService(getIt()));
-    getIt.registerLazySingleton(() => LoginUseCase(getIt()));
+  getIt.registerLazySingleton(() => LoginUseCase(getIt()));
   getIt.registerLazySingleton(() => RegisterUseCase(getIt()));
   getIt.registerLazySingleton(() => VerifyOtpUseCase(getIt()));
   getIt.registerLazySingleton(() => ResendOtpUseCase(getIt()));
-  
-  // Home dependencies
-  getIt.registerLazySingleton<HomeRemoteDataSource>(
-    () => HomeRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<HomeRepository>(
-    () => HomeRepositoryImpl(
-      remoteDataSource: getIt(),
-    ),
-  );
+
+  // Home
+  getIt.registerLazySingleton<HomeRemoteDataSource>(() => HomeRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<HomeRepository>(() => HomeRepositoryImpl(remoteDataSource: getIt()));
   getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCategoryDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByCategoryUseCase(getIt()));
@@ -179,59 +156,31 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProductDetailUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductImagesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductPrimaryImagesUseCase(getIt()));
-  
-  // Advanced Search dependencies
-  getIt.registerLazySingleton<SearchRemoteDataSource>(
-    () => SearchRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<SearchRepository>(
-    () => SearchRepositoryImpl(getIt()),
-  );
-  
+
+  // Advanced Search
+  getIt.registerLazySingleton<SearchRemoteDataSource>(() => SearchRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<SearchRepository>(() => SearchRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => SearchProductsAdvancedUseCase(getIt()));
-  
-  // Flash Sale dependencies
-  getIt.registerLazySingleton<FlashSaleRemoteDataSource>(
-    () => FlashSaleRemoteDataSourceImpl(dio: getIt()),
-  );
-  
-  getIt.registerLazySingleton<FlashSaleRepository>(
-    () => FlashSaleRepositoryImpl(remoteDataSource: getIt()),
-  );
-  
+
+  // Flash Sale
+  getIt.registerLazySingleton<FlashSaleRemoteDataSource>(() => FlashSaleRemoteDataSourceImpl(dio: getIt()));
+  getIt.registerLazySingleton<FlashSaleRepository>(() => FlashSaleRepositoryImpl(remoteDataSource: getIt()));
   getIt.registerLazySingleton(() => GetFlashSalesUseCase(repository: getIt()));
   getIt.registerLazySingleton(() => GetFlashSaleProductsUseCase(repository: getIt()));
-  
-  // Search service
+
+  // Search service, Image upload
   getIt.registerLazySingleton(() => SearchHistoryService());
-  
-  // Image upload service
   getIt.registerLazySingleton(() => ImageUploadService(getIt()));
-  
-  // Profile dependencies
-  getIt.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(
-      remoteDataSource: getIt(),
-    ),
-  );
-  
+
+  // Profile
+  getIt.registerLazySingleton<ProfileRemoteDataSource>(() => ProfileRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepositoryImpl(remoteDataSource: getIt()));
   getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
-  
-  // Cart dependencies
-  getIt.registerLazySingleton<CartRemoteDataSource>(
-    () => CartRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<CartRepository>(
-    () => CartRepositoryImpl(getIt()),
-  );
-  
+
+  // Cart
+  getIt.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<CartRepository>(() => CartRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => AddToCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartItemsUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateCartItemUseCase(getIt()));
@@ -241,57 +190,77 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => ClearCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
   getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt()));
-  
-  // SHOP DEPENDENCIES
-  getIt.registerLazySingleton<ShopRemoteDataSource>(
-    () => ShopRemoteDataSourceImpl(getIt()),
-  );
-  
-  getIt.registerLazySingleton<ShopRepository>(
-    () => ShopRepositoryImpl(remoteDataSource: getIt()),
-  );
-  
+
+  // Shop
+  getIt.registerLazySingleton<ShopRemoteDataSource>(() => ShopRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<ShopRepository>(() => ShopRepositoryImpl(remoteDataSource: getIt()));
   getIt.registerLazySingleton(() => GetShopsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetShopByIdUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByShopUseCase(getIt()));
 
-  getIt.registerLazySingleton<ChatRemoteDataSource>(
-    () => ChatRemoteDataSourceImpl(getIt()), 
-  );
-
-  getIt.registerLazySingleton<ChatRepository>(
-  () => ChatRepositoryImpl(getIt<ChatRemoteDataSource>()), 
-);
-
-  getIt.registerLazySingleton(() => LoadChatRoomsUseCase(getIt()));
-  getIt.registerLazySingleton(() => LoadChatRoomsByShopUseCase(getIt()));
-  getIt.registerLazySingleton(() => LoadShopChatRoomsUseCase(getIt()));
-  getIt.registerLazySingleton(() => LoadChatRoomUseCase(getIt()));
-  getIt.registerLazySingleton(() => SendMessageUseCase(getIt()));
-  getIt.registerLazySingleton(() => ReceiveMessageUseCase(getIt()));
-  getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt()));
-  getIt.registerLazySingleton(() => ConnectLiveKitUseCase(getIt<LivekitService>()));
-  getIt.registerLazySingleton(() => DisconnectLiveKitUseCase(getIt<LivekitService>()));
-
-  // === PRODUCT VARIANTS DEPENDENCIES ===
+  // === CHAT (SignalR only) ===
   // Data sources
-  getIt.registerLazySingleton<ProductVariantsRemoteDataSource>(
-    () => ProductVariantsRemoteDataSourceImpl(dio: getIt()),
-  );
+  getIt.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(dio: getIt<Dio>()));
 
   // Repositories
-  getIt.registerLazySingleton<ProductVariantsRepository>(
-    () => ProductVariantsRepositoryImpl(getIt()),
-  );
+  getIt.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(remoteDataSource: getIt<ChatRemoteDataSource>()));
 
-  // Use cases
+  // SignalR Service 
+  getIt.registerLazySingleton<SignalRService>(() => SignalRService(
+    dotenv.env['SIGNALR_CHAT_BASE_URL']!,  
+    getIt<StorageService>(),
+    onStatusChanged: (status) {
+      print('SignalR Status: $status');
+    },
+  ));
+
+  // Use cases 
+  getIt.registerLazySingleton(() => LoadChatRoomsUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => LoadChatRoomDetailUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => LoadChatRoomMessagesUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => SearchChatRoomMessagesUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => CreateChatRoomUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => SendMessageUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => UpdateMessageUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => ReceiveMessageUseCase());
+  getIt.registerLazySingleton(() => MarkChatRoomAsReadUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => SendTypingIndicatorUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => ConnectSignalRUseCase(getIt<SignalRService>()));
+  getIt.registerLazySingleton(() => DisconnectSignalRUseCase(getIt<SignalRService>()));
+  getIt.registerLazySingleton(() => JoinChatRoomUseCase(getIt<SignalRService>()));
+  getIt.registerLazySingleton(() => LeaveChatRoomUseCase(getIt<SignalRService>()));
+  getIt.registerLazySingleton(() => LoadShopChatRoomsUseCase(getIt<ChatRepository>()));
+  getIt.registerLazySingleton(() => GetUnreadCountUseCase(getIt<ChatRepository>()));
+
+  // ChatBloc
+  getIt.registerLazySingleton<ChatBloc>(() => ChatBloc(
+    loadChatRoomsUseCase: getIt(),
+    loadChatRoomDetailUseCase: getIt(),
+    loadChatRoomMessagesUseCase: getIt(),
+    searchChatRoomMessagesUseCase: getIt(),
+    createChatRoomUseCase: getIt(),
+    sendMessageUseCase: getIt(),
+    updateMessageUseCase: getIt(),
+    receiveMessageUseCase: getIt(),
+    markChatRoomAsReadUseCase: getIt(),
+    sendTypingIndicatorUseCase: getIt(),
+    connectSignalRUseCase: getIt(),
+    disconnectSignalRUseCase: getIt(),
+    joinChatRoomUseCase: getIt(),
+    leaveChatRoomUseCase: getIt(),
+    loadShopChatRoomsUseCase: getIt(),
+    getUnreadCountUseCase: getIt(),
+    signalRService: getIt(),
+  ));
+
+  // === PRODUCT VARIANTS ===
+  getIt.registerLazySingleton<ProductVariantsRemoteDataSource>(() => ProductVariantsRemoteDataSourceImpl(dio: getIt()));
+  getIt.registerLazySingleton<ProductVariantsRepository>(() => ProductVariantsRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
   getIt.registerLazySingleton(() => GetProductVariantById(getIt()));
   getIt.registerLazySingleton(() => CheckVariantAvailability(getIt()));
   getIt.registerLazySingleton(() => GetCheapestVariant(getIt()));
   getIt.registerLazySingleton(() => GetAvailableVariants(getIt()));
-
-  // Blocs
   getIt.registerFactory(() => ProductVariantsBloc(
     getProductVariantsByProductId: getIt(),
     getProductVariantById: getIt(),
@@ -300,164 +269,30 @@ Future<void> setupDependencies() async {
     getAvailableVariants: getIt(),
   ));
 
-
-  // Register ChatBloc
-  getIt.registerLazySingleton<ChatBloc>(() => ChatBloc(
-    loadChatRoomUseCase: getIt(),
-    loadChatRoomsByShopUseCase: getIt(),
-    loadChatRoomsUseCase: getIt(),
-    loadShopChatRoomsUseCase: getIt(),
-    sendMessageUseCase: getIt(),
-    receiveMessageUseCase: getIt(),
-    markChatRoomAsReadUseCase: getIt(),
-    connectLiveKitUseCase: getIt(),
-    disconnectLiveKitUseCase: getIt(),
-  ));
-  
-  //Livekit dependencies
-  getIt.registerLazySingleton<LivekitService>(() => LivekitService(
-    getIt(), 
-    onStatusChanged: (status) {
-      // Nếu muốn, có thể gửi event lên Bloc tại đây hoặc để Bloc tự set callback sau
-      // Ví dụ: getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
-        getIt<ChatBloc>().add(ChatLiveKitStatusChanged(status));
-    }
-  ));
-
-  getIt.registerFactory(() => AuthBloc(
-    loginUseCase: getIt(),
-    registerUseCase: getIt(),
-    verifyOtpUseCase: getIt(),
-    resendOtpUseCase: getIt(),
-    authRepository: getIt(),
-  ));
-  
-  getIt.registerFactory(() => HomeBloc(
-    getCategoriesUseCase: getIt(),
-    getProductsUseCase: getIt(),
-    getProductPrimaryImagesUseCase: getIt(),
-    getFlashSalesUseCase: getIt(),
-    getFlashSaleProductsUseCase: getIt(),
-  ));
-  
-  getIt.registerFactory(() => SearchBloc(
-    searchProductsUseCase: getIt(),
-    getCategoriesUseCase: getIt(),
-    getProductPrimaryImagesUseCase: getIt(),
-    searchHistoryService: getIt(),
-  ));
-  
-  getIt.registerFactory(() => AdvancedSearchBloc(
-    searchProductsAdvancedUseCase: getIt(),
-  ));
-  
-  getIt.registerFactory(() => ProfileBloc(
-    getUserProfileUseCase: getIt(),
-    updateUserProfileUseCase: getIt(),
-  ));
-  
-  getIt.registerFactory(() => ProductDetailBloc(
-    getProductDetailUseCase: getIt(),
-    getProductImagesUseCase: getIt(),
-    addToCartUseCase: getIt(),
-    cartBloc: getIt(),
-  ));
-
-  getIt.registerFactory(() => CategoryDetailBloc(
-    getCategoryDetailUseCase: getIt(),
-    getProductsByCategoryUseCase: getIt(),
-    getProductPrimaryImagesUseCase: getIt(),
-  ));
-  
-  // Register CartBloc as singleton so all parts of the app share the same instance
-  getIt.registerLazySingleton(() {
-    print('Creating CartBloc singleton in DI');
-    final cartBloc = CartBloc(
-      addToCartUseCase: getIt(),
-      getCartItemsUseCase: getIt(),
-      updateCartItemUseCase: getIt(),
-      removeFromCartUseCase: getIt(),
-      removeCartItemUseCase: getIt(),
-      removeMultipleCartItemsUseCase: getIt(),
-      clearCartUseCase: getIt(),
-      getCartPreviewUseCase: getIt(),
-      getPreviewOrderUseCase: getIt(),
-    );
-    print('CartBloc singleton created: ${cartBloc.hashCode}');
-    return cartBloc;
-  });
-
-  // === NOTIFICATION DEPENDENCIES ===
-  // Data sources
-  getIt.registerLazySingleton<NotificationRemoteDataSource>(
-    () => NotificationRemoteDataSourceImpl(getIt()),
-  );
-
-  // Repositories
-  getIt.registerLazySingleton<NotificationRepository>(
-    () => NotificationRepositoryImpl(getIt()),
-  );
-
-  // Use cases
+  // === NOTIFICATION ===
+  getIt.registerLazySingleton<NotificationRemoteDataSource>(() => NotificationRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<NotificationRepository>(() => NotificationRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => GetNotificationsUseCase(getIt()));
   getIt.registerLazySingleton(() => MarkNotificationAsReadUseCase(getIt()));
   getIt.registerLazySingleton(() => GetUnreadNotificationCountUseCase(getIt()));
 
-  // Blocs
-  getIt.registerFactory(() => NotificationBloc(
-    getNotificationsUseCase: getIt(),
-    markNotificationAsReadUseCase: getIt(),
-    getUnreadNotificationCountUseCase: getIt(),
-  ));
-
-  // === SHOP DEPENDENCIES ===
-  // Register ShopBloc
-  getIt.registerFactory(() => ShopBloc(
-    getShopsUseCase: getIt(),
-    getShopByIdUseCase: getIt(),
-    getProductsByShopUseCase: getIt(),
-  ));
-
-  // === ADDRESS DEPENDENCIES ===
-  // Services
-  getIt.registerLazySingleton<AddressExternalService>(
-    () => AddressExternalService(getIt<Dio>()),
-  );
-
-  // Data sources
-  getIt.registerLazySingleton<AddressRemoteDataSource>(
-    () => AddressRemoteDataSourceImpl(getIt<Dio>(), getIt<AddressExternalService>()),
-  );
-
-  // Repositories
-  getIt.registerLazySingleton<AddressRepository>(
-    () => AddressRepositoryImpl(
-      remoteDataSource: getIt<AddressRemoteDataSource>(),
-    ),
-  );
-
-  // Use cases - Core CRUD
+  // === ADDRESS ===
+  getIt.registerLazySingleton<AddressExternalService>(() => AddressExternalService(getIt<Dio>()));
+  getIt.registerLazySingleton<AddressRemoteDataSource>(() => AddressRemoteDataSourceImpl(getIt<Dio>(), getIt<AddressExternalService>()));
+  getIt.registerLazySingleton<AddressRepository>(() => AddressRepositoryImpl(remoteDataSource: getIt<AddressRemoteDataSource>()));
   getIt.registerLazySingleton(() => GetAddressesUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => CreateAddressUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => UpdateAddressUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => DeleteAddressUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetAddressByIdUseCase(getIt<AddressRepository>()));
-
-  // Use cases - Address Management
   getIt.registerLazySingleton(() => SetDefaultShippingAddressUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetDefaultShippingAddressUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetAddressesByTypeUseCase(getIt<AddressRepository>()));
-
-  // Use cases - Shop Integration
   getIt.registerLazySingleton(() => AssignAddressToShopUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetAddressesByShopUseCase(getIt<AddressRepository>()));
-
-  // Use cases - Location API
   getIt.registerLazySingleton(() => GetProvincesUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetDistrictsUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
-
-  // Blocs
   getIt.registerFactory(() => AddressBloc(
     getAddressesUseCase: getIt(),
     createAddressUseCase: getIt(),
@@ -473,4 +308,102 @@ Future<void> setupDependencies() async {
     getDistrictsUseCase: getIt(),
     getWardsUseCase: getIt(),
   ));
+
+  // === BLOCS ===
+  getIt.registerFactory(() => AuthBloc(
+    loginUseCase: getIt(),
+    registerUseCase: getIt(),
+    verifyOtpUseCase: getIt(),
+    resendOtpUseCase: getIt(),
+    authRepository: getIt(),
+  ));
+
+  getIt.registerFactory(() => HomeBloc(
+    getCategoriesUseCase: getIt(),
+    getProductsUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
+    getFlashSalesUseCase: getIt(),
+    getFlashSaleProductsUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => SearchBloc(
+    searchProductsUseCase: getIt(),
+    getCategoriesUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
+    searchHistoryService: getIt(),
+  ));
+
+  getIt.registerFactory(() => AdvancedSearchBloc(
+    searchProductsAdvancedUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => ProfileBloc(
+    getUserProfileUseCase: getIt(),
+    updateUserProfileUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => ProductDetailBloc(
+    getProductDetailUseCase: getIt(),
+    getProductImagesUseCase: getIt(),
+    addToCartUseCase: getIt(),
+    cartBloc: getIt(),
+  ));
+
+  getIt.registerFactory(() => CategoryDetailBloc(
+    getCategoryDetailUseCase: getIt(),
+    getProductsByCategoryUseCase: getIt(),
+    getProductPrimaryImagesUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => ProductVariantsBloc(
+    getProductVariantsByProductId: getIt(),
+    getProductVariantById: getIt(),
+    checkVariantAvailability: getIt(),
+    getCheapestVariant: getIt(),
+    getAvailableVariants: getIt(),
+  ));
+
+  getIt.registerFactory(() => NotificationBloc(
+    getNotificationsUseCase: getIt(),
+    markNotificationAsReadUseCase: getIt(),
+    getUnreadNotificationCountUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => ShopBloc(
+    getShopsUseCase: getIt(),
+    getShopByIdUseCase: getIt(),
+    getProductsByShopUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => AddressBloc(
+    getAddressesUseCase: getIt(),
+    createAddressUseCase: getIt(),
+    updateAddressUseCase: getIt(),
+    deleteAddressUseCase: getIt(),
+    getAddressByIdUseCase: getIt(),
+    setDefaultShippingAddressUseCase: getIt(),
+    getDefaultShippingAddressUseCase: getIt(),
+    getAddressesByTypeUseCase: getIt(),
+    assignAddressToShopUseCase: getIt(),
+    getAddressesByShopUseCase: getIt(),
+    getProvincesUseCase: getIt(),
+    getDistrictsUseCase: getIt(),
+    getWardsUseCase: getIt(),
+  ));
+
+  // CartBloc as singleton 
+  getIt.registerLazySingleton(() {
+    final cartBloc = CartBloc(
+      addToCartUseCase: getIt(),
+      getCartItemsUseCase: getIt(),
+      updateCartItemUseCase: getIt(),
+      removeFromCartUseCase: getIt(),
+      removeCartItemUseCase: getIt(),
+      removeMultipleCartItemsUseCase: getIt(),
+      clearCartUseCase: getIt(),
+      getCartPreviewUseCase: getIt(),
+      getPreviewOrderUseCase: getIt(),
+    );
+    return cartBloc;
+  });
 }
