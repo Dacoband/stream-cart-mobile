@@ -123,10 +123,16 @@ import '../../domain/usecases/product_variants/get_available_variants.dart';
 import '../../presentation/blocs/product_variants/product_variants_bloc.dart';
 
 final getIt = GetIt.instance;
-String signalRChatBaseUrl = dotenv.env['SIGNALR_CHAT_BASE_URL']!;
-String signalRNotificationBaseUrl = dotenv.env['SIGNALR_NOTIFICATION_BASE_URL']!;
 
 Future<void> setupDependencies() async {
+  // FIX 1: Load dotenv và reset GetIt ở ĐẦU
+  await dotenv.load(fileName: ".env");
+  await getIt.reset();
+  
+  // Declare SignalR URLs after dotenv is loaded
+  String signalRChatBaseUrl = dotenv.env['SIGNALR_CHAT_BASE_URL']!;
+
+  // Core services
   getIt.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
   getIt.registerLazySingleton<StorageService>(() => StorageService(getIt()));
   HttpService.initialize(storageService: getIt<StorageService>());
@@ -207,7 +213,7 @@ Future<void> setupDependencies() async {
 
   // SignalR Service 
   getIt.registerLazySingleton<SignalRService>(() => SignalRService(
-    dotenv.env['SIGNALR_CHAT_BASE_URL']!,  
+    signalRChatBaseUrl,  // Use local variable
     getIt<StorageService>(),
     onStatusChanged: (status) {
       print('SignalR Status: $status');
@@ -253,7 +259,7 @@ Future<void> setupDependencies() async {
     signalRService: getIt(),
   ));
 
-  // === PRODUCT VARIANTS ===
+  // === PRODUCT VARIANTS === 
   getIt.registerLazySingleton<ProductVariantsRemoteDataSource>(() => ProductVariantsRemoteDataSourceImpl(dio: getIt()));
   getIt.registerLazySingleton<ProductVariantsRepository>(() => ProductVariantsRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => GetProductVariantsByProductId(getIt()));
@@ -261,6 +267,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => CheckVariantAvailability(getIt()));
   getIt.registerLazySingleton(() => GetCheapestVariant(getIt()));
   getIt.registerLazySingleton(() => GetAvailableVariants(getIt()));
+  
+  // FIX 2: ProductVariantsBloc - CHỈ register 1 LẦN
   getIt.registerFactory(() => ProductVariantsBloc(
     getProductVariantsByProductId: getIt(),
     getProductVariantById: getIt(),
@@ -293,23 +301,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProvincesUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetDistrictsUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
-  getIt.registerFactory(() => AddressBloc(
-    getAddressesUseCase: getIt(),
-    createAddressUseCase: getIt(),
-    updateAddressUseCase: getIt(),
-    deleteAddressUseCase: getIt(),
-    getAddressByIdUseCase: getIt(),
-    setDefaultShippingAddressUseCase: getIt(),
-    getDefaultShippingAddressUseCase: getIt(),
-    getAddressesByTypeUseCase: getIt(),
-    assignAddressToShopUseCase: getIt(),
-    getAddressesByShopUseCase: getIt(),
-    getProvincesUseCase: getIt(),
-    getDistrictsUseCase: getIt(),
-    getWardsUseCase: getIt(),
-  ));
 
-  // === BLOCS ===
+  // === BLOCS === (Factory registrations)
   getIt.registerFactory(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
@@ -355,14 +348,6 @@ Future<void> setupDependencies() async {
     getProductPrimaryImagesUseCase: getIt(),
   ));
 
-  getIt.registerFactory(() => ProductVariantsBloc(
-    getProductVariantsByProductId: getIt(),
-    getProductVariantById: getIt(),
-    checkVariantAvailability: getIt(),
-    getCheapestVariant: getIt(),
-    getAvailableVariants: getIt(),
-  ));
-
   getIt.registerFactory(() => NotificationBloc(
     getNotificationsUseCase: getIt(),
     markNotificationAsReadUseCase: getIt(),
@@ -391,7 +376,7 @@ Future<void> setupDependencies() async {
     getWardsUseCase: getIt(),
   ));
 
-  // CartBloc as singleton 
+  // CartBloc as singleton (keep this at the end)
   getIt.registerLazySingleton(() {
     final cartBloc = CartBloc(
       addToCartUseCase: getIt(),
@@ -406,4 +391,6 @@ Future<void> setupDependencies() async {
     );
     return cartBloc;
   });
+
+  print('✅ All dependencies registered successfully!');
 }

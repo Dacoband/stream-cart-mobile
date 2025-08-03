@@ -110,48 +110,46 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _setupSignalRListeners() {
-    // Message received
+    // Fix: Use correct callback signature (4 parameters)
+    signalRService.onUserTyping = (userId, chatRoomId, isTyping, userName) {
+      print('📝 SignalR Typing: $userName ($userId) in $chatRoomId - ${isTyping ? "started" : "stopped"}');
+      
+      add(TypingReceivedEvent(
+        userId: userId,
+        chatRoomId: chatRoomId,
+        userName: userName ?? 'Unknown User',
+        isTyping: isTyping,
+        timestamp: DateTime.now(),
+      ));
+    };
+
+    // Fix: Message received callback
     signalRService.onReceiveMessage = (messageData) {
       add(ReceiveMessageEvent(messageData: messageData));
     };
 
-    // User typing
-    signalRService.onUserTyping = ((userId, chatRoomId, isTyping, userName) {
-      add(TypingReceivedEvent(
-        userId: userId,
+    // Fix: User joined room callback
+    signalRService.onUserJoinedRoom = (userId, chatRoomId, userName) {
+      add(UserJoinedRoomEvent(
+        userId: userId, 
         chatRoomId: chatRoomId,
         userName: userName,
-        isTyping: isTyping,
-        timestamp: DateTime.now(),
       ));
-    }) as OnUserTyping?;
-
-    // User joined room
-    signalRService.onUserJoinedRoom = (userId, chatRoomId) {
-      add(UserJoinedRoomEvent(userId: userId, chatRoomId: chatRoomId));
     };
 
-    // User left room
-    signalRService.onUserLeftRoom = (userId, chatRoomId) {
-      add(UserLeftRoomEvent(userId: userId, chatRoomId: chatRoomId));
+    // Fix: User left room callback
+    signalRService.onUserLeftRoom = (userId, chatRoomId, userName) {
+      add(UserLeftRoomEvent(
+        userId: userId, 
+        chatRoomId: chatRoomId,
+        userName: userName,
+      ));
     };
 
-    // Connection state changes
-    signalRService.onConnectionStateChanged = (state) {
-      final isConnected = state == HubConnectionState.connected;
-      add(SignalRConnectionChangedEvent(isConnected: isConnected));
-    };
-
-    // Error handling
-    signalRService.onError = (error) {
-      add(ChatErrorEvent(error: error));
-    };
-
-    // Status changes
+    // Status change callback
     signalRService.onStatusChanged = (status) {
-      if (status.contains('❌') || status.contains('Lỗi')) {
-        add(ChatErrorEvent(error: status));
-      }
+      print('🔄 SignalR Status changed: $status');
+      // Handle status changes if needed
     };
   }
 

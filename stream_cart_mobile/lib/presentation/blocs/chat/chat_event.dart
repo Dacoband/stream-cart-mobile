@@ -240,29 +240,33 @@ class UpdateUnreadCountEvent extends ChatEvent {
 
 // User Presence Events
 class UserJoinedRoomEvent extends ChatEvent {
-  final String userId;
+ final String userId;
   final String chatRoomId;
+  final String? userName;
 
   const UserJoinedRoomEvent({
     required this.userId,
     required this.chatRoomId,
+    this.userName,
   });
 
   @override
-  List<Object> get props => [userId, chatRoomId];
+  List<Object> get props => [userId, chatRoomId, userName ?? ''];
 }
 
 class UserLeftRoomEvent extends ChatEvent {
   final String userId;
   final String chatRoomId;
+  final String? userName;
 
   const UserLeftRoomEvent({
     required this.userId,
     required this.chatRoomId,
+    this.userName,
   });
 
   @override
-  List<Object> get props => [userId, chatRoomId];
+  List<Object> get props => [userId, chatRoomId, userName ?? ''];
 }
 
 // Error Events

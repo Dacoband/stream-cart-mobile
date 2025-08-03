@@ -6,9 +6,9 @@ import 'package:stream_cart_mobile/core/services/storage_service.dart';
 
 typedef SignalRStatusCallback = void Function(String status);
 typedef OnReceiveMessage = void Function(Map<String, dynamic> message);
-typedef OnUserTyping = void Function(String userId, String chatRoomId, bool isTyping);
-typedef OnUserJoinedRoom = void Function(String userId, String chatRoomId);
-typedef OnUserLeftRoom = void Function(String userId, String chatRoomId);
+typedef OnUserTyping = void Function(String userId, String chatRoomId, bool isTyping, String? userName);
+typedef OnUserJoinedRoom = void Function(String userId, String chatRoomId, String? userName);
+typedef OnUserLeftRoom = void Function(String userId, String chatRoomId, String? userName);
 typedef OnConnectionStateChanged = void Function(HubConnectionState state);
 typedef OnError = void Function(String error);
 
@@ -160,11 +160,12 @@ class SignalRService {
     // Lắng nghe typing với thông tin chi tiết hơn
     _connection.on("Typing", (args) {
       try {
-        if (args != null && args.length >= 3) {
+        if (args != null && args.length >= 4) {
           final userId = args[0] as String;
           final chatRoomId = args[1] as String;
           final isTyping = args[2] as bool;
-          onUserTyping?.call(userId, chatRoomId, isTyping);
+          final userName = args[3] as String?; // Thêm tham số userName
+          onUserTyping?.call(userId, chatRoomId, isTyping, userName);
         }
       } catch (e) {
         onError?.call("Lỗi xử lý typing indicator: $e");
@@ -174,10 +175,11 @@ class SignalRService {
     // User joined với thông tin chi tiết
     _connection.on("UserJoined", (args) {
       try {
-        if (args != null && args.length >= 2) {
+        if (args != null && args.length >= 3) {
           final userId = args[0] as String;
           final chatRoomId = args[1] as String;
-          onUserJoinedRoom?.call(userId, chatRoomId);
+          final userName = args[2] as String?; // Thêm tham số userName
+          onUserJoinedRoom?.call(userId, chatRoomId, userName);
           onStatusChanged?.call("👤 User $userId joined room $chatRoomId");
         }
       } catch (e) {
@@ -188,10 +190,11 @@ class SignalRService {
     // User left với thông tin chi tiết
     _connection.on("UserLeft", (args) {
       try {
-        if (args != null && args.length >= 2) {
+        if (args != null && args.length >= 3) {
           final userId = args[0] as String;
           final chatRoomId = args[1] as String;
-          onUserLeftRoom?.call(userId, chatRoomId);
+          final userName = args[2] as String?;
+          onUserLeftRoom?.call(userId, chatRoomId, userName);
           onStatusChanged?.call("👤 User $userId left room $chatRoomId");
         }
       } catch (e) {
