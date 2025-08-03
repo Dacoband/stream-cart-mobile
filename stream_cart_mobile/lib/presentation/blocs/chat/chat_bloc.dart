@@ -103,17 +103,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ClearChatStateEvent>(_onClearChatState);
     on<ClearMessagesEvent>(_onClearMessages);
     on<ClearSearchResultsEvent>(_onClearSearchResults);
-    on<TypingReceivedEvent>(_onTypingReceived); // Add this line
+    on<TypingReceivedEvent>(_onTypingReceived);
 
     // Setup SignalR listeners
     _setupSignalRListeners();
   }
 
   void _setupSignalRListeners() {
-    // Fix: Use correct callback signature (4 parameters)
     signalRService.onUserTyping = (userId, chatRoomId, isTyping, userName) {
-      print('📝 SignalR Typing: $userName ($userId) in $chatRoomId - ${isTyping ? "started" : "stopped"}');
-      
       add(TypingReceivedEvent(
         userId: userId,
         chatRoomId: chatRoomId,
@@ -123,14 +120,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Fix: Message received callback
     signalRService.onReceiveMessage = (messageData) {
-      print('🎯 ChatBloc - SignalR message received!');
-      print('📨 Message data: $messageData');
       add(ReceiveMessageEvent(messageData: messageData));
     };
 
-    // Fix: User joined room callback
     signalRService.onUserJoinedRoom = (userId, chatRoomId, userName) {
       add(UserJoinedRoomEvent(
         userId: userId, 
@@ -139,7 +132,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Fix: User left room callback
     signalRService.onUserLeftRoom = (userId, chatRoomId, userName) {
       add(UserLeftRoomEvent(
         userId: userId, 
@@ -148,17 +140,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Status change callback
     signalRService.onStatusChanged = (status) {
-      print('🔄 SignalR Status changed: $status');
       // Handle status changes if needed
     };
   }
 
   // Chat Rooms - Updated để check role Customer vs Seller
   Future<void> _onLoadChatRooms(LoadChatRoomsEvent event, Emitter<ChatState> emit) async {
-    print('👥 ChatBloc: _onLoadChatRooms called for Customer');
-    
     if (event.isRefresh) {
       emit(ChatLoading());
     } else {
@@ -173,11 +161,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     result.fold(
       (failure) {
-        print('❌ Customer chat rooms error: ${failure.message}');
         emit(ChatRoomsError(message: failure.message));
       },
       (paginatedResponse) {
-        print('✅ Customer chat rooms loaded: ${paginatedResponse.items.length}');
         emit(ChatRoomsLoaded(
           chatRooms: paginatedResponse.items,
           currentPage: paginatedResponse.currentPage,
@@ -206,8 +192,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Messages
   Future<void> _onLoadChatRoomMessages(LoadChatRoomMessagesEvent event, Emitter<ChatState> emit) async {
-    print('📨 Loading messages for room: ${event.chatRoomId}');
-    
     if (event.isRefresh) {
       emit(ChatLoading());
     } else {
@@ -222,24 +206,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     result.fold(
       (failure) {
-        print('❌ Load messages error: ${failure.message}');
         emit(ChatMessagesError(
           message: failure.message,
           chatRoomId: event.chatRoomId,
         ));
       },
       (messages) {
-        print('✅ ChatBloc - Messages loaded: ${messages.length}');
-        print('📋 Messages data: ${messages.map((m) => m.content).toList()}');
-        
         emit(ChatMessagesLoaded(
           messages: messages,
           chatRoomId: event.chatRoomId,
           currentPage: event.pageNumber,
           hasMoreMessages: messages.length == event.pageSize,
         ));
-        
-        print('🎯 State emitted: ChatMessagesLoaded');
       },
     );
   }
@@ -289,15 +267,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onSendMessage(SendMessageEvent event, Emitter<ChatState> emit) async {
-    print('💬 ChatBloc - Sending message: "${event.content}"');
-    print('🏠 To room: ${event.chatRoomId}');
-    print('📱 Message type: ${event.messageType}');
-    
     final tempMessageId = DateTime.now().millisecondsSinceEpoch.toString();
     emit(MessageSending(tempMessageId: tempMessageId, content: event.content));
 
     // Send via HTTP API first
-    print('📡 Calling sendMessageUseCase...');
     final result = await sendMessageUseCase(SendMessageParams(
       chatRoomId: event.chatRoomId,
       content: event.content,
@@ -307,19 +280,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     result.fold(
       (failure) {
-        print('❌ Send message failed: ${failure.message}');
         emit(MessageSendError(
           message: failure.message,
           tempMessageId: tempMessageId,
         ));
       },
       (message) {
-        print('✅ Message sent successfully: ${message.content}');
         emit(MessageSent(message: message));
         
         // Send via SignalR for real-time if connected
         if (_isSignalRConnected) {
-          print('📡 Sending via SignalR...');
           try {
             signalRService.sendMessage(
               chatRoomId: event.chatRoomId,
@@ -327,9 +297,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               messageType: event.messageType,
               attachmentUrl: event.attachmentUrl,
             );
-            print('✅ SignalR message sent');
           } catch (e) {
-            print('❌ SignalR send failed: $e');
+            // Handle error silently or emit error state if needed
           }
         }
       },
@@ -349,24 +318,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onReceiveMessage(ReceiveMessageEvent event, Emitter<ChatState> emit) async {
-    print('🎯 ChatBloc - _onReceiveMessage called!');
-    print('📨 Event messageData: ${event.messageData}');
-    
     final result = await receiveMessageUseCase(ReceiveMessageParams(
       messageData: event.messageData,
     ));
 
     result.fold(
       (failure) {
-        print('❌ ChatBloc - Receive message failed: ${failure.message}');
         emit(ChatError(message: failure.message));
       },
       (message) {
-        print('✅ ChatBloc - Message received successfully!');
-        print('💬 Message content: "${message.content}"');
-        print('👤 Sender: ${message.senderName} (${message.senderUserId})');
-        print('🏠 Chat room: ${message.chatRoomId}');
-        
         emit(MessageReceived(message: message));
         
         // Update current messages if we're in the same room
@@ -374,7 +334,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           final currentState = state as ChatMessagesLoaded;
           if (currentState.chatRoomId == message.chatRoomId) {
             final updatedMessages = [...currentState.messages, message];
-            print('🔄 Updating loaded messages: ${updatedMessages.length} total');
             emit(currentState.copyWith(messages: updatedMessages));
           }
         }
@@ -438,33 +397,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // SignalR Connection
   Future<void> _onConnectSignalR(ConnectSignalREvent event, Emitter<ChatState> emit) async {
-    print('🔌 ChatBloc - ConnectSignalR event received');
     emit(SignalRConnecting());
     
     final currentUser = _getCurrentUser();
     if (currentUser == null) {
-      print('❌ ChatBloc - No current user found');
       emit(const SignalRConnectionError(error: 'User not authenticated'));
       return;
     }
-    
-    print('👤 ChatBloc - Current user: ${currentUser.id}');
 
     final result = await connectSignalRUseCase();
 
     result.fold(
       (failure) {
-        print('❌ ChatBloc - SignalR connection failed: ${failure.message}');
         emit(SignalRConnectionError(error: failure.message));
       },
       (_) {
-        print('✅ ChatBloc - SignalR connected successfully');
         _isSignalRConnected = true;
         _reconnectAttempts = 0;
         emit(const SignalRConnected());
-        
-        // Log user info for debugging
-        print('SignalR connected for ${currentUser.role}: ${currentUser.email}');
       },
     );
   }
@@ -534,8 +484,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Shop Chat Rooms
   Future<void> _onLoadShopChatRooms(LoadShopChatRoomsEvent event, Emitter<ChatState> emit) async {
-    print('🏪 ChatBloc: _onLoadShopChatRooms called for Seller');
-    
     if (event.isRefresh) {
       emit(ChatLoading());
     } else {
@@ -550,11 +498,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     result.fold(
       (failure) {
-        print('❌ Shop chat rooms error: ${failure.message}');
         emit(ChatRoomsError(message: failure.message));
       },
       (paginatedResponse) {
-        print('✅ Shop chat rooms loaded: ${paginatedResponse.items.length}');
         emit(ShopChatRoomsLoaded(
           chatRooms: paginatedResponse.items,
           currentPage: paginatedResponse.currentPage,
@@ -705,17 +651,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final user = authState.loginResponse.account;
         // Validate role is valid (Customer or Seller)
         if (!_isValidRole()) {
-          print('Invalid user role: ${user.role}. Expected: Customer (1) or Seller (2)');
           return null;
         }
         
         return user;
       }
       
-      print('Current auth state: ${authState.runtimeType}');
       return null;
     } catch (e) {
-      print('Error getting current user: $e');
       return null;
     }
   }
@@ -734,7 +677,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       try {
         await disconnectSignalRUseCase();
       } catch (e) {
-        print('Error disconnecting SignalR on close: $e');
+        // Handle error silently
       }
     }
     
