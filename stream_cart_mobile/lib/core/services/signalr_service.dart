@@ -38,34 +38,62 @@ class SignalRService {
     this.onConnectionStateChanged,
     this.onError,
   }) {
+    print('🔧 SignalRService - Initializing with baseUrl: $baseUrl');
+    
     _connection = HubConnectionBuilder()
         .withUrl(
           '$baseUrl/chatHub',
           HttpConnectionOptions(
             transport: HttpTransportType.webSockets,
-            accessTokenFactory: () async => await storageService.getAccessToken() ?? "",
+            accessTokenFactory: () async {
+              final token = await storageService.getAccessToken();
+              print('🔑 SignalR - Access token retrieved: ${token?.substring(0, 10)}...');
+              return token ?? "";
+            },
           ),
         )
         .withAutomaticReconnect()
         .build();
 
     _setupListeners();
+    print('✅ SignalR - Service initialized successfully');
   }
 
   /// Kết nối đến SignalR hub
   Future<void> connect() async {
+    print('🔌 SignalR - Starting connection process...');
+    print('🌐 SignalR - Target URL: $baseUrl/chatHub');
+    print('📱 SignalR - Current state: ${_connection.state}');
+    
     if (_connection.state == HubConnectionState.connected) {
+      print('✅ SignalR - Already connected');
       onStatusChanged?.call("Đã kết nối SignalR");
       _isConnected = true;
       return;
     }
+    
     onStatusChanged?.call("Đang kết nối SignalR...");
     try {
+      print('🚀 SignalR - Attempting to start connection...');
       await _connection.start();
       _isConnected = true;
+      print('✅ SignalR - Connection successful!');
+      print('📊 SignalR - Connection state: ${_connection.state}');
+      print('🔑 SignalR - Connection ID: ${_connection.connectionId}');
       onStatusChanged?.call("✅ Đã kết nối SignalR");
     } catch (e) {
       _isConnected = false;
+      print('❌ SignalR - Connection failed: $e');
+      print('❌ SignalR - Error type: ${e.runtimeType}');
+      if (e.toString().contains('CORS')) {
+        print('🚫 SignalR - CORS error detected');
+      }
+      if (e.toString().contains('WebSocket')) {
+        print('🚫 SignalR - WebSocket error detected');  
+      }
+      if (e.toString().contains('401') || e.toString().contains('403')) {
+        print('🚫 SignalR - Authentication error detected');
+      }
       onStatusChanged?.call("❌ Lỗi kết nối SignalR: $e");
       rethrow;
     }
@@ -144,15 +172,34 @@ class SignalRService {
     // Lắng nghe tin nhắn mới
     _connection.on("ReceiveMessage", (arguments) {
       try {
-        if (arguments == null || arguments.isEmpty) return;
+        print('🎯 SignalR - ReceiveMessage callback triggered!');
+        print('📨 Arguments: $arguments');
+        
+        if (arguments == null || arguments.isEmpty) {
+          print('❌ SignalR - No arguments received');
+          return;
+        }
+        
         final data = arguments[0];
+        print('📤 SignalR - Raw data: $data');
+        print('📤 SignalR - Data type: ${data.runtimeType}');
+        
         if (data is Map<String, dynamic>) {
+          print('✅ SignalR - Processing as Map: $data');
           onReceiveMessage?.call(data);
+          onStatusChanged?.call("✅ Đã nhận tin nhắn qua SignalR");
         } else if (data is String) {
+          print('✅ SignalR - Processing as String, parsing JSON...');
           final map = jsonDecode(data);
+          print('✅ SignalR - Parsed JSON: $map');
           onReceiveMessage?.call(map);
+          onStatusChanged?.call("✅ Đã nhận tin nhắn qua SignalR (JSON)");
+        } else {
+          print('❌ SignalR - Unknown data type: ${data.runtimeType}');
+          onError?.call("Dữ liệu tin nhắn không đúng định dạng: ${data.runtimeType}");
         }
       } catch (e) {
+        print('❌ SignalR - Error processing message: $e');
         onError?.call("Lỗi xử lý tin nhắn: $e");
       }
     });

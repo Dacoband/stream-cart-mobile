@@ -10,7 +10,7 @@ class ChatRoomModel {
   final String userId;
   final String shopId;
   final DateTime startedAt;
-  final DateTime lastMessageAt;
+  final DateTime? lastMessageAt;
   final String? relatedOrderId;
   final bool isActive;
   final String userName;
@@ -25,7 +25,7 @@ class ChatRoomModel {
     required this.userId,
     required this.shopId,
     required this.startedAt,
-    required this.lastMessageAt,
+    this.lastMessageAt,
     this.relatedOrderId,
     required this.isActive,
     required this.userName,

@@ -20,7 +20,7 @@ ChatMessageModel _$ChatMessageModelFromJson(Map<String, dynamic> json) =>
       editedAt: json['editedAt'] == null
           ? null
           : DateTime.parse(json['editedAt'] as String),
-      senderName: json['senderName'] as String,
+      senderName: json['senderName'] as String?,
       senderAvatarUrl: json['senderAvatarUrl'] as String?,
       isMine: json['isMine'] as bool,
     );

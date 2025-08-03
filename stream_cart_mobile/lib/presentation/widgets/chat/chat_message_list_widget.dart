@@ -82,10 +82,18 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print('🔄 ChatMessageListWidget build called for room: ${widget.chatRoomId}');
+    
     return BlocListener<ChatBloc, ChatState>(
       listener: (context, state) {
+        print('🎯 ChatMessageListWidget listener - State: ${state.runtimeType}');
+        
         // Auto scroll when messages loaded
         if (state is ChatMessagesLoaded) {
+          print('✅ Messages loaded in listener: ${state.messages.length}');
+          print('📍 For room: ${state.chatRoomId}');
+          print('📱 Widget room: ${widget.chatRoomId}');
+          
           _hasScrolledToBottom = false;
           if (state.messages.isNotEmpty) {
             _scrollToBottom();
@@ -102,11 +110,15 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
       },
       child: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
+          print('🏗️ ChatMessageListWidget builder - State: ${state.runtimeType}');
+          
           if (state is ChatMessagesLoading) {
+            print('⏳ Loading messages...');
             return const CustomLoadingWidget();
           }
           
           if (state is ChatMessagesError) {
+            print('❌ Messages error: ${state.message}');
             return CustomErrorWidget(
               message: state.message,
               onRetry: _retryLoadMessages, // Use the fixed retry method
@@ -114,6 +126,17 @@ class _ChatMessageListWidgetState extends State<ChatMessageListWidget> {
           }
           
           if (state is ChatMessagesLoaded) {
+            print('✅ Building messages list with ${state.messages.length} messages');
+            print('📍 State room ID: ${state.chatRoomId}');
+            print('📱 Widget room ID: ${widget.chatRoomId}');
+            
+            // Check if messages are for this widget's room
+            if (widget.chatRoomId != null && state.chatRoomId != widget.chatRoomId) {
+              print('❌ Room IDs don\'t match - not displaying');
+              return const Center(
+                child: Text('Chưa có tin nhắn. Hãy gửi tin nhắn đầu tiên!'),
+              );
+            }
             if (state.messages.isEmpty) {
               return Column(
                 children: [
@@ -324,10 +347,14 @@ class ChatMessageItemWidget extends StatelessWidget {
                   : null,
               child: message.senderAvatarUrl == null || message.senderAvatarUrl!.isEmpty
                   ? Text(
-                      message.senderName.isNotEmpty 
-                          ? message.senderName[0].toUpperCase()
-                          : 'U',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      (message.senderName?.isNotEmpty == true)
+                          ? message.senderName![0].toUpperCase()
+                          : '?', // Default fallback
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     )
                   : null,
             ),

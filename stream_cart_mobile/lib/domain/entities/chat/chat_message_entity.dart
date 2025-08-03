@@ -11,7 +11,7 @@ class ChatMessage extends Equatable {
   final String messageType;
   final String? attachmentUrl;
   final DateTime? editedAt;
-  final String senderName;
+  final String? senderName; 
   final String? senderAvatarUrl;
   final bool isMine;
 
@@ -26,7 +26,7 @@ class ChatMessage extends Equatable {
     required this.messageType,
     this.attachmentUrl,
     this.editedAt,
-    required this.senderName,
+    this.senderName, 
     this.senderAvatarUrl,
     required this.isMine,
   });

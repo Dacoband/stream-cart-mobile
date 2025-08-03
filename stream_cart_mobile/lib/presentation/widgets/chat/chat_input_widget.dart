@@ -58,7 +58,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   void _sendMessage() {
     final message = textController.text.trim();
+    print('🚀 Attempting to send message: "$message"');
+    print('📝 _isSending: $_isSending');
+    print('⌨️ _isTyping: $_isTyping');
+    
     if (message.isNotEmpty && !_isSending) {
+      print('✅ Sending message...');
       setState(() {
         _isSending = true;
       });
@@ -79,6 +84,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           isTyping: false,
         ));
       }
+    } else {
+      print('❌ Cannot send message - empty or already sending');
     }
   }
 
@@ -136,7 +143,17 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                 final isConnected = state is SignalRConnected || 
                                     state is ChatRoomJoined ||
                                     state is MessageSent ||
-                                    state is MessageReceived;
+                                    state is MessageReceived ||
+                                    state is ChatMessagesLoaded ||
+                                    state is ChatRoomDetailLoaded; // Add more states
+                
+                print('🔗 Connection state: ${state.runtimeType}');
+                print('🔗 isConnected: $isConnected');
+                print('⌨️ _isTyping: $_isTyping');
+                print('📤 _isSending: $_isSending');
+                
+                final canSend = _isTyping && !_isSending; // Remove isConnected requirement temporarily
+                print('✅ canSend: $canSend');
                 
                 return IconButton(
                   icon: _isSending
@@ -150,13 +167,11 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                         )
                       : Icon(
                           Icons.send,
-                          color: isConnected && _isTyping
+                          color: canSend
                               ? const Color(0xFFB0F847)
                               : Colors.grey,
                         ),
-                  onPressed: isConnected && !_isSending && _isTyping
-                      ? _sendMessage
-                      : null,
+                  onPressed: canSend ? _sendMessage : null,
                 );
               },
             ),

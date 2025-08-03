@@ -12,7 +12,9 @@ ChatRoomModel _$ChatRoomModelFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String,
       shopId: json['shopId'] as String,
       startedAt: DateTime.parse(json['startedAt'] as String),
-      lastMessageAt: DateTime.parse(json['lastMessageAt'] as String),
+      lastMessageAt: json['lastMessageAt'] == null
+          ? null
+          : DateTime.parse(json['lastMessageAt'] as String),
       relatedOrderId: json['relatedOrderId'] as String?,
       isActive: json['isActive'] as bool,
       userName: json['userName'] as String,
@@ -32,7 +34,7 @@ Map<String, dynamic> _$ChatRoomModelToJson(ChatRoomModel instance) =>
       'userId': instance.userId,
       'shopId': instance.shopId,
       'startedAt': instance.startedAt.toIso8601String(),
-      'lastMessageAt': instance.lastMessageAt.toIso8601String(),
+      'lastMessageAt': instance.lastMessageAt?.toIso8601String(),
       'relatedOrderId': instance.relatedOrderId,
       'isActive': instance.isActive,
       'userName': instance.userName,
