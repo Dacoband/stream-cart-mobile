@@ -24,7 +24,7 @@ class ProductDetailEntity extends Equatable {
   final double shopCompleteRate;
   final int shopTotalReview;
   final double shopRatingAverage;
-  final String shopLogo;
+  final String? shopLogo;
   final int shopTotalProduct;
   final List<ProductAttributeEntity> attributes;
   final List<ProductVariantEntity> variants;
@@ -51,7 +51,7 @@ class ProductDetailEntity extends Equatable {
     required this.shopCompleteRate,
     required this.shopTotalReview,
     required this.shopRatingAverage,
-    required this.shopLogo,
+    this.shopLogo,
     required this.shopTotalProduct,
     required this.attributes,
     required this.variants,

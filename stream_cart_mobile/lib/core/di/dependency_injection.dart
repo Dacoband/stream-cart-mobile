@@ -303,7 +303,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
 
   // === BLOCS === (Factory registrations)
-  getIt.registerFactory(() => AuthBloc(
+  getIt.registerLazySingleton<AuthBloc>(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
     verifyOtpUseCase: getIt(),

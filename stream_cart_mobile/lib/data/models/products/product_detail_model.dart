@@ -27,7 +27,7 @@ class ProductDetailModel extends ProductDetailEntity {
     required super.shopCompleteRate,
     required super.shopTotalReview,
     required super.shopRatingAverage,
-    required super.shopLogo,
+    super.shopLogo, 
     required super.shopTotalProduct,
     required super.attributes,
     required super.variants,
@@ -49,14 +49,15 @@ class ProductDetailModel extends ProductDetailEntity {
       length: (json['length'] as num?)?.toDouble() ?? 0.0,
       width: (json['width'] as num?)?.toDouble() ?? 0.0,
       height: (json['height'] as num?)?.toDouble() ?? 0.0,
-      primaryImage: List<String>.from(json['primaryImage'] ?? []),
+      primaryImage: (json['primaryImage'] as List<dynamic>?)?.cast<String>() ?? [],
       shopId: json['shopId']?.toString() ?? '',
       shopName: json['shopName']?.toString() ?? '',
       shopStartTime: DateTime.tryParse(json['shopStartTime']?.toString() ?? '') ?? DateTime.now(),
       shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
       shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
       shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
-      shopLogo: json['shopLogo']?.toString() ?? '',
+      // SỬA: shopLogo có thể null nên cần xử lý đúng
+      shopLogo: json['shopLogo']?.toString(),
       shopTotalProduct: (json['shopTotalProduct'] as num?)?.toInt() ?? 0,
       attributes: (json['attributes'] as List<dynamic>?)
           ?.map((attr) => ProductAttributeModel.fromJson(attr as Map<String, dynamic>))

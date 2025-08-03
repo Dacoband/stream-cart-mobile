@@ -856,9 +856,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: product.shopLogo.isNotEmpty
+                  child: product.shopLogo != null
                       ? Image.network(
-                          product.shopLogo,
+                          product.shopLogo!,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
