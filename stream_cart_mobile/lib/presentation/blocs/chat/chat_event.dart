@@ -287,3 +287,22 @@ class ClearMessagesEvent extends ChatEvent {
 class ClearSearchResultsEvent extends ChatEvent {
   const ClearSearchResultsEvent();
 }
+
+class TypingReceivedEvent extends ChatEvent {
+  final String userId;
+  final String chatRoomId;
+  final String? userName;
+  final bool isTyping;
+  final DateTime? timestamp;
+
+  const TypingReceivedEvent({
+    required this.userId,
+    required this.chatRoomId,
+    this.userName,
+    required this.isTyping,
+    this.timestamp,
+  });
+
+  @override
+  List<Object?> get props => [userId, chatRoomId, userName, isTyping, timestamp];
+}

@@ -3,11 +3,9 @@ import 'dart:convert';
 import 'package:signalr_core/signalr_core.dart';
 import 'package:stream_cart_mobile/core/services/storage_service.dart';
 
-// Bạn có thể define thêm model ChatMessage/ChatEvent tuỳ theo app
 
 typedef SignalRStatusCallback = void Function(String status);
 typedef OnReceiveMessage = void Function(Map<String, dynamic> message);
-// Thêm typedef cho các callbacks khác
 typedef OnUserTyping = void Function(String userId, String chatRoomId, bool isTyping);
 typedef OnUserJoinedRoom = void Function(String userId, String chatRoomId);
 typedef OnUserLeftRoom = void Function(String userId, String chatRoomId);

@@ -450,6 +450,34 @@ class NetworkError extends ChatState {
   List<Object> get props => [message];
 }
 
+class MessageSendFailure extends ChatState {
+  final String error;
+
+  MessageSendFailure(this.error);
+
+  @override
+  List<Object> get props => [error];
+}
+
+class TypingIndicatorReceived extends ChatState {
+  final String userId;
+  final String chatRoomId;
+  final String? userName;
+  final bool isTyping;
+  final DateTime timestamp; 
+
+  TypingIndicatorReceived({
+    required this.userId,
+    required this.chatRoomId,
+    this.userName,
+    required this.isTyping,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  @override
+  List<Object?> get props => [userId, chatRoomId, userName, isTyping, timestamp];
+}
+
 // Status States
 class ChatStatusChanged extends ChatState {
   final String status;

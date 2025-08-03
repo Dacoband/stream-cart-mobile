@@ -179,8 +179,8 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => ChatDetailPage(
             chatRoomId: args['chatRoomId']!,
-            userId: args['userId']!,
-            userName: args['userName']!,
+            shopId: args['shopId']!,
+            shopName: args['shopName'] ?? '',
           ),
         );
       case addressList:

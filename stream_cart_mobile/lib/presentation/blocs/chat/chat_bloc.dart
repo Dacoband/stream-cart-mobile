@@ -103,6 +103,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ClearChatStateEvent>(_onClearChatState);
     on<ClearMessagesEvent>(_onClearMessages);
     on<ClearSearchResultsEvent>(_onClearSearchResults);
+    on<TypingReceivedEvent>(_onTypingReceived); // Add this line
 
     // Setup SignalR listeners
     _setupSignalRListeners();
@@ -115,13 +116,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     };
 
     // User typing
-    signalRService.onUserTyping = (userId, chatRoomId, isTyping) {
-      add(UserTypingChangedEvent(
+    signalRService.onUserTyping = ((userId, chatRoomId, isTyping, userName) {
+      add(TypingReceivedEvent(
         userId: userId,
         chatRoomId: chatRoomId,
+        userName: userName,
         isTyping: isTyping,
+        timestamp: DateTime.now(),
       ));
-    };
+    }) as OnUserTyping?;
 
     // User joined room
     signalRService.onUserJoinedRoom = (userId, chatRoomId) {
@@ -674,13 +677,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       
       if (authState is AuthSuccess) {
         final user = authState.loginResponse.account;
-        
-        // Validate role exists
-        if (user.role == null) {
-          print('User role is null');
-          return null;
-        }
-        
         // Validate role is valid (Customer or Seller)
         if (!_isValidRole()) {
           print('Invalid user role: ${user.role}. Expected: Customer (1) or Seller (2)');
@@ -723,5 +719,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _reconnectAttempts = 0;
     
     return super.close();
+  }
+
+  // Add new event handler method
+  Future<void> _onTypingReceived(TypingReceivedEvent event, Emitter<ChatState> emit) async {
+    // Only emit if it's not the current user typing
+    final currentUser = _getCurrentUser();
+    if (currentUser != null && currentUser.id != event.userId) {
+      emit(TypingIndicatorReceived(
+        userId: event.userId,
+        chatRoomId: event.chatRoomId,
+        userName: event.userName,
+        isTyping: event.isTyping,
+        timestamp: event.timestamp ?? DateTime.now(),
+      ));
+
+      // Auto-clear typing indicator after timeout if user is typing
+      if (event.isTyping) {
+        Timer(const Duration(seconds: 5), () {
+          // Check if still in the same state and emit stop typing
+          if (state is TypingIndicatorReceived) {
+            final currentState = state as TypingIndicatorReceived;
+            if (currentState.userId == event.userId && 
+                currentState.chatRoomId == event.chatRoomId) {
+              add(TypingReceivedEvent(
+                userId: event.userId,
+                chatRoomId: event.chatRoomId,
+                userName: event.userName,
+                isTyping: false,
+              ));
+            }
+          }
+        });
+      }
+    }
   }
 }
