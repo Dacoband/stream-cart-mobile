@@ -15,7 +15,7 @@ class ChatMessage extends Equatable {
   final String? senderAvatarUrl;
   final bool isMine;
 
-  ChatMessage({
+  const ChatMessage({
     required this.id,
     required this.chatRoomId,
     required this.senderUserId,
@@ -30,6 +30,38 @@ class ChatMessage extends Equatable {
     this.senderAvatarUrl,
     required this.isMine,
   });
+
+  ChatMessage copyWith({
+    String? id,
+    String? chatRoomId,
+    String? senderUserId,
+    String? content,
+    DateTime? sentAt,
+    bool? isRead,
+    bool? isEdited,
+    String? messageType,
+    String? attachmentUrl,
+    DateTime? editedAt,
+    String? senderName,
+    String? senderAvatarUrl,
+    bool? isMine,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      chatRoomId: chatRoomId ?? this.chatRoomId,
+      senderUserId: senderUserId ?? this.senderUserId,
+      content: content ?? this.content,
+      sentAt: sentAt ?? this.sentAt,
+      isRead: isRead ?? this.isRead,
+      isEdited: isEdited ?? this.isEdited,
+      messageType: messageType ?? this.messageType,
+      attachmentUrl: attachmentUrl ?? this.attachmentUrl,
+      editedAt: editedAt ?? this.editedAt,
+      senderName: senderName ?? this.senderName,
+      senderAvatarUrl: senderAvatarUrl ?? this.senderAvatarUrl,
+      isMine: isMine ?? this.isMine,
+    );
+  }
 
   @override
   List<Object?> get props => [

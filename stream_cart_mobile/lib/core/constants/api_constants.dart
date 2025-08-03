@@ -88,17 +88,20 @@ class ApiConstants {
   static const String notificationEndpoint = '/api/notification';
   static const String markAsReadEndpoint = '/api/notification/mark-as-read';
 
-  //Chat endpoints
-  static const String chatEndpoint = '/api/chat/messages';
-  static const String chatMessageEndpoint = '/api/chat/messages/{messageId}';
-  static const String chatRoomEndpoint = '/api/chat/rooms';
-  static const String chatRoomDetailsEndpoint = '/api/chat/rooms/{chatRoomId}/messages';
-  static const String chatRoomMarkAsReadEndpoint = '/api/chat/rooms/{chatRoomId}/mark-read';
-  static const String chatRoomShopEndpoint = '/api/chat/rooms/shop/{shopId}';
-  static const String shopTokenEndpoint = '/api/chat/rooms/{chatRoomId}/shop-token';
-  static const String chatShopRoomsEndpoint = '/api/chat/shop-rooms';
+  //Chat with SignalR endpoints
+  static const String chatRoomEndpoint = '/api/chatsignalr/rooms'; // GET, POST
+  static const String chatRoomDetailEndpoint = '/api/chatsignalr/rooms/{chatRoomId}'; // GET
+  static const String chatRoomJoinEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/join'; // POST
+  static const String chatRoomLeaveEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/leave'; // POST
+  static const String chatRoomMarkReadEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/mark-read'; // PATCH
+  static const String chatRoomTypingEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/typing'; // POST
+  static const String chatRoomMessagesEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/messages'; // GET
+  static const String chatRoomMessagesSearchEndpoint = '/api/chatsignalr/rooms/{chatRoomId}/messages/search'; // GET
+  static const String chatMessagesEndpoint = '/api/chatsignalr/messages'; // POST
+  static const String chatMessagePutEndpoint = '/api/chatsignalr/messages/{messageId}'; // PUT
+  static const String unReadCountEndpoint = '/api/chatsignalr/unread-count'; // GET
+  static const String chatShopRoomsEndpoint = '/api/chatsignalr/shop-rooms'; // GET những phòng chat của shop
 
-  
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;

@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import '../../pages/chat/chat_detail_page.dart';
-import 'package:stream_cart_mobile/domain/entities/chat/chat_entity.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_room_entity.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 

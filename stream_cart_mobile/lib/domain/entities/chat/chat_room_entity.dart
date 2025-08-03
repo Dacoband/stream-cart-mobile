@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 
-class ChatEntity extends Equatable {
+class ChatRoomEntity extends Equatable {
   final String id;
   final String userId;
   final String shopId;
@@ -15,12 +15,8 @@ class ChatEntity extends Equatable {
   final String? shopLogoUrl;
   final ChatMessage? lastMessage;
   final int unreadCount;
-  final bool hasUnreadMessages;
-  final String? liveKitRoomName;
-  final String customerToken;
-  final bool isLiveKitActive;
 
-  ChatEntity({
+  const ChatRoomEntity({
     required this.id,
     required this.userId,
     required this.shopId,
@@ -34,13 +30,11 @@ class ChatEntity extends Equatable {
     this.shopLogoUrl,
     this.lastMessage,
     required this.unreadCount,
-    this.hasUnreadMessages = false,
-    this.liveKitRoomName,
-    required this.customerToken,
-    required this.isLiveKitActive,
   });
 
-  ChatEntity copyWith({
+  bool get hasUnreadMessages => unreadCount > 0;
+
+  ChatRoomEntity copyWith({
     String? id,
     String? userId,
     String? shopId,
@@ -50,17 +44,12 @@ class ChatEntity extends Equatable {
     bool? isActive,
     String? userName,
     String? userAvatarUrl,
-    String? shopLogoUrl,
     String? shopName,
-    String? shopAvatarUrl,
+    String? shopLogoUrl,
     ChatMessage? lastMessage,
     int? unreadCount,
-    bool? hasUnreadMessages,
-    String? liveKitRoomName,
-    String? customerToken,
-    bool? isLiveKitActive,
   }) {
-    return ChatEntity(
+    return ChatRoomEntity(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       shopId: shopId ?? this.shopId,
@@ -70,14 +59,10 @@ class ChatEntity extends Equatable {
       isActive: isActive ?? this.isActive,
       userName: userName ?? this.userName,
       userAvatarUrl: userAvatarUrl ?? this.userAvatarUrl,
-      shopLogoUrl: shopLogoUrl ?? this.shopLogoUrl,
       shopName: shopName ?? this.shopName,
+      shopLogoUrl: shopLogoUrl ?? this.shopLogoUrl,
       lastMessage: lastMessage ?? this.lastMessage,
       unreadCount: unreadCount ?? this.unreadCount,
-      hasUnreadMessages: hasUnreadMessages ?? this.hasUnreadMessages,
-      liveKitRoomName: liveKitRoomName ?? this.liveKitRoomName,
-      customerToken: customerToken ?? this.customerToken,
-      isLiveKitActive: isLiveKitActive ?? this.isLiveKitActive,
     );
   }
 
@@ -94,12 +79,59 @@ class ChatEntity extends Equatable {
         userAvatarUrl,
         shopName,
         shopLogoUrl,
-        lastMessage, 
+        lastMessage,
         unreadCount,
-        hasUnreadMessages,
-        liveKitRoomName,
-        isLiveKitActive,
-        customerToken,
       ];
 }
 
+// Thêm class để handle pagination response
+class ChatRoomsPaginatedResponse extends Equatable {
+  final int currentPage;
+  final int pageSize;
+  final int totalCount;
+  final int totalPages;
+  final bool hasPrevious;
+  final bool hasNext;
+  final List<ChatRoomEntity> items;
+
+  const ChatRoomsPaginatedResponse({
+    required this.currentPage,
+    required this.pageSize,
+    required this.totalCount,
+    required this.totalPages,
+    required this.hasPrevious,
+    required this.hasNext,
+    required this.items,
+  });
+
+  ChatRoomsPaginatedResponse copyWith({
+    int? currentPage,
+    int? pageSize,
+    int? totalCount,
+    int? totalPages,
+    bool? hasPrevious,
+    bool? hasNext,
+    List<ChatRoomEntity>? items,
+  }) {
+    return ChatRoomsPaginatedResponse(
+      currentPage: currentPage ?? this.currentPage,
+      pageSize: pageSize ?? this.pageSize,
+      totalCount: totalCount ?? this.totalCount,
+      totalPages: totalPages ?? this.totalPages,
+      hasPrevious: hasPrevious ?? this.hasPrevious,
+      hasNext: hasNext ?? this.hasNext,
+      items: items ?? this.items,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        currentPage,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasPrevious,
+        hasNext,
+        items,
+      ];
+}
