@@ -86,7 +86,7 @@ import '../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../domain/usecases/chat/connect_livekit_usecase.dart';
 import '../../domain/usecases/chat/disconnect_livekit_usecase.dart';
 import '../../presentation/blocs/chat/chat_bloc.dart';
-import '../services/livekit_service.dart';
+import '../services/signalr_service.dart';
 import '../../core/services/address_external_service.dart';
 import '../../data/datasources/address/address_remote_data_source.dart';
 import '../../data/repositories/address_repository_impl.dart';

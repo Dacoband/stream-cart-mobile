@@ -7,6 +7,12 @@ import 'package:stream_cart_mobile/core/services/storage_service.dart';
 
 typedef SignalRStatusCallback = void Function(String status);
 typedef OnReceiveMessage = void Function(Map<String, dynamic> message);
+// Thêm typedef cho các callbacks khác
+typedef OnUserTyping = void Function(String userId, String chatRoomId, bool isTyping);
+typedef OnUserJoinedRoom = void Function(String userId, String chatRoomId);
+typedef OnUserLeftRoom = void Function(String userId, String chatRoomId);
+typedef OnConnectionStateChanged = void Function(HubConnectionState state);
+typedef OnError = void Function(String error);
 
 class SignalRService {
   late final HubConnection _connection;
@@ -15,6 +21,12 @@ class SignalRService {
   final SignalRStatusCallback? onStatusChanged;
   final OnReceiveMessage? onReceiveMessage;
 
+  final OnUserTyping? onUserTyping;
+  final OnUserJoinedRoom? onUserJoinedRoom;
+  final OnUserLeftRoom? onUserLeftRoom;
+  final OnConnectionStateChanged? onConnectionStateChanged;
+  final OnError? onError;
+
   bool _isConnected = false;
 
   SignalRService(
@@ -22,6 +34,11 @@ class SignalRService {
     this.storageService, {
     this.onStatusChanged,
     this.onReceiveMessage,
+    this.onUserTyping,
+    this.onUserJoinedRoom,
+    this.onUserLeftRoom,
+    this.onConnectionStateChanged,
+    this.onError,
   }) {
     _connection = HubConnectionBuilder()
         .withUrl(
@@ -69,27 +86,23 @@ class SignalRService {
 
   bool get isConnected => _isConnected;
 
-  /// Gửi message đến hub
+  // Cải tiến sendMessage với retry
   Future<void> sendMessage({
     required String chatRoomId,
     required String content,
     String messageType = "Text",
     String? attachmentUrl,
   }) async {
-    if (!_isConnected) throw Exception("SignalR chưa kết nối!");
-    try {
+    return _withRetry(() async {
       final message = {
         "chatRoomId": chatRoomId,
         "content": content,
         "messageType": messageType,
         if (attachmentUrl != null) "attachmentUrl": attachmentUrl,
       };
-      // Giả sử backend có method tên 'SendMessage' trên hub
       await _connection.invoke("SendMessage", args: [message]);
-    } catch (e) {
-      onStatusChanged?.call("❌ Gửi message thất bại: $e");
-      rethrow;
-    }
+      onStatusChanged?.call("✅ Đã gửi tin nhắn");
+    });
   }
 
   /// Join một chat room
@@ -132,43 +145,104 @@ class SignalRService {
   void _setupListeners() {
     // Lắng nghe tin nhắn mới
     _connection.on("ReceiveMessage", (arguments) {
-      if (arguments == null || arguments.isEmpty) return;
-      // Dữ liệu truyền về thường là Map<String, dynamic>
-      final data = arguments[0];
-      if (data is Map<String, dynamic>) {
-        onReceiveMessage?.call(data);
-      } else if (data is String) {
-        // Nếu backend trả về string json
-        final map = jsonDecode(data);
-        onReceiveMessage?.call(map);
+      try {
+        if (arguments == null || arguments.isEmpty) return;
+        final data = arguments[0];
+        if (data is Map<String, dynamic>) {
+          onReceiveMessage?.call(data);
+        } else if (data is String) {
+          final map = jsonDecode(data);
+          onReceiveMessage?.call(map);
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý tin nhắn: $e");
       }
     });
 
-    // Lắng nghe khi có user join/leave room hoặc các sự kiện khác
-    _connection.on("UserJoined", (args) {
-      onStatusChanged?.call("👤 User joined: ${args?[0]}");
-    });
-
-    _connection.on("UserLeft", (args) {
-      onStatusChanged?.call("👤 User left: ${args?[0]}");
-    });
-
+    // Lắng nghe typing với thông tin chi tiết hơn
     _connection.on("Typing", (args) {
-      onStatusChanged?.call("✏️ Typing: $args");
+      try {
+        if (args != null && args.length >= 3) {
+          final userId = args[0] as String;
+          final chatRoomId = args[1] as String;
+          final isTyping = args[2] as bool;
+          onUserTyping?.call(userId, chatRoomId, isTyping);
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý typing indicator: $e");
+      }
     });
 
-    // Lắng nghe trạng thái connection
+    // User joined với thông tin chi tiết
+    _connection.on("UserJoined", (args) {
+      try {
+        if (args != null && args.length >= 2) {
+          final userId = args[0] as String;
+          final chatRoomId = args[1] as String;
+          onUserJoinedRoom?.call(userId, chatRoomId);
+          onStatusChanged?.call("👤 User $userId joined room $chatRoomId");
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý user joined: $e");
+      }
+    });
+
+    // User left với thông tin chi tiết
+    _connection.on("UserLeft", (args) {
+      try {
+        if (args != null && args.length >= 2) {
+          final userId = args[0] as String;
+          final chatRoomId = args[1] as String;
+          onUserLeftRoom?.call(userId, chatRoomId);
+          onStatusChanged?.call("👤 User $userId left room $chatRoomId");
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý user left: $e");
+      }
+    });
+
+    // Connection state changes
     _connection.onclose((error) {
       _isConnected = false;
+      onConnectionStateChanged?.call(HubConnectionState.disconnected);
       onStatusChanged?.call("❌ SignalR bị ngắt kết nối: $error");
-      // Ở đây có thể tự động reconnect hoặc thông báo lên UI
     });
+
     _connection.onreconnecting((error) {
+      onConnectionStateChanged?.call(HubConnectionState.reconnecting);
       onStatusChanged?.call("🔄 SignalR đang reconnect...");
     });
+
     _connection.onreconnected((connectionId) {
       _isConnected = true;
+      onConnectionStateChanged?.call(HubConnectionState.connected);
       onStatusChanged?.call("✅ SignalR đã reconnect: $connectionId");
     });
+  }
+
+  // Thêm method để check và auto-reconnect
+  Future<void> ensureConnected() async {
+    if (!_isConnected || _connection.state != HubConnectionState.connected) {
+      await connect();
+    }
+  }
+
+  // Thêm method để handle retry logic
+  Future<T> _withRetry<T>(Future<T> Function() operation, {int maxRetries = 3}) async {
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        await ensureConnected();
+        return await operation();
+      } catch (e) {
+        if (i == maxRetries - 1) rethrow;
+        await Future.delayed(Duration(seconds: i + 1));
+      }
+    }
+    throw Exception("Operation failed after $maxRetries retries");
+  }
+
+  // Dispose method để cleanup
+  void dispose() {
+    disconnect();
   }
 }

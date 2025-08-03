@@ -6,7 +6,7 @@ import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 
 import '../../../core/di/dependency_injection.dart';
-import '../../../core/services/livekit_service.dart';
+import '../../../core/services/signalr_service.dart';
 import '../../widgets/chat/chat_input_widget.dart';
 import '../../widgets/chat/chat_message_list_widget.dart';
 

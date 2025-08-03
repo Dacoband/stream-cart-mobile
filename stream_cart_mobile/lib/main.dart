@@ -6,7 +6,7 @@ import 'core/config/firebase_config.dart';
 import 'core/config/env.dart';
 import 'core/di/dependency_injection.dart';
 import 'core/routing/app_router.dart';
-import 'core/services/livekit_service.dart';
+import 'core/services/signalr_service.dart';
 import 'core/services/search_history_service.dart';
 import 'core/services/notification_signalr_manager.dart';
 import 'core/services/firebase_notification_service.dart';

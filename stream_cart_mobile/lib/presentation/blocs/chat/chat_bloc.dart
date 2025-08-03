@@ -15,7 +15,7 @@ import '../../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/send_message_usecase.dart';
-import '../../../core/services/livekit_service.dart';
+import '../../../core/services/signalr_service.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_state.dart';
