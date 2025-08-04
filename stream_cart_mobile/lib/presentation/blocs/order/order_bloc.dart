@@ -56,8 +56,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final result = await _getOrdersByAccountUseCase(
       GetOrdersByAccountParams(
         accountId: event.accountId,
-        pageIndex: _currentPage,
-        pageSize: _pageSize,
         status: event.status,
       ),
     );
@@ -167,8 +165,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final result = await _getOrdersByAccountUseCase(
       GetOrdersByAccountParams(
         accountId: event.accountId,
-        pageIndex: _currentPage,
-        pageSize: _pageSize,
         status: event.status,
       ),
     );
@@ -203,8 +199,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final result = await _getOrdersByAccountUseCase(
       GetOrdersByAccountParams(
         accountId: event.accountId,
-        pageIndex: _currentPage,
-        pageSize: _pageSize,
         status: event.status,
       ),
     );

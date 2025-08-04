@@ -14,8 +14,6 @@ abstract class OrderRepository {
   // GET /api/orders/account/{accountId}
   Future<Either<Failure, List<OrderEntity>>> getOrdersByAccountId(
     String accountId, {
-    int? pageIndex,
-    int? pageSize,
     int? status,
   });
   //Get order details by order code

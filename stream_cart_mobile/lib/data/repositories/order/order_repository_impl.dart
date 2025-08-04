@@ -16,15 +16,11 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<Either<Failure, List<OrderEntity>>> getOrdersByAccountId(
     String accountId, {
-    int? pageIndex,
-    int? pageSize,
     int? status,
   }) async {
     try {
       final remoteOrders = await remoteDataSource.getOrdersByAccountId(
         accountId,
-        pageIndex: pageIndex,
-        pageSize: pageSize,
         status: status,
       );
       return Right(remoteOrders.map((model) => model.toEntity()).toList());

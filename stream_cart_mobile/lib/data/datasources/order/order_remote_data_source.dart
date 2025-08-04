@@ -6,8 +6,6 @@ import '../../models/order/order_model.dart';
 abstract class OrderRemoteDataSource {
   Future<List<OrderModel>> getOrdersByAccountId(
     String accountId, {
-    int? pageIndex,
-    int? pageSize,
     int? status,
   });
   Future<OrderModel> getOrderById(String id);
@@ -24,14 +22,10 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<List<OrderModel>> getOrdersByAccountId(
     String accountId, {
-    int? pageIndex,
-    int? pageSize,
     int? status,
   }) async {
     try {
       final queryParameters = <String, dynamic>{};
-      if (pageIndex != null) queryParameters['PageIndex'] = pageIndex;
-      if (pageSize != null) queryParameters['PageSize'] = pageSize;
       if (status != null) queryParameters['Status'] = status;
 
       final response = await _dioClient.get(

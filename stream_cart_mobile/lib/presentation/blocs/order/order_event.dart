@@ -3,26 +3,19 @@ import '../../../domain/entities/order/create_order_request_entity.dart';
 
 abstract class OrderEvent extends Equatable {
   const OrderEvent();
-
-  @override
-  List<Object?> get props => [];
 }
 
 class GetOrdersByAccountEvent extends OrderEvent {
   final String accountId;
-  final int? pageIndex;
-  final int? pageSize;
   final int? status;
 
   const GetOrdersByAccountEvent({
     required this.accountId,
-    this.pageIndex,
-    this.pageSize,
     this.status,
   });
 
   @override
-  List<Object?> get props => [accountId, pageIndex, pageSize, status];
+  List<Object?> get props => [accountId, status];
 }
 
 class GetOrderByIdEvent extends OrderEvent {
@@ -89,4 +82,7 @@ class LoadMoreOrdersEvent extends OrderEvent {
 
 class ResetOrderStateEvent extends OrderEvent {
   const ResetOrderStateEvent();
+
+  @override
+  List<Object?> get props => [];
 }

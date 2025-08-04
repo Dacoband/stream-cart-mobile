@@ -1,20 +1,20 @@
 import 'package:dartz/dartz.dart';
+import 'package:equatable/equatable.dart';
 import '../../../core/error/failures.dart';
 import '../../entities/order/order_entity.dart';
 import '../../repositories/order/order_repository.dart';
 
-class GetOrdersByAccountParams {
+class GetOrdersByAccountParams extends Equatable {
   final String accountId;
-  final int? pageIndex;
-  final int? pageSize;
   final int? status;
 
-  GetOrdersByAccountParams({
+  const GetOrdersByAccountParams({
     required this.accountId,
-    this.pageIndex,
-    this.pageSize,
     this.status,
   });
+
+  @override
+  List<Object?> get props => [accountId, status];
 }
 
 class GetOrdersByAccountUseCase {
@@ -25,8 +25,6 @@ class GetOrdersByAccountUseCase {
   Future<Either<Failure, List<OrderEntity>>> call(GetOrdersByAccountParams params) async {
     return await repository.getOrdersByAccountId(
       params.accountId,
-      pageIndex: params.pageIndex,
-      pageSize: params.pageSize,
       status: params.status,
     );
   }

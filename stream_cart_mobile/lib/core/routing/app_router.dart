@@ -5,6 +5,7 @@ import '../../presentation/pages/address/add_edit_address_page.dart';
 import '../../presentation/pages/address/address_list_page.dart';
 import '../../presentation/pages/chat/chat_detail_page.dart';
 import '../../presentation/pages/chat/chat_list_page.dart';
+import '../../presentation/pages/order/order_list_page.dart';
 import '../di/dependency_injection.dart';
 import '../../presentation/pages/auth/login_page.dart' as auth;
 import '../../presentation/pages/auth/register_page.dart';
@@ -129,13 +130,9 @@ class AppRouter {
           ),
         );
       case orders:
+        final String? accountId = settings.arguments as String?;
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Đơn hàng của tôi')),
-            body: const Center(
-              child: Text('Trang đơn hàng đang phát triển'),
-            ),
-          ),
+          builder: (_) => OrderListPage(accountId: accountId),
         );
       case notification:
         return MaterialPageRoute(
