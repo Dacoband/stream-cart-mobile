@@ -86,8 +86,30 @@ class ApiConstants {
   static const String cartEndpoint = '/api/carts'; // GET, POST, PUT, DELETE
   static const String cartPreviewEndpoint = '/api/carts/PreviewOrder'; // Lấy thông tin giỏ hàng để preview đem trước khi tạo order
 
-  static const String ordersEndpoint = '/api/orders';
-  
+  // Order endpoints
+  static const String ordersEndpoint = '/api/orders/multi'; //POST, tạo đơn hàng
+  static const String orderDetailEndpoint = '/api/orders/{id}'; // GET, lấy chi tiết đơn hàng
+  static const String orderCancelEndpoint = '/api/orders/{id}/cancel'; // POST, hủy đơn hàng
+  static const String orderAccountEndpoint = '/api/orders/account/{accountId}'; // GET, lấy đơn hàng của tài khoản
+  static const String orderPaymentStatusEndpoint = '/api/orders/{id}/payment-status'; // PUT, cập nhật trạng thái thanh toán của đơn hàng
+  static const String orderStatusEndpoint = '/api/orders/{id}/status'; // PUT, cập nhật trạng thái của đơn hàng
+  static const String orderShippingInfoEndpoint = '/api/orders/{id}/shipping-info'; // PUT, cập nhật thông tin vận chuyển của đơn hàng
+  static const String orderTrackingCodeEndpoint = '/api/orders/{id}/tracking-code'; // PUT, cập nhật mã đơn của đơn hàng
+  static const String orderCodeEndpoint = '/api/orders/{id}/code'; // GET, lấy đơn hàng theo mã đơn hàng
+
+
+  // Order Item endpoints
+  static const String orderItemsEndpoint = '/api/order-items/{id}'; // GET, PUT, DELETE 
+  static const String orderItemsByOrderEndpoint = '/api/order-items/by-order/{orderId}'; // GET, lấy tất cả order item của đơn hàng
+  static const String orderItemRefundRequestEndpoint = '/api/order-items/{orderItemId}/refund'; // POST, gửi yêu cầu hoàn tiền cho order item
+  static const String createOrderItemByOrderEndpoint = '/api/order-items/orders/{orderId}'; // POST, tạo order item từ đơn hàng
+
+  // Payment endpoints
+  static const String paymentEndpoint = '/api/payments/generate-qr-code'; // POST, tạo thanh toán và generate QR code
+
+// Delivery endpoints
+  static const String deliveryEndpoint = '/api/deliveries/preview-order'; // POST
+
   // Notification endpoints
   static const String notificationEndpoint = '/api/notification';
   static const String markAsReadEndpoint = '/api/notification/mark-as-read';
