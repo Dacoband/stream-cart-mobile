@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../../../domain/usecases/cart/get_cart_items_usecase.dart';
+import '../../../domain/usecases/cart/get_all_cart_items_usecase.dart';
 import '../../../domain/usecases/cart/update_cart_item_usecase.dart';
 import '../../../domain/usecases/cart/remove_from_cart_usecase.dart';
 import '../../../domain/usecases/cart/remove_cart_item_usecase.dart';
@@ -14,6 +16,7 @@ import 'cart_state.dart';
 class CartBloc extends Bloc<CartEvent, CartState> {
   final AddToCartUseCase addToCartUseCase;
   final GetCartItemsUseCase getCartItemsUseCase;
+  final GetAllCartItemsUseCase getAllCartItemsUseCase;
   final UpdateCartItemUseCase updateCartItemUseCase;
   final RemoveFromCartUseCase removeFromCartUseCase;
   final RemoveCartItemUseCase removeCartItemUseCase;
@@ -25,6 +28,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc({
     required this.addToCartUseCase,
     required this.getCartItemsUseCase,
+    required this.getAllCartItemsUseCase,
     required this.updateCartItemUseCase,
     required this.removeFromCartUseCase,
     required this.removeCartItemUseCase,
@@ -50,16 +54,17 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   Future<void> _onLoadCart(LoadCartEvent event, Emitter<CartState> emit) async {
     emit(CartLoading());
     
-    final result = await getCartItemsUseCase();
+    final result = await getAllCartItemsUseCase();
     result.fold(
       (failure) => emit(CartError(failure.message)),
-      (cartItems) {
+      (allItems) {
         double totalAmount = 0;
-        for (var item in cartItems) {
+        for (var item in allItems) {
           totalAmount += (item.currentPrice * item.quantity);
         }
+        
         emit(CartLoaded(
-          items: cartItems, 
+          items: allItems, 
           totalAmount: totalAmount,
           selectedCartItemIds: const {},
         ));
@@ -146,7 +151,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       (failure) => emit(CartError(failure.message)),
       (_) {
         emit(const CartItemRemoved('Đã xóa sản phẩm khỏi giỏ hàng'));
-        // Reload cart after removing item
         add(LoadCartEvent());
       },
     );

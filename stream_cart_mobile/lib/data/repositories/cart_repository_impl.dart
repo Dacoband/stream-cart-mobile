@@ -4,6 +4,7 @@ import '../../domain/entities/cart/cart_entity.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../datasources/cart/cart_remote_data_source.dart';
 import '../models/cart/cart_model.dart';
+import '../models/cart/cart_response_model.dart';
 import '../../core/error/failures.dart';
 import '../../core/error/exceptions.dart';
 
@@ -34,10 +35,21 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
-  Future<Either<Failure, List<CartItemEntity>>> getCartItems() async {
+  Future<Either<Failure, CartSummaryEntity>> getCartItems() async {
     try {
-      final cartItems = await remoteDataSource.getCartItems();
-      return Right(cartItems.map((item) => item.toEntity()).toList());
+      final response = await remoteDataSource.getCartItems();
+      if (response.success && response.data != null) {
+        final cartSummary = response.data!.toCartSummaryModel();
+        return Right(cartSummary.toEntity());
+      } else {
+        return Right(const CartSummaryEntity(
+          totalItem: 0,
+          subTotal: 0,
+          discount: 0,
+          totalAmount: 0,
+          listCartItem: [],
+        ));
+      }
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
@@ -127,7 +139,6 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, void>> removeMultipleCartItems(List<String> cartItemIds) async {
     try {
-      // Remove items one by one (could be optimized with batch API if available)
       for (String cartItemId in cartItemIds) {
         await remoteDataSource.removeCartItem(cartItemId);
       }

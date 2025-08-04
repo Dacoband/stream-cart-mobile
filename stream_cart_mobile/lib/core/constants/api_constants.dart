@@ -40,6 +40,7 @@ class ApiConstants {
   static const String shopDetailEndpoint = '/api/shops/{id}';
   static const String shopSearchEndpoint = '/api/shops/search'; // Tìm kiếm shop theo tên
 
+
   
   // Product endpoints
   static const String productsEndpoint = '/api/products';
@@ -80,8 +81,11 @@ class ApiConstants {
   static const String categoriesEndpoint = '/api/categorys';
   static const String categoryDetailEndpoint = '/api/categorys/{id}';
   static const String productsByCategoryEndpoint = '/api/products/category/{id}';
-  static const String cartEndpoint = '/api/carts';
-  static const String cartPreviewEndpoint = '/api/carts/PreviewOrder';
+
+  // Cart endpoints
+  static const String cartEndpoint = '/api/carts'; // GET, POST, PUT, DELETE
+  static const String cartPreviewEndpoint = '/api/carts/PreviewOrder'; // Lấy thông tin giỏ hàng để preview đem trước khi tạo order
+
   static const String ordersEndpoint = '/api/orders';
   
   // Notification endpoints
