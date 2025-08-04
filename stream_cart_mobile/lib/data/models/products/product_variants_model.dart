@@ -22,17 +22,37 @@ class ProductVariantsModel extends ProductVariantEntity {
 
   factory ProductVariantsModel.fromJson(Map<String, dynamic> json) {
     try {
-      print('🔍 Parse variant: ${json['variantId'] ?? json['id']}');
+      print('🔍 Parse variant JSON: $json');
+      
+      // Determine which API structure this is from
+      bool isFromProductDetailAPI = json.containsKey('variantId');
+      bool isFromVariantsAPI = json.containsKey('id') && !json.containsKey('variantId');
+      
+      String variantId;
+      if (isFromProductDetailAPI) {
+        variantId = json['variantId']?.toString() ?? '';
+      } else {
+        variantId = json['id']?.toString() ?? '';
+      }
+      
+      // Handle variant image from Product Detail API
+      String? variantImageUrl;
+      if (json['variantImage'] != null) {
+        if (json['variantImage'] is Map) {
+          variantImageUrl = json['variantImage']['url']?.toString();
+        } else if (json['variantImage'] is String) {
+          variantImageUrl = json['variantImage'];
+        }
+      }
       
       return ProductVariantsModel(
-        // SỬA: Sử dụng đúng field names
-        id: json['id']?.toString() ?? json['variantId']?.toString() ?? '',
+        id: variantId,
         productId: json['productId']?.toString() ?? '',
-        sku: json['sku']?.toString() ?? '',
+        sku: json['sku']?.toString() ?? variantId,
         price: (json['price'] as num?)?.toDouble() ?? 0.0,
         flashSalePrice: (json['flashSalePrice'] as num?)?.toDouble() ?? 0.0,
         stock: (json['stock'] as num?)?.toInt() ?? 0,
-        // Parse DateTime từ string
+        // Handle DateTime fields
         createdAt: json['createdAt'] != null 
             ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
             : DateTime.now(),
@@ -41,10 +61,11 @@ class ProductVariantsModel extends ProductVariantEntity {
             ? DateTime.tryParse(json['lastModifiedAt'].toString())
             : null,
         lastModifiedBy: json['lastModifiedBy']?.toString(),
-        // Thêm các field mới từ product detail API
+        // Handle attributeValues (only in Product Detail API)
         attributeValues: json['attributeValues'] != null
             ? Map<String, String>.from(json['attributeValues'] as Map)
             : {},
+        // Handle dimensions (only in Product Detail API)
         weight: json['weight'] != null 
             ? (json['weight'] as num).toDouble()
             : null,
@@ -57,14 +78,36 @@ class ProductVariantsModel extends ProductVariantEntity {
         height: json['height'] != null 
             ? (json['height'] as num).toDouble()
             : null,
-        variantImage: json['variantImage']?.toString(),
+        variantImage: variantImageUrl,
       );
     } catch (e, stackTrace) {
       print('❌ Lỗi parse ProductVariantsModel: $e');
       print('📍 StackTrace: $stackTrace');
       print('📄 Variant JSON: $json');
-      rethrow;
+      
+      // Return default variant instead of throwing
+      return ProductVariantsModel(
+        id: json['variantId']?.toString() ?? json['id']?.toString() ?? '',
+        productId: json['productId']?.toString() ?? '',
+        sku: json['sku']?.toString() ?? '',
+        price: (json['price'] as num?)?.toDouble() ?? 0.0,
+        flashSalePrice: (json['flashSalePrice'] as num?)?.toDouble() ?? 0.0,
+        stock: (json['stock'] as num?)?.toInt() ?? 0,
+        createdAt: DateTime.now(),
+        createdBy: 'System',
+        attributeValues: {},
+      );
     }
+  }
+
+  // Factory constructor cho Product Detail API
+  factory ProductVariantsModel.fromProductDetailJson(Map<String, dynamic> json) {
+    return ProductVariantsModel.fromJson(json);
+  }
+
+  // Factory constructor cho Product Variants API
+  factory ProductVariantsModel.fromVariantsApiJson(Map<String, dynamic> json) {
+    return ProductVariantsModel.fromJson(json);
   }
 
   Map<String, dynamic> toJson() {

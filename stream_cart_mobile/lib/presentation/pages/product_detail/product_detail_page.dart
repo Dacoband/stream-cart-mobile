@@ -63,6 +63,29 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           backgroundColor: Color(0xFF202328),
           foregroundColor: Color(0xFFB0F847),
           elevation: 0,
+          automaticallyImplyLeading: true,
+          leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color(0xFFB0F847),
+          ),
+          onPressed: () {
+            print('🔙 Back button pressed - navigating back');
+            // SỬA: Thử các cách navigate khác nhau
+            try {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                print('⚠️ Cannot pop, pushing to home');
+                Navigator.pushReplacementNamed(context, '/');
+              }
+            } catch (e) {
+              print('❌ Navigation error: $e');
+              // Force navigation bằng cách khác
+              Navigator.of(context, rootNavigator: true).pop();
+            }
+          },
+        ),
           actions: [
             BlocBuilder<CartBloc, CartState>(
               builder: (context, cartState) {
@@ -1068,7 +1091,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               _buildDetailRowModern(
                 icon: Icons.straighten,
                 label: 'Kích thước',
-                value: product.dimension,
+                value: product.height.toString(),
                 color: Colors.orange,
               ),
               const SizedBox(height: 12),

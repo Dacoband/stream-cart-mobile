@@ -1,6 +1,8 @@
 import '../../../domain/entities/products/product_attribute_entity.dart';
+import '../../../domain/entities/products/product_detail_attribute_entity.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
 import '../../../domain/entities/products/product_variants_entity.dart';
+import 'product_detail_attribute_model.dart';
 import 'product_variants_model.dart';
 import 'product_attribute_model.dart';
 
@@ -34,6 +36,44 @@ class ProductDetailModel extends ProductDetailEntity {
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
+  try {
+    print('🔍 Parse ProductDetail JSON keys: ${json.keys}');
+    
+    // Parse variants from Product Detail API
+    List<ProductVariantsModel> variantsList = [];
+    if (json['variants'] != null && json['variants'] is List) {
+      print('📦 Found ${(json['variants'] as List).length} variants in product detail');
+      variantsList = (json['variants'] as List)
+          .map((variantJson) {
+            print('🔧 Parsing variant from product detail: ${variantJson.keys}');
+            return ProductVariantsModel.fromProductDetailJson(variantJson as Map<String, dynamic>);
+          })
+          .toList();
+      print('✅ Successfully parsed ${variantsList.length} variants from product detail');
+    }
+    
+    // SỬA: Parse attributes với ProductDetailAttributeModel (không phải ProductAttributeModel)
+    List<ProductDetailAttributeModel> attributesList = [];
+    if (json['attributes'] != null && json['attributes'] is List) {
+      print('📦 Found ${(json['attributes'] as List).length} attributes in product detail');
+      
+      for (var attrJson in (json['attributes'] as List)) {
+        try {
+          if (attrJson != null && attrJson is Map<String, dynamic>) {
+            print('🔧 Parsing attribute: $attrJson');
+            // SỬA: Sử dụng ProductDetailAttributeModel thay vì ProductAttributeModel
+            attributesList.add(ProductDetailAttributeModel.fromJson(attrJson));
+          }
+        } catch (e) {
+          print('❌ Error parsing single attribute: $e');
+          print('📄 Attribute data: $attrJson');
+          continue;
+        }
+      }
+      
+      print('✅ Successfully parsed ${attributesList.length} attributes from product detail');
+    }
+    
     return ProductDetailModel(
       productId: json['productId']?.toString() ?? '',
       productName: json['productName']?.toString() ?? '',
@@ -56,17 +96,17 @@ class ProductDetailModel extends ProductDetailEntity {
       shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
       shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
       shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
-      // SỬA: shopLogo có thể null nên cần xử lý đúng
       shopLogo: json['shopLogo']?.toString(),
       shopTotalProduct: (json['shopTotalProduct'] as num?)?.toInt() ?? 0,
-      attributes: (json['attributes'] as List<dynamic>?)
-          ?.map((attr) => ProductAttributeModel.fromJson(attr as Map<String, dynamic>))
-          .toList() ?? [],
-      variants: (json['variants'] as List<dynamic>?)
-          ?.map((variant) => ProductVariantsModel.fromJson(variant as Map<String, dynamic>))
-          .toList() ?? [],
+      attributes: attributesList,
+      variants: variantsList,
     );
+  } catch (e, stackTrace) {
+    print('❌ Lỗi parse ProductDetailModel: $e');
+    print('📍 StackTrace: $stackTrace');
+    rethrow;
   }
+}
 
   Map<String, dynamic> toJson() {
     return {
@@ -93,7 +133,7 @@ class ProductDetailModel extends ProductDetailEntity {
       'shopRatingAverage': shopRatingAverage,
       'shopLogo': shopLogo,
       'shopTotalProduct': shopTotalProduct,
-      'attributes': attributes.map((attr) => (attr as ProductAttributeModel).toJson()).toList(),
+      'attributes': attributes.map((attr) => (attr as ProductDetailAttributeModel).toJson()).toList(),
       'variants': variants.map((variant) => (variant as ProductVariantsModel).toJson()).toList(),
     };
   }
@@ -123,10 +163,42 @@ class ProductDetailModel extends ProductDetailEntity {
       shopRatingAverage: entity.shopRatingAverage,
       shopLogo: entity.shopLogo,
       shopTotalProduct: entity.shopTotalProduct,
-      attributes: entity.attributes.map((attr) => ProductAttributeModel.fromEntity(attr)).toList(),
+      // SỬA: Map thành ProductDetailAttributeModel
+      attributes: entity.attributes.map((attr) => ProductDetailAttributeModel.fromEntity(attr)).toList(),
       variants: entity.variants.map((variant) => ProductVariantsModel.fromEntity(variant)).toList(),
     );
   }
+
+  Map<String, dynamic> toEntityJson() {
+  return {
+    'productId': productId,
+    'productName': productName,
+    'description': description,
+    'categoryId': categoryId,
+    'categoryName': categoryName,
+    'basePrice': basePrice,
+    'discountPrice': discountPrice,
+    'finalPrice': finalPrice,
+    'stockQuantity': stockQuantity,
+    'quantitySold': quantitySold,
+    'weight': weight,
+    'length': length,
+    'width': width,
+    'height': height,
+    'primaryImage': primaryImage,
+    'shopId': shopId,
+    'shopName': shopName,
+    'shopStartTime': shopStartTime.toIso8601String(),
+    'shopCompleteRate': shopCompleteRate,
+    'shopTotalReview': shopTotalReview,
+    'shopRatingAverage': shopRatingAverage,
+    'shopLogo': shopLogo,
+    'shopTotalProduct': shopTotalProduct,
+    // SỬA: Cast thành ProductDetailAttributeModel
+    'attributes': attributes.map((attr) => (attr as ProductDetailAttributeModel).toJson()).toList(),
+    'variants': variants.map((variant) => (variant as ProductVariantsModel).toJson()).toList(),
+  };
+}
 
   ProductDetailEntity toEntity() {
     return ProductDetailEntity(
@@ -159,59 +231,60 @@ class ProductDetailModel extends ProductDetailEntity {
   }
 
   @override
-  ProductDetailModel copyWith({
-    String? productId,
-    String? productName,
-    String? description,
-    String? categoryId,
-    String? categoryName,
-    double? basePrice,
-    double? discountPrice,
-    double? finalPrice,
-    int? stockQuantity,
-    int? quantitySold,
-    double? weight,
-    double? length,
-    double? width,
-    double? height,
-    List<String>? primaryImage,
-    String? shopId,
-    String? shopName,
-    DateTime? shopStartTime,
-    double? shopCompleteRate,
-    int? shopTotalReview,
-    double? shopRatingAverage,
-    String? shopLogo,
-    int? shopTotalProduct,
-    List<ProductAttributeEntity>? attributes,
-    List<ProductVariantEntity>? variants,
-  }) {
-    return ProductDetailModel(
-      productId: productId ?? this.productId,
-      productName: productName ?? this.productName,
-      description: description ?? this.description,
-      categoryId: categoryId ?? this.categoryId,
-      categoryName: categoryName ?? this.categoryName,
-      basePrice: basePrice ?? this.basePrice,
-      discountPrice: discountPrice ?? this.discountPrice,
-      finalPrice: finalPrice ?? this.finalPrice,
-      stockQuantity: stockQuantity ?? this.stockQuantity,
-      quantitySold: quantitySold ?? this.quantitySold,
-      weight: weight ?? this.weight,
-      length: length ?? this.length,
-      width: width ?? this.width,
-      height: height ?? this.height,
-      primaryImage: primaryImage ?? this.primaryImage,
-      shopId: shopId ?? this.shopId,
-      shopName: shopName ?? this.shopName,
-      shopStartTime: shopStartTime ?? this.shopStartTime,
-      shopCompleteRate: shopCompleteRate ?? this.shopCompleteRate,
-      shopTotalReview: shopTotalReview ?? this.shopTotalReview,
-      shopRatingAverage: shopRatingAverage ?? this.shopRatingAverage,
-      shopLogo: shopLogo ?? this.shopLogo,
-      shopTotalProduct: shopTotalProduct ?? this.shopTotalProduct,
-      attributes: attributes ?? this.attributes,
-      variants: variants ?? this.variants,
-    );
-  }
+ProductDetailModel copyWith({
+  String? productId,
+  String? productName,
+  String? description,
+  String? categoryId,
+  String? categoryName,
+  double? basePrice,
+  double? discountPrice,
+  double? finalPrice,
+  int? stockQuantity,
+  int? quantitySold,
+  double? weight,
+  double? length,
+  double? width,
+  double? height,
+  List<String>? primaryImage,
+  String? shopId,
+  String? shopName,
+  DateTime? shopStartTime,
+  double? shopCompleteRate,
+  int? shopTotalReview,
+  double? shopRatingAverage,
+  String? shopLogo,
+  int? shopTotalProduct,
+  // SỬA: Sử dụng type đúng
+  List<ProductDetailAttributeEntity>? attributes,
+  List<ProductVariantEntity>? variants,
+}) {
+  return ProductDetailModel(
+    productId: productId ?? this.productId,
+    productName: productName ?? this.productName,
+    description: description ?? this.description,
+    categoryId: categoryId ?? this.categoryId,
+    categoryName: categoryName ?? this.categoryName,
+    basePrice: basePrice ?? this.basePrice,
+    discountPrice: discountPrice ?? this.discountPrice,
+    finalPrice: finalPrice ?? this.finalPrice,
+    stockQuantity: stockQuantity ?? this.stockQuantity,
+    quantitySold: quantitySold ?? this.quantitySold,
+    weight: weight ?? this.weight,
+    length: length ?? this.length,
+    width: width ?? this.width,
+    height: height ?? this.height,
+    primaryImage: primaryImage ?? this.primaryImage,
+    shopId: shopId ?? this.shopId,
+    shopName: shopName ?? this.shopName,
+    shopStartTime: shopStartTime ?? this.shopStartTime,
+    shopCompleteRate: shopCompleteRate ?? this.shopCompleteRate,
+    shopTotalReview: shopTotalReview ?? this.shopTotalReview,
+    shopRatingAverage: shopRatingAverage ?? this.shopRatingAverage,
+    shopLogo: shopLogo ?? this.shopLogo,
+    shopTotalProduct: shopTotalProduct ?? this.shopTotalProduct,
+    attributes: attributes ?? this.attributes,
+    variants: variants ?? this.variants,
+  );
+}
 }
