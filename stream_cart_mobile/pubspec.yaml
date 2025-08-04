@@ -38,6 +38,8 @@ dependencies:
   
 
 
+# Material Design
+  shimmer: ^3.0.0
 
   # HTTP client
   dio: ^5.3.2

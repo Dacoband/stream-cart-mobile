@@ -73,7 +73,6 @@ class CartItemModel {
   
   Map<String, dynamic> toJson() {
     final json = _$CartItemModelToJson(this);
-    // Xử lý variantId null cho API
     if (variantId == null || variantId!.isEmpty) {
       json['variantId'] = '';
     }

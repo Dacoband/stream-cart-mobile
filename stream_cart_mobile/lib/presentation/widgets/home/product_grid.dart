@@ -270,8 +270,8 @@ class ProductGrid extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              _formatPrice(product.discountPrice > 0 && product.discountPrice < product.basePrice 
-                                  ? product.discountPrice 
+                              _formatPrice(product.discountPrice > 0  
+                                  ? product.finalPrice 
                                   : product.basePrice),
                               style: const TextStyle(
                                 fontSize: 13, 
@@ -281,7 +281,7 @@ class ProductGrid extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (product.discountPrice > 0 && product.discountPrice < product.basePrice) ...[
+                          if (product.discountPrice > 0) ...[
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(

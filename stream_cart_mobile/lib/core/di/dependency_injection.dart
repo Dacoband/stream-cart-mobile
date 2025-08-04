@@ -122,6 +122,24 @@ import '../../domain/usecases/product_variants/check_variant_availability.dart';
 import '../../domain/usecases/product_variants/get_cheapest_variant.dart';
 import '../../domain/usecases/product_variants/get_available_variants.dart';
 import '../../presentation/blocs/product_variants/product_variants_bloc.dart';
+import '../../data/datasources/order/order_remote_data_source.dart';
+import '../../data/datasources/order/order_item_remote_data_source.dart';
+import '../../data/repositories/order/order_repository_impl.dart';
+import '../../data/repositories/order/order_item_repository_impl.dart';
+import '../../domain/repositories/order/order_repository.dart';
+import '../../domain/repositories/order/order_item_repository.dart';
+import '../../domain/usecases/order/get_orders_by_account_usecase.dart';
+import '../../domain/usecases/order/get_order_by_id_usecase.dart';
+import '../../domain/usecases/order/get_order_by_code_usecase.dart';
+import '../../domain/usecases/order/create_multiple_orders_usecase.dart';
+import '../../domain/usecases/order/cancel_order_usecase.dart';
+import '../../domain/usecases/order/get_order_item_by_id_usecase.dart';
+import '../../domain/usecases/order/get_order_items_by_order_usecase.dart';
+import '../../domain/usecases/order/add_order_item_usecase.dart';
+import '../../domain/usecases/order/delete_order_item_usecase.dart';
+import '../../presentation/blocs/order/order_bloc.dart';
+import '../../presentation/blocs/order_item/order_item_bloc.dart';
+
 
 final getIt = GetIt.instance;
 
@@ -199,6 +217,29 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
   getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt()));
 
+  // === ORDER ===
+  // Data sources
+  getIt.registerLazySingleton<OrderRemoteDataSource>(() => OrderRemoteDataSourceImpl(dioClient: getIt()));
+  getIt.registerLazySingleton<OrderItemRemoteDataSource>(() => OrderItemRemoteDataSourceImpl(dioClient: getIt()));
+
+  // Repositories
+  getIt.registerLazySingleton<OrderRepository>(() => OrderRepositoryImpl(getIt()));
+  getIt.registerLazySingleton<OrderItemRepository>(() => OrderItemRepositoryImpl(getIt()));
+
+  // Order Use cases
+  getIt.registerLazySingleton(() => GetOrdersByAccountUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetOrderByIdUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetOrderByCodeUseCase(getIt()));
+  getIt.registerLazySingleton(() => CreateMultipleOrdersUseCase(getIt()));
+  getIt.registerLazySingleton(() => CancelOrderUseCase(getIt()));
+
+  // Order Item Use cases
+  getIt.registerLazySingleton(() => GetOrderItemByIdUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetOrderItemsByOrderUseCase(getIt()));
+  getIt.registerLazySingleton(() => AddOrderItemUseCase(getIt()));
+  getIt.registerLazySingleton(() => DeleteOrderItemUseCase(getIt()));
+
+
   // Shop
   getIt.registerLazySingleton<ShopRemoteDataSource>(() => ShopRemoteDataSourceImpl(getIt()));
   getIt.registerLazySingleton<ShopRepository>(() => ShopRepositoryImpl(remoteDataSource: getIt()));
@@ -270,7 +311,6 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetCheapestVariant(getIt()));
   getIt.registerLazySingleton(() => GetAvailableVariants(getIt()));
   
-  // FIX 2: ProductVariantsBloc - CHỈ register 1 LẦN
   getIt.registerFactory(() => ProductVariantsBloc(
     getProductVariantsByProductId: getIt(),
     getProductVariantById: getIt(),
@@ -303,6 +343,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetProvincesUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetDistrictsUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
+
+
 
   // === BLOCS === (Factory registrations)
   getIt.registerLazySingleton<AuthBloc>(() => AuthBloc(
@@ -376,6 +418,21 @@ Future<void> setupDependencies() async {
     getDistrictsUseCase: getIt(),
     getWardsUseCase: getIt(),
   ));
+
+  getIt.registerFactory(() => OrderBloc(
+      getOrdersByAccountUseCase: getIt(),
+      getOrderByIdUseCase: getIt(),
+      getOrderByCodeUseCase: getIt(),
+      createMultipleOrdersUseCase: getIt(),
+      cancelOrderUseCase: getIt(),
+    ));
+
+    getIt.registerFactory(() => OrderItemBloc(
+      getOrderItemByIdUseCase: getIt(),
+      getOrderItemsByOrderUseCase: getIt(),
+      addOrderItemUseCase: getIt(),
+      deleteOrderItemUseCase: getIt(),
+    ));
 
   // CartBloc as singleton (keep this at the end)
   getIt.registerLazySingleton(() {
