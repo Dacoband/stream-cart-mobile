@@ -98,7 +98,7 @@ class OrderCardWidget extends StatelessWidget {
           ),
           
           // Status badge
-          OrderStatusBadgeWidget(status: order.orderStatus.toString()),
+          OrderStatusBadgeWidget(status: order.orderStatus),
         ],
       ),
     );
