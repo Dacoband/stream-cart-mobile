@@ -138,8 +138,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         BlocProvider(
           create: (context) => getIt<AddressBloc>(),
         ),
-        BlocProvider.value(
-          value: getIt<ChatBloc>(),
+        BlocProvider(
+          create: (context) => getIt<ChatBloc>(),
         ),
       ],
       child: MaterialApp(

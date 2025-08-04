@@ -103,17 +103,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ClearChatStateEvent>(_onClearChatState);
     on<ClearMessagesEvent>(_onClearMessages);
     on<ClearSearchResultsEvent>(_onClearSearchResults);
-    on<TypingReceivedEvent>(_onTypingReceived); // Add this line
+    on<TypingReceivedEvent>(_onTypingReceived);
 
     // Setup SignalR listeners
     _setupSignalRListeners();
   }
 
   void _setupSignalRListeners() {
-    // Fix: Use correct callback signature (4 parameters)
     signalRService.onUserTyping = (userId, chatRoomId, isTyping, userName) {
-      print('📝 SignalR Typing: $userName ($userId) in $chatRoomId - ${isTyping ? "started" : "stopped"}');
-      
       add(TypingReceivedEvent(
         userId: userId,
         chatRoomId: chatRoomId,
@@ -123,12 +120,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Fix: Message received callback
     signalRService.onReceiveMessage = (messageData) {
       add(ReceiveMessageEvent(messageData: messageData));
     };
 
-    // Fix: User joined room callback
     signalRService.onUserJoinedRoom = (userId, chatRoomId, userName) {
       add(UserJoinedRoomEvent(
         userId: userId, 
@@ -137,7 +132,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Fix: User left room callback
     signalRService.onUserLeftRoom = (userId, chatRoomId, userName) {
       add(UserLeftRoomEvent(
         userId: userId, 
@@ -146,9 +140,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       ));
     };
 
-    // Status change callback
     signalRService.onStatusChanged = (status) {
-      print('🔄 SignalR Status changed: $status');
       // Handle status changes if needed
     };
   }
@@ -161,24 +153,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatRoomsLoading());
     }
 
-    // Check user role để quyết định load chat rooms nào
-    final currentUser = _getCurrentUser();
-    if (currentUser == null) {
-      emit(const ChatRoomsError(message: 'User not authenticated'));
-      return;
-    }
+    final result = await loadChatRoomsUseCase(LoadChatRoomsParams(
+      pageNumber: event.pageNumber,
+      pageSize: event.pageSize,
+      isActive: event.isActive,
+    ));
 
-    // Nếu là Seller thì dùng LoadShopChatRoomsUseCase
-    if (_isSellerUser()) {
-      final result = await loadShopChatRoomsUseCase(LoadShopChatRoomsParams(
-        pageNumber: event.pageNumber,
-        pageSize: event.pageSize,
-        isActive: event.isActive,
-      ));
-
-      result.fold(
-        (failure) => emit(ChatRoomsError(message: failure.message)),
-        (paginatedResponse) => emit(ShopChatRoomsLoaded(
+    result.fold(
+      (failure) {
+        emit(ChatRoomsError(message: failure.message));
+      },
+      (paginatedResponse) {
+        emit(ChatRoomsLoaded(
           chatRooms: paginatedResponse.items,
           currentPage: paginatedResponse.currentPage,
           totalPages: paginatedResponse.totalPages,
@@ -186,31 +172,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           hasPrevious: paginatedResponse.hasPrevious,
           totalCount: paginatedResponse.totalCount,
           isRefresh: event.isRefresh,
-        )),
-      );
-    } else if (_isCustomerUser()) {
-      // Nếu là Customer thì dùng LoadChatRoomsUseCase thông thường
-      final result = await loadChatRoomsUseCase(LoadChatRoomsParams(
-        pageNumber: event.pageNumber,
-        pageSize: event.pageSize,
-        isActive: event.isActive,
-      ));
-
-      result.fold(
-        (failure) => emit(ChatRoomsError(message: failure.message)),
-        (paginatedResponse) => emit(ChatRoomsLoaded(
-          chatRooms: paginatedResponse.items,
-          currentPage: paginatedResponse.currentPage,
-          totalPages: paginatedResponse.totalPages,
-          hasNext: paginatedResponse.hasNext,
-          hasPrevious: paginatedResponse.hasPrevious,
-          totalCount: paginatedResponse.totalCount,
-          isRefresh: event.isRefresh,
-        )),
-      );
-    } else {
-      emit(ChatRoomsError(message: 'Invalid user role: ${currentUser.role}'));
-    }
+        ));
+      },
+    );
   }
 
   Future<void> _onLoadChatRoomDetail(LoadChatRoomDetailEvent event, Emitter<ChatState> emit) async {
@@ -241,17 +205,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     result.fold(
-      (failure) => emit(ChatMessagesError(
-        message: failure.message,
-        chatRoomId: event.chatRoomId,
-      )),
-      (messages) => emit(ChatMessagesLoaded(
-        messages: messages,
-        chatRoomId: event.chatRoomId,
-        currentPage: event.pageNumber,
-        hasMoreMessages: messages.length == event.pageSize,
-        isRefresh: event.isRefresh,
-      )),
+      (failure) {
+        emit(ChatMessagesError(
+          message: failure.message,
+          chatRoomId: event.chatRoomId,
+        ));
+      },
+      (messages) {
+        emit(ChatMessagesLoaded(
+          messages: messages,
+          chatRoomId: event.chatRoomId,
+          currentPage: event.pageNumber,
+          hasMoreMessages: messages.length == event.pageSize,
+        ));
+      },
     );
   }
 
@@ -312,10 +279,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     result.fold(
-      (failure) => emit(MessageSendError(
-        message: failure.message,
-        tempMessageId: tempMessageId,
-      )),
+      (failure) {
+        emit(MessageSendError(
+          message: failure.message,
+          tempMessageId: tempMessageId,
+        ));
+      },
       (message) {
         emit(MessageSent(message: message));
         
@@ -329,7 +298,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               attachmentUrl: event.attachmentUrl,
             );
           } catch (e) {
-            print('SignalR send failed: $e');
+            // Handle error silently or emit error state if needed
           }
         }
       },
@@ -354,7 +323,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     result.fold(
-      (failure) => emit(ChatError(message: failure.message)),
+      (failure) {
+        emit(ChatError(message: failure.message));
+      },
       (message) {
         emit(MessageReceived(message: message));
         
@@ -437,14 +408,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await connectSignalRUseCase();
 
     result.fold(
-      (failure) => emit(SignalRConnectionError(error: failure.message)),
+      (failure) {
+        emit(SignalRConnectionError(error: failure.message));
+      },
       (_) {
         _isSignalRConnected = true;
         _reconnectAttempts = 0;
         emit(const SignalRConnected());
-        
-        // Log user info for debugging
-        print('SignalR connected for ${currentUser.role}: ${currentUser.email}');
       },
     );
   }
@@ -527,16 +497,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     ));
 
     result.fold(
-      (failure) => emit(ChatRoomsError(message: failure.message)),
-      (paginatedResponse) => emit(ShopChatRoomsLoaded(
-        chatRooms: paginatedResponse.items,
-        currentPage: paginatedResponse.currentPage,
-        totalPages: paginatedResponse.totalPages,
-        hasNext: paginatedResponse.hasNext,
-        hasPrevious: paginatedResponse.hasPrevious,
-        totalCount: paginatedResponse.totalCount,
-        isRefresh: event.isRefresh,
-      )),
+      (failure) {
+        emit(ChatRoomsError(message: failure.message));
+      },
+      (paginatedResponse) {
+        emit(ShopChatRoomsLoaded(
+          chatRooms: paginatedResponse.items,
+          currentPage: paginatedResponse.currentPage,
+          totalPages: paginatedResponse.totalPages,
+          hasNext: paginatedResponse.hasNext,
+          hasPrevious: paginatedResponse.hasPrevious,
+          totalCount: paginatedResponse.totalCount,
+          isRefresh: event.isRefresh,
+        ));
+      },
     );
   }
 
@@ -677,17 +651,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final user = authState.loginResponse.account;
         // Validate role is valid (Customer or Seller)
         if (!_isValidRole()) {
-          print('Invalid user role: ${user.role}. Expected: Customer (1) or Seller (2)');
           return null;
         }
         
         return user;
       }
       
-      print('Current auth state: ${authState.runtimeType}');
       return null;
     } catch (e) {
-      print('Error getting current user: $e');
       return null;
     }
   }
@@ -706,7 +677,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       try {
         await disconnectSignalRUseCase();
       } catch (e) {
-        print('Error disconnecting SignalR on close: $e');
+        // Handle error silently
       }
     }
     

@@ -2,8 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/usecases/product/get_product_detail_usecase.dart';
 import '../../../domain/usecases/product/get_product_images_usecase.dart';
 import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
-import '../cart/cart_bloc.dart';
-import '../cart/cart_event.dart' as cart_events;
 import 'product_detail_event.dart';
 import 'product_detail_state.dart';
 
@@ -11,13 +9,11 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
   final GetProductDetailUseCase getProductDetailUseCase;
   final GetProductImagesUseCase getProductImagesUseCase;
   final AddToCartUseCase addToCartUseCase;
-  final CartBloc cartBloc;
 
   ProductDetailBloc({
     required this.getProductDetailUseCase,
     required this.getProductImagesUseCase,
     required this.addToCartUseCase,
-    required this.cartBloc,
   }) : super(ProductDetailInitial()) {
     on<LoadProductDetailEvent>(_onLoadProductDetail);
     on<AddToCartEvent>(_onAddToCart);
@@ -101,7 +97,6 @@ class ProductDetailBloc extends Bloc<ProductDetailEvent, ProductDetailState> {
       },
       (response) {
         if (response.success) {
-          cartBloc.add(cart_events.LoadCartEvent());
           
           emit(currentState.copyWith(
             isAddingToCart: false,

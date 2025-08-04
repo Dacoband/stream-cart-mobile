@@ -9,7 +9,7 @@ abstract class CartRepository {
     int quantity,
   );
   
-  Future<Either<Failure, List<CartItemEntity>>> getCartItems();
+  Future<Either<Failure, CartSummaryEntity>> getCartItems();
   
   Future<Either<Failure, CartResponseEntity>> updateCartItem(
     String productId,

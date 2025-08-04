@@ -177,12 +177,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     
     try {
-      print('=== MANUAL TOKEN REFRESH ===');
       final result = await authRepository.refreshToken(event.refreshToken);
       
       result.fold(
         (failure) {
-          print('Manual refresh failed: ${failure.message}');
           if (failure is UnauthorizedFailure) {
             emit(AuthUnauthenticated());
           } else {
@@ -190,7 +188,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           }
         },
         (loginResponse) {
-          print('Manual refresh successful');
           emit(AuthSuccess(loginResponse));
         },
       );

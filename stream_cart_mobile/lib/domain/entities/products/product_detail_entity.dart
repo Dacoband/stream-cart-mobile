@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'product_variants_entity.dart';
-import 'product_attribute_entity.dart';
+import 'product_detail_attribute_entity.dart'; // Import entity mới
 
 class ProductDetailEntity extends Equatable {
   final String productId;
@@ -24,9 +24,9 @@ class ProductDetailEntity extends Equatable {
   final double shopCompleteRate;
   final int shopTotalReview;
   final double shopRatingAverage;
-  final String shopLogo;
+  final String? shopLogo;
   final int shopTotalProduct;
-  final List<ProductAttributeEntity> attributes;
+  final List<ProductDetailAttributeEntity> attributes; // SỬA: Sử dụng entity mới
   final List<ProductVariantEntity> variants;
 
   const ProductDetailEntity({
@@ -51,97 +51,18 @@ class ProductDetailEntity extends Equatable {
     required this.shopCompleteRate,
     required this.shopTotalReview,
     required this.shopRatingAverage,
-    required this.shopLogo,
+    this.shopLogo,
     required this.shopTotalProduct,
     required this.attributes,
     required this.variants,
   });
 
-  // Computed property để tạo dimension string
-  String get dimension => '${length}x${width}x${height}cm';
-
-  ProductDetailEntity copyWith({
-    String? productId,
-    String? productName,
-    String? description,
-    String? categoryId,
-    String? categoryName,
-    double? basePrice,
-    double? discountPrice,
-    double? finalPrice,
-    int? stockQuantity,
-    int? quantitySold,
-    double? weight,
-    double? length,
-    double? width,
-    double? height,
-    List<String>? primaryImage,
-    String? shopId,
-    String? shopName,
-    DateTime? shopStartTime,
-    double? shopCompleteRate,
-    int? shopTotalReview,
-    double? shopRatingAverage,
-    String? shopLogo,
-    int? shopTotalProduct,
-    List<ProductAttributeEntity>? attributes,
-    List<ProductVariantEntity>? variants,
-  }) {
-    return ProductDetailEntity(
-      productId: productId ?? this.productId,
-      productName: productName ?? this.productName,
-      description: description ?? this.description,
-      categoryId: categoryId ?? this.categoryId,
-      categoryName: categoryName ?? this.categoryName,
-      basePrice: basePrice ?? this.basePrice,
-      discountPrice: discountPrice ?? this.discountPrice,
-      finalPrice: finalPrice ?? this.finalPrice,
-      stockQuantity: stockQuantity ?? this.stockQuantity,
-      quantitySold: quantitySold ?? this.quantitySold,
-      weight: weight ?? this.weight,
-      length: length ?? this.length,
-      width: width ?? this.width,
-      height: height ?? this.height,
-      primaryImage: primaryImage ?? this.primaryImage,
-      shopId: shopId ?? this.shopId,
-      shopName: shopName ?? this.shopName,
-      shopStartTime: shopStartTime ?? this.shopStartTime,
-      shopCompleteRate: shopCompleteRate ?? this.shopCompleteRate,
-      shopTotalReview: shopTotalReview ?? this.shopTotalReview,
-      shopRatingAverage: shopRatingAverage ?? this.shopRatingAverage,
-      shopLogo: shopLogo ?? this.shopLogo,
-      shopTotalProduct: shopTotalProduct ?? this.shopTotalProduct,
-      attributes: attributes ?? this.attributes,
-      variants: variants ?? this.variants,
-    );
-  }
-
   @override
   List<Object?> get props => [
-    productId,
-    productName,
-    description,
-    categoryId,
-    categoryName,
-    basePrice,
-    discountPrice,
-    finalPrice,
-    stockQuantity,
-    quantitySold,
-    weight,
-    length,
-    width,
-    height,
-    primaryImage,
-    shopId,
-    shopName,
-    shopStartTime,
-    shopCompleteRate,
-    shopTotalReview,
-    shopRatingAverage,
-    shopLogo,
-    shopTotalProduct,
-    attributes,
-    variants,
+    productId, productName, description, categoryId, categoryName,
+    basePrice, discountPrice, finalPrice, stockQuantity, quantitySold,
+    weight, length, width, height, primaryImage, shopId, shopName,
+    shopStartTime, shopCompleteRate, shopTotalReview, shopRatingAverage,
+    shopLogo, shopTotalProduct, attributes, variants,
   ];
 }

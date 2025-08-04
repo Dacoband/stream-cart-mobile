@@ -168,8 +168,6 @@ class SignalRStatusWidget extends StatelessWidget {
             ),
           );
         }
-
-        // FIX: Use correct typing indicator state
         if (state is TypingIndicatorSent) {
           return Container(
             width: double.infinity,

@@ -151,10 +151,20 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       final response = await dio.get(endpoint, queryParameters: queryParams);
       final responseData = response.data;
       
+      print('🔍 Chat room messages response: $responseData');
+      
       if (responseData['success'] == true && responseData['data'] != null) {
-        final List<dynamic> messagesData = responseData['data'] as List<dynamic>;
+        final data = responseData['data'] as Map<String, dynamic>;
+        print('📋 Data structure: ${data.keys}');
+        
+        // Lấy items array từ data object
+        final List<dynamic> messagesData = data['items'] as List<dynamic>;
+        print('📨 Messages count: ${messagesData.length}');
+        
         final models = messagesData.map((json) => ChatMessageModel.fromJson(json)).toList();
         final entities = models.map((model) => model.toEntity()).toList();
+        
+        print('✅ Messages parsed successfully: ${entities.length}');
         return entities;
       } else {
         print('[DataSource] No messages found for chat room: $chatRoomId');

@@ -1,9 +1,9 @@
-import '../../../domain/entities/products/product_attribute_entity.dart';
+
+import '../../../domain/entities/products/product_detail_attribute_entity.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
 import '../../../domain/entities/products/product_variants_entity.dart';
+import 'product_detail_attribute_model.dart';
 import 'product_variants_model.dart';
-import 'product_attribute_model.dart';
-
 class ProductDetailModel extends ProductDetailEntity {
   const ProductDetailModel({
     required super.productId,
@@ -27,44 +27,66 @@ class ProductDetailModel extends ProductDetailEntity {
     required super.shopCompleteRate,
     required super.shopTotalReview,
     required super.shopRatingAverage,
-    required super.shopLogo,
+    super.shopLogo, 
     required super.shopTotalProduct,
     required super.attributes,
     required super.variants,
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
-    return ProductDetailModel(
-      productId: json['productId']?.toString() ?? '',
-      productName: json['productName']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      categoryId: json['categoryId']?.toString() ?? '',
-      categoryName: json['categoryName']?.toString() ?? '',
-      basePrice: (json['basePrice'] as num?)?.toDouble() ?? 0.0,
-      discountPrice: (json['discountPrice'] as num?)?.toDouble() ?? 0.0,
-      finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0.0,
-      stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
-      quantitySold: (json['quantitySold'] as num?)?.toInt() ?? 0,
-      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
-      length: (json['length'] as num?)?.toDouble() ?? 0.0,
-      width: (json['width'] as num?)?.toDouble() ?? 0.0,
-      height: (json['height'] as num?)?.toDouble() ?? 0.0,
-      primaryImage: List<String>.from(json['primaryImage'] ?? []),
-      shopId: json['shopId']?.toString() ?? '',
-      shopName: json['shopName']?.toString() ?? '',
-      shopStartTime: DateTime.tryParse(json['shopStartTime']?.toString() ?? '') ?? DateTime.now(),
-      shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
-      shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
-      shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
-      shopLogo: json['shopLogo']?.toString() ?? '',
-      shopTotalProduct: (json['shopTotalProduct'] as num?)?.toInt() ?? 0,
-      attributes: (json['attributes'] as List<dynamic>?)
-          ?.map((attr) => ProductAttributeModel.fromJson(attr as Map<String, dynamic>))
-          .toList() ?? [],
-      variants: (json['variants'] as List<dynamic>?)
-          ?.map((variant) => ProductVariantsModel.fromJson(variant as Map<String, dynamic>))
-          .toList() ?? [],
-    );
+    try {
+      List<ProductVariantsModel> variantsList = [];
+      if (json['variants'] != null && json['variants'] is List) {
+        variantsList = (json['variants'] as List)
+            .map((variantJson) {
+              return ProductVariantsModel.fromProductDetailJson(variantJson as Map<String, dynamic>);
+            })
+            .toList();
+      }
+      
+      List<ProductDetailAttributeModel> attributesList = [];
+      if (json['attributes'] != null && json['attributes'] is List) {
+        for (var attrJson in (json['attributes'] as List)) {
+          try {
+            if (attrJson != null && attrJson is Map<String, dynamic>) {
+              attributesList.add(ProductDetailAttributeModel.fromJson(attrJson));
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      }
+      
+      return ProductDetailModel(
+        productId: json['productId']?.toString() ?? '',
+        productName: json['productName']?.toString() ?? '',
+        description: json['description']?.toString() ?? '',
+        categoryId: json['categoryId']?.toString() ?? '',
+        categoryName: json['categoryName']?.toString() ?? '',
+        basePrice: (json['basePrice'] as num?)?.toDouble() ?? 0.0,
+        discountPrice: (json['discountPrice'] as num?)?.toDouble() ?? 0.0,
+        finalPrice: (json['finalPrice'] as num?)?.toDouble() ?? 0.0,
+        stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
+        quantitySold: (json['quantitySold'] as num?)?.toInt() ?? 0,
+        weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
+        length: (json['length'] as num?)?.toDouble() ?? 0.0,
+        width: (json['width'] as num?)?.toDouble() ?? 0.0,
+        height: (json['height'] as num?)?.toDouble() ?? 0.0,
+        primaryImage: (json['primaryImage'] as List<dynamic>?)?.cast<String>() ?? [],
+        shopId: json['shopId']?.toString() ?? '',
+        shopName: json['shopName']?.toString() ?? '',
+        shopStartTime: DateTime.tryParse(json['shopStartTime']?.toString() ?? '') ?? DateTime.now(),
+        shopCompleteRate: (json['shopCompleteRate'] as num?)?.toDouble() ?? 0.0,
+        shopTotalReview: (json['shopTotalReview'] as num?)?.toInt() ?? 0,
+        shopRatingAverage: (json['shopRatingAverage'] as num?)?.toDouble() ?? 0.0,
+        shopLogo: json['shopLogo']?.toString(),
+        shopTotalProduct: (json['shopTotalProduct'] as num?)?.toInt() ?? 0,
+        attributes: attributesList,
+        variants: variantsList,
+      );
+    } catch (e, stackTrace) {
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -92,7 +114,7 @@ class ProductDetailModel extends ProductDetailEntity {
       'shopRatingAverage': shopRatingAverage,
       'shopLogo': shopLogo,
       'shopTotalProduct': shopTotalProduct,
-      'attributes': attributes.map((attr) => (attr as ProductAttributeModel).toJson()).toList(),
+      'attributes': attributes.map((attr) => (attr as ProductDetailAttributeModel).toJson()).toList(),
       'variants': variants.map((variant) => (variant as ProductVariantsModel).toJson()).toList(),
     };
   }
@@ -122,9 +144,39 @@ class ProductDetailModel extends ProductDetailEntity {
       shopRatingAverage: entity.shopRatingAverage,
       shopLogo: entity.shopLogo,
       shopTotalProduct: entity.shopTotalProduct,
-      attributes: entity.attributes.map((attr) => ProductAttributeModel.fromEntity(attr)).toList(),
+      attributes: entity.attributes.map((attr) => ProductDetailAttributeModel.fromEntity(attr)).toList(),
       variants: entity.variants.map((variant) => ProductVariantsModel.fromEntity(variant)).toList(),
     );
+  }
+
+  Map<String, dynamic> toEntityJson() {
+    return {
+      'productId': productId,
+      'productName': productName,
+      'description': description,
+      'categoryId': categoryId,
+      'categoryName': categoryName,
+      'basePrice': basePrice,
+      'discountPrice': discountPrice,
+      'finalPrice': finalPrice,
+      'stockQuantity': stockQuantity,
+      'quantitySold': quantitySold,
+      'weight': weight,
+      'length': length,
+      'width': width,
+      'height': height,
+      'primaryImage': primaryImage,
+      'shopId': shopId,
+      'shopName': shopName,
+      'shopStartTime': shopStartTime.toIso8601String(),
+      'shopCompleteRate': shopCompleteRate,
+      'shopTotalReview': shopTotalReview,
+      'shopRatingAverage': shopRatingAverage,
+      'shopLogo': shopLogo,
+      'shopTotalProduct': shopTotalProduct,
+      'attributes': attributes.map((attr) => (attr as ProductDetailAttributeModel).toJson()).toList(),
+      'variants': variants.map((variant) => (variant as ProductVariantsModel).toJson()).toList(),
+    };
   }
 
   ProductDetailEntity toEntity() {
@@ -182,7 +234,7 @@ class ProductDetailModel extends ProductDetailEntity {
     double? shopRatingAverage,
     String? shopLogo,
     int? shopTotalProduct,
-    List<ProductAttributeEntity>? attributes,
+    List<ProductDetailAttributeEntity>? attributes,
     List<ProductVariantEntity>? variants,
   }) {
     return ProductDetailModel(

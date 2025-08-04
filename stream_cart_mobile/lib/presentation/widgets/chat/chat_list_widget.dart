@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart'; // Add this import
 import '../../pages/chat/chat_detail_page.dart';
 import 'package:stream_cart_mobile/domain/entities/chat/chat_room_entity.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -73,7 +74,6 @@ class ChatListWidget extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Unread indicator - red dot
                       if (chatRoom.hasUnreadMessages)
                         Positioned(
                           right: 0,
@@ -98,21 +98,6 @@ class ChatListWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-                      // Online status indicator - FIX: Remove isOnline check if not available
-                      // if (chatRoom.isOnline ?? false)
-                      //   Positioned(
-                      //     right: 2,
-                      //     bottom: 2,
-                      //     child: Container(
-                      //       width: 12,
-                      //       height: 12,
-                      //       decoration: BoxDecoration(
-                      //         color: Colors.green,
-                      //         shape: BoxShape.circle,
-                      //         border: Border.all(color: Colors.white, width: 2),
-                      //       ),
-                      //     ),
-                      //   ),
                     ],
                   ),
                   title: Row(
@@ -157,62 +142,88 @@ class ChatListWidget extends StatelessWidget {
                   ),
                   subtitle: Container(
                     margin: const EdgeInsets.only(top: 6),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              chatRoom.hasUnreadMessages
-                                  ? Icons.mark_chat_unread
-                                  : Icons.mark_chat_read,
-                              size: 14,
-                              color: chatRoom.hasUnreadMessages
-                                  ? Colors.orange
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                chatRoom.lastMessage?.content ?? 'Chưa có tin nhắn',
-                                style: TextStyle(
-                                  color: chatRoom.hasUnreadMessages
-                                      ? Colors.black87
-                                      : Colors.grey[600],
-                                  fontSize: 13,
-                                  fontWeight: chatRoom.hasUnreadMessages
-                                      ? FontWeight.w500
-                                      : FontWeight.normal,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // Message type indicator
-                        if (chatRoom.lastMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
+                    child: BlocBuilder<ChatBloc, ChatState>(
+                      builder: (context, state) {
+                        // Nếu có typing indicator đúng phòng này thì show, không thì bình thường
+                        if (state is TypingIndicatorReceived &&
+                            state.chatRoomId == chatRoom.id &&
+                            state.isTyping == true) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
                             child: Row(
                               children: [
-                                Icon(
-                                  _getMessageTypeIcon(chatRoom.lastMessage!.messageType),
-                                  size: 12,
-                                  color: Colors.grey[500],
+                                const SizedBox(
+                                  width: 16, height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                 Text(
-                                  _getMessageTypeText(chatRoom.lastMessage!.messageType),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey[500],
+                                  '${state.userName ?? "Ai đó"} đang nhập...',
+                                  style: const TextStyle(
+                                    color: Colors.green, fontStyle: FontStyle.italic, fontSize: 13,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                      ],
+                          );
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  chatRoom.hasUnreadMessages
+                                      ? Icons.mark_chat_unread
+                                      : Icons.mark_chat_read,
+                                  size: 14,
+                                  color: chatRoom.hasUnreadMessages
+                                      ? Colors.orange
+                                      : Colors.grey,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    chatRoom.lastMessage?.content ?? 'Chưa có tin nhắn',
+                                    style: TextStyle(
+                                      color: chatRoom.hasUnreadMessages
+                                          ? Colors.black87
+                                          : Colors.grey[600],
+                                      fontSize: 13,
+                                      fontWeight: chatRoom.hasUnreadMessages
+                                          ? FontWeight.w500
+                                          : FontWeight.normal,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (chatRoom.lastMessage != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      _getMessageTypeIcon(chatRoom.lastMessage!.messageType),
+                                      size: 12,
+                                      color: Colors.grey[500],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _getMessageTypeText(chatRoom.lastMessage!.messageType),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   trailing: const Icon(

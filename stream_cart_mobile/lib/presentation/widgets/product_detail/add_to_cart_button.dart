@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
-import '../../blocs/product_detail/product_detail_bloc.dart';
-import '../../blocs/product_detail/product_detail_event.dart';
-import '../../blocs/product_detail/product_detail_state.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_state.dart';
+import '../../blocs/cart/cart_event.dart' as cart_events;
 
 class AddToCartButton extends StatefulWidget {
   final ProductDetailEntity product;
@@ -58,7 +58,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16), // Tăng top padding để cân bằng
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16), 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -133,15 +133,9 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
             // Add to Cart Button
             Expanded(
               flex: 3,
-              child: BlocBuilder<ProductDetailBloc, ProductDetailState>(
-                builder: (context, state) {
-                  bool isLoading = false;
-                  
-                  if (state is AddToCartLoading) {
-                    isLoading = true;
-                  } else if (state is ProductDetailLoaded && state.isAddingToCart) {
-                    isLoading = true;
-                  }
+              child: BlocBuilder<CartBloc, CartState>(
+                builder: (context, cartState) {
+                  bool isLoading = cartState is CartLoading;
                   
                   return AnimatedBuilder(
                     animation: _scaleAnimation,
@@ -174,11 +168,33 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                             child: InkWell(
                               onTap: isLoading ? null : () {
                                 _animateButton();
-                                context.read<ProductDetailBloc>().add(
-                                  AddToCartEvent(
+                                
+                                // Use CartBloc directly instead of ProductDetailBloc
+                                context.read<CartBloc>().add(
+                                  cart_events.AddToCartEvent(
                                     productId: widget.product.productId,
-                                    variantId: widget.selectedVariantId,
+                                    variantId: widget.selectedVariantId ?? '',
                                     quantity: _quantity,
+                                  ),
+                                );
+                                
+                                // Show success message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.check_circle,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text("Đã thêm vào giỏ hàng"),
+                                      ],
+                                    ),
+                                    backgroundColor: Color(0xFF4CAF50),
+                                    duration: Duration(milliseconds: 1500),
+                                    behavior: SnackBarBehavior.floating,
                                   ),
                                 );
                               },
@@ -255,10 +271,10 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                   child: InkWell(
                     onTap: () {
                       _animateButton();
-                      context.read<ProductDetailBloc>().add(
-                        AddToCartEvent(
+                      context.read<CartBloc>().add(
+                        cart_events.AddToCartEvent(
                           productId: widget.product.productId,
-                          variantId: widget.selectedVariantId,
+                          variantId: widget.selectedVariantId ?? '',
                           quantity: _quantity,
                         ),
                       );
@@ -268,7 +284,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                       });
                     },
                     borderRadius: BorderRadius.circular(10),
-                    child: Center( // Dùng Center thay vì Container alignment
+                    child: Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,

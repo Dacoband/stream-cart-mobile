@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../../../domain/usecases/cart/get_cart_items_usecase.dart';
+import '../../../domain/usecases/cart/get_all_cart_items_usecase.dart';
 import '../../../domain/usecases/cart/update_cart_item_usecase.dart';
 import '../../../domain/usecases/cart/remove_from_cart_usecase.dart';
 import '../../../domain/usecases/cart/remove_cart_item_usecase.dart';
@@ -14,6 +16,7 @@ import 'cart_state.dart';
 class CartBloc extends Bloc<CartEvent, CartState> {
   final AddToCartUseCase addToCartUseCase;
   final GetCartItemsUseCase getCartItemsUseCase;
+  final GetAllCartItemsUseCase getAllCartItemsUseCase;
   final UpdateCartItemUseCase updateCartItemUseCase;
   final RemoveFromCartUseCase removeFromCartUseCase;
   final RemoveCartItemUseCase removeCartItemUseCase;
@@ -25,6 +28,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc({
     required this.addToCartUseCase,
     required this.getCartItemsUseCase,
+    required this.getAllCartItemsUseCase,
     required this.updateCartItemUseCase,
     required this.removeFromCartUseCase,
     required this.removeCartItemUseCase,
@@ -48,46 +52,103 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   }
 
   Future<void> _onLoadCart(LoadCartEvent event, Emitter<CartState> emit) async {
-    emit(CartLoading());
-    
-    final result = await getCartItemsUseCase();
-    result.fold(
-      (failure) => emit(CartError(failure.message)),
-      (cartItems) {
-        double totalAmount = 0;
-        for (var item in cartItems) {
-          totalAmount += (item.currentPrice * item.quantity);
-        }
-        emit(CartLoaded(
-          items: cartItems, 
-          totalAmount: totalAmount,
-          selectedCartItemIds: const {},
-        ));
-      },
-    );
+    try {
+      if (state is CartLoaded) {
+        return; 
+      }
+      
+      emit(CartLoading());
+      
+      final result = await getAllCartItemsUseCase();
+      result.fold(
+        (failure) => emit(CartError(failure.message)),
+        (allItems) {
+          double totalAmount = 0;
+          for (var item in allItems) {
+            totalAmount += (item.currentPrice * item.quantity);
+          }
+          
+          emit(CartLoaded(
+            items: allItems, 
+            totalAmount: totalAmount,
+            selectedCartItemIds: const {},
+          ));
+        },
+      );
+    } catch (e) {
+      print('Error loading cart: $e');
+      if (!isClosed) {
+        emit(CartError('Không thể tải giỏ hàng: $e'));
+      }
+    }
   }
 
   Future<void> _onAddToCart(AddToCartEvent event, Emitter<CartState> emit) async {
-    emit(CartLoading());
-    
-    final params = AddToCartParams(
-      productId: event.productId,
-      variantId: event.variantId,
-      quantity: event.quantity,
-    );
-    
-    final result = await addToCartUseCase(params);
-    result.fold(
-      (failure) => emit(CartError(failure.message)),
-      (response) {
-        if (response.success) {
-          emit(CartItemAdded(response.message));
-          add(LoadCartEvent());
-        } else {
-          emit(CartError(response.errors.isNotEmpty ? response.errors.first : 'Lỗi không xác định'));
-        }
-      },
-    );
+    try {
+      // Preserve current items if we have them
+      List<CartItemEntity>? currentItems;
+      if (state is CartLoaded) {
+        currentItems = (state as CartLoaded).items;
+      }
+      
+      emit(CartLoading());
+      
+      final params = AddToCartParams(
+        productId: event.productId,
+        variantId: event.variantId,
+        quantity: event.quantity,
+      );
+      
+      final result = await addToCartUseCase(params);
+      if (isClosed) return; // Don't emit if bloc is closed
+      
+      result.fold(
+        (failure) {
+          // If we had items before, restore them
+          if (currentItems != null) {
+            double totalAmount = 0;
+            for (var item in currentItems) {
+              totalAmount += (item.currentPrice * item.quantity);
+            }
+            emit(CartLoaded(
+              items: currentItems, 
+              totalAmount: totalAmount,
+              selectedCartItemIds: const {},
+            ));
+          } else {
+            emit(CartError(failure.message));
+          }
+        },
+        (response) {
+          if (response.success) {
+            emit(CartItemAdded(response.message));
+            // Use a safer way to load cart
+            if (!isClosed) {
+              add(LoadCartEvent());
+            }
+          } else {
+            if (currentItems != null) {
+              double totalAmount = 0;
+              for (var item in currentItems) {
+                totalAmount += (item.currentPrice * item.quantity);
+              }
+              emit(CartLoaded(
+                items: currentItems, 
+                totalAmount: totalAmount,
+                selectedCartItemIds: const {},
+              ));
+            } else {
+              emit(CartError(response.errors.isNotEmpty ? response.errors.first : 'Lỗi không xác định'));
+            }
+          }
+        },
+      );
+    } catch (e) {
+      print('Error adding to cart: $e');
+      if (!isClosed) {
+        emit(CartError('Không thể thêm vào giỏ hàng: $e'));
+      }
+    }
   }
 
   Future<void> _onUpdateCartItem(UpdateCartItemEvent event, Emitter<CartState> emit) async {
@@ -146,7 +207,6 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       (failure) => emit(CartError(failure.message)),
       (_) {
         emit(const CartItemRemoved('Đã xóa sản phẩm khỏi giỏ hàng'));
-        // Reload cart after removing item
         add(LoadCartEvent());
       },
     );

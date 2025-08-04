@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../domain/entities/products/product_variants_entity.dart';
 import '../../../domain/usecases/product_variants/get_product_variants_by_product_id.dart';
 import '../../../domain/usecases/product_variants/get_product_variant_by_id.dart';
 import '../../../domain/usecases/product_variants/check_variant_availability.dart';
@@ -32,58 +33,48 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
     GetProductVariantsByProductIdEvent event,
     Emitter<ProductVariantsState> emit,
   ) async {
-    print('[ProductVariantsBloc] Loading variants for product: ${event.productId}');
     emit(ProductVariantsLoading());
     
     try {
       final result = await getProductVariantsByProductId(event.productId);
       
-      print('[ProductVariantsBloc] Variants result type: ${result.runtimeType}');
-      
       await result.fold(
         (failure) async {
-          print('[ProductVariantsBloc] Error: ${failure.message}');
           if (!emit.isDone) { 
             emit(ProductVariantsError(failure.message));
           }
         },
         (variants) async {
-          print('[ProductVariantsBloc] Loaded ${variants.length} variants');
-          print('[ProductVariantsBloc] First variant type: ${variants.isNotEmpty ? variants.first.runtimeType : 'empty'}');
-          
           if (!emit.isDone) { 
             if (variants.isEmpty) {
-              emit(const ProductVariantsLoaded(
-                variants: [],
-                selectedVariant: null,
-                cheapestVariant: null,
-              ));
+              emit(const ProductVariantsLoaded(variants: []));
             } else {
-              // Debug: print variant details
-              for (var variant in variants) {
-                print('[ProductVariantsBloc] Variant: id=${variant.id}, price=${variant.price}, stock=${variant.stock}');
+              // Find cheapest variant
+              try {
+                final cheapestResult = await getCheapestVariant(event.productId);
+                ProductVariantEntity? cheapestVariant;
+
+                cheapestResult.fold(
+                  (failure) => null,
+                  (cheapest) => cheapestVariant = cheapest,
+                );
+                
+                emit(ProductVariantsLoaded(
+                  variants: variants,
+                  selectedVariant: variants.isNotEmpty ? variants.first : null,
+                  cheapestVariant: cheapestVariant,
+                ));
+              } catch (e) {
+                emit(ProductVariantsLoaded(
+                  variants: variants,
+                  selectedVariant: variants.isNotEmpty ? variants.first : null,
+                ));
               }
-              
-              final cheapestVariant = variants.reduce((a, b) {
-                final priceA = a.flashSalePrice > 0 ? a.flashSalePrice : a.price;
-                final priceB = b.flashSalePrice > 0 ? b.flashSalePrice : b.price;
-                return priceA < priceB ? a : b;
-              });
-              
-              print('[ProductVariantsBloc] Cheapest variant: ${cheapestVariant.id}');
-              
-              emit(ProductVariantsLoaded(
-                variants: variants,
-                selectedVariant: null,
-                cheapestVariant: cheapestVariant,
-              ));
             }
           }
         },
       );
     } catch (e, stackTrace) {
-      print('[ProductVariantsBloc] Exception: $e');
-      print('[ProductVariantsBloc] StackTrace: $stackTrace');
       if (!emit.isDone) {
         emit(ProductVariantsError('Unexpected error: $e'));
       }

@@ -11,16 +11,31 @@ class ProductAttributeModel extends ProductAttributeEntity {
   });
 
   factory ProductAttributeModel.fromJson(Map<String, dynamic> json) {
-    return ProductAttributeModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      createdBy: json['createdBy'] as String,
-      lastModifiedAt: json['lastModifiedAt'] != null
-          ? DateTime.parse(json['lastModifiedAt'] as String)
-          : null,
-      lastModifiedBy: json['lastModifiedBy'] as String?,
-    );
+    try {
+      print('🔍 Parse attribute JSON: $json');
+      
+      return ProductAttributeModel(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+        createdBy: json['createdBy']?.toString() ?? '',
+        lastModifiedAt: json['lastModifiedAt'] != null 
+            ? DateTime.tryParse(json['lastModifiedAt'].toString())
+            : null,
+        lastModifiedBy: json['lastModifiedBy']?.toString(),
+      );
+    } catch (e, stackTrace) {
+      print('❌ Lỗi parse ProductAttributeModel: $e');
+      print('📍 StackTrace: $stackTrace');
+      print('📄 Attribute JSON: $json');
+
+      return ProductAttributeModel(
+        id: '',
+        name: '',
+        createdAt: DateTime.now(),
+        createdBy: '',
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -42,36 +57,6 @@ class ProductAttributeModel extends ProductAttributeEntity {
       createdBy: entity.createdBy,
       lastModifiedAt: entity.lastModifiedAt,
       lastModifiedBy: entity.lastModifiedBy,
-    );
-  }
-
-  ProductAttributeEntity toEntity() {
-    return ProductAttributeEntity(
-      id: id,
-      name: name,
-      createdAt: createdAt,
-      createdBy: createdBy,
-      lastModifiedAt: lastModifiedAt,
-      lastModifiedBy: lastModifiedBy,
-    );
-  }
-
-  @override
-  ProductAttributeModel copyWith({
-    String? id,
-    String? name,
-    DateTime? createdAt,
-    String? createdBy,
-    DateTime? lastModifiedAt,
-    String? lastModifiedBy,
-  }) {
-    return ProductAttributeModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      createdAt: createdAt ?? this.createdAt,
-      createdBy: createdBy ?? this.createdBy,
-      lastModifiedAt: lastModifiedAt ?? this.lastModifiedAt,
-      lastModifiedBy: lastModifiedBy ?? this.lastModifiedBy,
     );
   }
 }

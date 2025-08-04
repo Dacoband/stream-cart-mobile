@@ -11,6 +11,12 @@ class ProductVariantEntity extends Equatable {
   final String createdBy;
   final DateTime? lastModifiedAt;
   final String? lastModifiedBy;
+  final Map<String, String> attributeValues;
+  final double? weight;
+  final double? length;
+  final double? width;
+  final double? height;
+  final String? variantImage;
 
   const ProductVariantEntity({
     required this.id,
@@ -23,6 +29,12 @@ class ProductVariantEntity extends Equatable {
     required this.createdBy,
     this.lastModifiedAt,
     this.lastModifiedBy,
+    this.attributeValues = const {},
+    this.weight,
+    this.length,
+    this.width,
+    this.height,
+    this.variantImage,
   });
 
   ProductVariantEntity copyWith({
@@ -36,6 +48,12 @@ class ProductVariantEntity extends Equatable {
     String? createdBy,
     DateTime? lastModifiedAt,
     String? lastModifiedBy,
+    Map<String, String>? attributeValues,
+    double? weight,
+    double? length,
+    double? width,
+    double? height,
+    String? variantImage,
   }) {
     return ProductVariantEntity(
       id: id ?? this.id,
@@ -48,6 +66,12 @@ class ProductVariantEntity extends Equatable {
       createdBy: createdBy ?? this.createdBy,
       lastModifiedAt: lastModifiedAt ?? this.lastModifiedAt,
       lastModifiedBy: lastModifiedBy ?? this.lastModifiedBy,
+      attributeValues: attributeValues ?? this.attributeValues,
+      weight: weight ?? this.weight,
+      length: length ?? this.length,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      variantImage: variantImage ?? this.variantImage,
     );
   }
 
@@ -63,5 +87,11 @@ class ProductVariantEntity extends Equatable {
         createdBy,
         lastModifiedAt,
         lastModifiedBy,
+        attributeValues,
+        weight,
+        length,
+        width,
+        height,
+        variantImage,
       ];
 }

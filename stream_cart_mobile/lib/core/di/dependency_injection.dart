@@ -40,6 +40,7 @@ import '../../domain/usecases/flash-sale/get_flash_sales.dart';
 import '../../domain/usecases/flash-sale/get_flash_sale_products.dart';
 import '../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../../domain/usecases/cart/get_cart_items_usecase.dart';
+import '../../domain/usecases/cart/get_all_cart_items_usecase.dart';
 import '../../domain/usecases/cart/update_cart_item_usecase.dart';
 import '../../domain/usecases/cart/remove_from_cart_usecase.dart';
 import '../../domain/usecases/cart/remove_cart_item_usecase.dart';
@@ -189,6 +190,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<CartRepository>(() => CartRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => AddToCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartItemsUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetAllCartItemsUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateCartItemUseCase(getIt()));
   getIt.registerLazySingleton(() => RemoveFromCartUseCase(getIt()));
   getIt.registerLazySingleton(() => RemoveCartItemUseCase(getIt()));
@@ -303,7 +305,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
 
   // === BLOCS === (Factory registrations)
-  getIt.registerFactory(() => AuthBloc(
+  getIt.registerLazySingleton<AuthBloc>(() => AuthBloc(
     loginUseCase: getIt(),
     registerUseCase: getIt(),
     verifyOtpUseCase: getIt(),
@@ -339,7 +341,6 @@ Future<void> setupDependencies() async {
     getProductDetailUseCase: getIt(),
     getProductImagesUseCase: getIt(),
     addToCartUseCase: getIt(),
-    cartBloc: getIt(),
   ));
 
   getIt.registerFactory(() => CategoryDetailBloc(
@@ -381,6 +382,7 @@ Future<void> setupDependencies() async {
     final cartBloc = CartBloc(
       addToCartUseCase: getIt(),
       getCartItemsUseCase: getIt(),
+      getAllCartItemsUseCase: getIt(),
       updateCartItemUseCase: getIt(),
       removeFromCartUseCase: getIt(),
       removeCartItemUseCase: getIt(),
@@ -391,6 +393,4 @@ Future<void> setupDependencies() async {
     );
     return cartBloc;
   });
-
-  print('✅ All dependencies registered successfully!');
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stream_cart_mobile/domain/entities/chat/chat_message_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
+import 'package:stream_cart_mobile/presentation/blocs/auth/auth_bloc.dart';
+import 'package:stream_cart_mobile/presentation/blocs/auth/auth_state.dart';
 import '../../widgets/chat/chat_input_widget.dart';
-import '../../widgets/chat/chat_message_list_widget.dart';
 import '../../widgets/chat/signalr_status_widget.dart';
 
 class ChatDetailPage extends StatefulWidget {
@@ -26,27 +28,105 @@ class ChatDetailPage extends StatefulWidget {
 
 class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObserver {
   bool _hasInitialized = false;
+  List<ChatMessage> _cachedMessages = []; // Cache messages to persist across state changes
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this); 
     
+    // Simplified initialization
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!_hasInitialized) {
         _initializeChatRoom();
         _hasInitialized = true;
       }
     });
+    
+    // Force re-setup SignalR listeners for this page
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        print('🔄 Re-setting up SignalR listeners for this chat room');
+        context.read<ChatBloc>().add(const ConnectSignalREvent());
+      }
+    });
+  }
+
+  void _initializeChatRoom() {
+    print('🚀 Initializing chat room: ${widget.chatRoomId}');
+    
+    // 1. Connect SignalR first
+    print('🔌 Connecting to SignalR...');
+    context.read<ChatBloc>().add(const ConnectSignalREvent());
+    
+    // 2. Join room
+    print('🏠 Joining chat room...');
+    context.read<ChatBloc>().add(JoinChatRoomEvent(
+      chatRoomId: widget.chatRoomId,
+    ));
+    
+    // 3. Load chat room detail
+    print('📋 Loading chat room detail...');
+    context.read<ChatBloc>().add(LoadChatRoomDetailEvent(
+      chatRoomId: widget.chatRoomId,
+    ));
+    
+    // 4. Load messages - MAIN CALL
+    print('📨 Loading messages for room: ${widget.chatRoomId}');
+    context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
+      chatRoomId: widget.chatRoomId,
+      pageNumber: 1,
+      pageSize: 50,
+      isRefresh: true,
+    ));
+    
+    // 5. Mark as read
+    print('👁️ Marking room as read...');
+    context.read<ChatBloc>().add(MarkChatRoomAsReadEvent(
+      chatRoomId: widget.chatRoomId,
+    ));
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this); 
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
     super.dispose();
   }
 
-  @override
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  String? _getCurrentUserId() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      return authState.loginResponse.account.id;
+    }
+    return null;
+  }
+
+  bool _isMyMessage(ChatMessage message) {
+    final currentUserId = _getCurrentUserId();
+    if (currentUserId == null) return message.isMine; // Fallback to API value
+    
+    // Override isMine based on current user ID
+    final isActuallyMine = message.senderUserId == currentUserId;
+    print('🔍 Message "${message.content}": senderUserId=${message.senderUserId}, currentUserId=$currentUserId, isActuallyMine=$isActuallyMine, API_isMine=${message.isMine}');
+    return isActuallyMine;
+  }  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && mounted) {
@@ -56,37 +136,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     }
   }
 
-  void _initializeChatRoom() {
-    // Ensure SignalR is connected first
-    context.read<ChatBloc>().add(const ConnectSignalREvent());
-    
-    // Join chat room
-    context.read<ChatBloc>().add(JoinChatRoomEvent(
-      chatRoomId: widget.chatRoomId,
-    ));
-    
-    // Load chat room detail
-    context.read<ChatBloc>().add(LoadChatRoomDetailEvent(
-      chatRoomId: widget.chatRoomId,
-    ));
-    
-    // Load messages
-    context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
-      chatRoomId: widget.chatRoomId,
-      pageNumber: 1,
-      pageSize: 50,
-      isRefresh: true,
-    ));
-    
-    // Mark as read
-    context.read<ChatBloc>().add(MarkChatRoomAsReadEvent(
-      chatRoomId: widget.chatRoomId,
-    ));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         // Giữ nguyên UI design của bạn
         leading: IconButton(
@@ -152,33 +205,85 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
       ),
       body: BlocListener<ChatBloc, ChatState>(
         listener: (context, state) {
-          // Auto mark as read when messages loaded
-          if (state is ChatMessagesLoaded) {
-            context.read<ChatBloc>().add(MarkChatRoomAsReadEvent(
-              chatRoomId: widget.chatRoomId,
-            ));
-          }
+          print('🎯 ChatDetailPage listener - State: ${state.runtimeType}');
           
-          // Handle connection success
+          // Connection status updates
           if (state is SignalRConnected) {
-            print('🔄 SignalR connected, joining room and loading messages...');
+            print('✅ SignalR connected in ChatDetailPage');
+          } else if (state is SignalRConnectionError) {
+            print('❌ SignalR connection error in ChatDetailPage');
+          } else if (state is ChatRoomJoined) {
+            print('✅ Chat room joined: ${state.chatRoomId}');
+          }
+          
+          // Cache messages when loaded
+          if (state is ChatMessagesLoaded) {
+            print('✅ Messages loaded, caching ${state.messages.length} messages');
+            _cachedMessages = List.from(state.messages);
+            
+            // Schedule mark as read with delay
             Future.delayed(const Duration(milliseconds: 500), () {
-              context.read<ChatBloc>().add(JoinChatRoomEvent(
-                chatRoomId: widget.chatRoomId,
-              ));
+              if (mounted) {
+                context.read<ChatBloc>().add(MarkChatRoomAsReadEvent(
+                  chatRoomId: widget.chatRoomId,
+                ));
+              }
             });
           }
           
-          if (state is ChatRoomJoined) {
-            print('🏠 Joined room, loading messages...');
-            Future.delayed(const Duration(milliseconds: 300), () {
-              context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
-                chatRoomId: widget.chatRoomId,
-                pageNumber: 1,
-                pageSize: 50,
-                isRefresh: true,
-              ));
-            });
+          // Add new sent message to cache
+          if (state is MessageSent) {
+            print('✅ Message sent, adding to cache: ${state.message.content}');
+            print('👤 Sent message senderUserId: ${state.message.senderUserId}');
+            print('🔍 Sent message isMine: ${state.message.isMine}');
+            print('📝 Message ID: ${state.message.id}');
+            
+            // Check for duplicates before adding
+            final isDuplicate = _cachedMessages.any((msg) => msg.id == state.message.id);
+            if (!isDuplicate) {
+              setState(() {
+                _cachedMessages = [..._cachedMessages, state.message];
+              });
+              print('📱 Updated cached messages count: ${_cachedMessages.length}');
+              _scrollToBottom(); // Auto scroll when new message sent
+            } else {
+              print('⚠️ Duplicate sent message detected, skipping');
+            }
+          }
+          
+          // Add new received message to cache
+          if (state is MessageReceived) {
+            print('✅ Message received, adding to cache: ${state.message.content}');
+            print('👤 Received message senderUserId: ${state.message.senderUserId}');
+            print('🔍 Received message isMine: ${state.message.isMine}');
+            print('🏠 Message chatRoomId: ${state.message.chatRoomId}');
+            print('🏠 Current chatRoomId: ${widget.chatRoomId}');
+            print('📝 Message ID: ${state.message.id}');
+            
+            // Only add message if it belongs to current chat room
+            if (state.message.chatRoomId == widget.chatRoomId) {
+              // Check for duplicates before adding
+              final isDuplicate = _cachedMessages.any((msg) => msg.id == state.message.id);
+              if (!isDuplicate) {
+                setState(() {
+                  _cachedMessages = [..._cachedMessages, state.message];
+                });
+                print('📱 Updated cached messages count: ${_cachedMessages.length}');
+                
+                // Force immediate UI rebuild
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    setState(() {});
+                  }
+                });
+                
+                _scrollToBottom(); // Auto scroll when new message received
+              } else {
+                print('⚠️ Duplicate message detected, skipping');
+              }
+            } else {
+              print('⚠️ Message belongs to different room, ignoring');
+            }
           }
         },
         child: Column(
@@ -186,45 +291,125 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
             // SignalR Status Widget
             const SignalRStatusWidget(),
             
-            // Messages List
+            // Test SignalR Connection Button (temporary)
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      print('🧪 Test button - Forcing SignalR reconnect');
+                      context.read<ChatBloc>().add(const ConnectSignalREvent());
+                    },
+                    child: const Text('Test SignalR'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      print('🧪 Test button - Joining room again');
+                      context.read<ChatBloc>().add(JoinChatRoomEvent(
+                        chatRoomId: widget.chatRoomId,
+                      ));
+                    },
+                    child: const Text('Join Room'),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Messages List - PERSISTENT VERSION
             Expanded(
               child: BlocBuilder<ChatBloc, ChatState>(
                 builder: (context, state) {
-                  if (state is ChatMessagesLoading || state is SignalRConnecting) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Đang tải tin nhắn...'),
-                        ],
-                      ),
+                  print('🔍 ChatDetailPage BlocBuilder - State: ${state.runtimeType}');
+                  print('💾 Cached messages count: ${_cachedMessages.length}');
+                  
+                  // Update cache if new messages loaded
+                  if (state is ChatMessagesLoaded) {
+                    print('✅ Updating cached messages: ${state.messages.length}');
+                    _cachedMessages = List.from(state.messages);
+                  }
+                  
+                  // Always show cached messages if available
+                  if (_cachedMessages.isNotEmpty) {
+                    print('📱 Displaying ${_cachedMessages.length} cached messages');
+                    
+                    // Sort messages by sentAt time
+                    final sortedMessages = List<ChatMessage>.from(_cachedMessages)
+                      ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+                    
+                    return ListView.builder(
+                      controller: _scrollController,
+                      itemCount: sortedMessages.length,
+                      itemBuilder: (context, index) {
+                        final message = sortedMessages[index];
+                        final isMyMessage = _isMyMessage(message);
+                        
+                        return Align(
+                          alignment: isMyMessage 
+                              ? Alignment.centerRight 
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              left: isMyMessage ? 50 : 8,
+                              right: isMyMessage ? 8 : 50,
+                              top: 4,
+                              bottom: 4,
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isMyMessage ? Colors.blue : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: isMyMessage 
+                                  ? CrossAxisAlignment.end 
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                if (!isMyMessage) // Only show sender name for others' messages
+                                  Text(
+                                    message.senderName ?? "Unknown",
+                                    style: const TextStyle(
+                                      fontSize: 12, 
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                if (!isMyMessage) const SizedBox(height: 4),
+                                Text(
+                                  message.content,
+                                  style: TextStyle(
+                                    color: isMyMessage ? Colors.white : Colors.black,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${isMyMessage ? "You" : "Them"} | ${message.sentAt.toString().substring(11, 19)}',
+                                  style: TextStyle(
+                                    fontSize: 10, 
+                                    color: isMyMessage ? Colors.white70 : Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
                   }
                   
-                  if (state is ChatMessagesError || state is SignalRConnectionError) {
-                    final errorMessage = state is ChatMessagesError 
-                        ? state.message 
-                        : (state as SignalRConnectionError).error;
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error, size: 64, color: Colors.red),
-                          const SizedBox(height: 16),
-                          Text('Lỗi: $errorMessage'),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => _initializeChatRoom(),
-                            child: const Text('Thử lại'),
-                          ),
-                        ],
-                      ),
-                    );
+                  // Show loading state only if no cached messages
+                  if (state is ChatMessagesLoading) {
+                    return const Center(child: CircularProgressIndicator());
                   }
-                  final chatRoomId = widget.chatRoomId;
-                  return ChatMessageListWidget(chatRoomId: chatRoomId);
+                  
+                  if (state is ChatMessagesError) {
+                    return Center(child: Text('Error: ${state.message}'));
+                  }
+                  
+                  // Show this only if no cached messages and no specific loading state
+                  return const Center(child: Text('Loading messages...'));
                 },
               ),
             ),
@@ -235,6 +420,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
               child: ChatInputWidget(
                 chatRoomId: widget.chatRoomId,
                 onSend: (content) {
+                  print('💬 ChatDetailPage - Sending message: "$content"');
+                  print('🏠 To room: ${widget.chatRoomId}');
+                  
                   context.read<ChatBloc>().add(SendMessageEvent(
                     chatRoomId: widget.chatRoomId,
                     content: content,

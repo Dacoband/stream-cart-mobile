@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import '../../models/cart/cart_model.dart';
+import '../../models/cart/cart_response_model.dart';
 import '../../../core/utils/api_url_helper.dart';
 
 abstract class CartRemoteDataSource {
   Future<CartResponseModel> addToCart(CartItemModel cartItem);
-  Future<List<CartItemModel>> getCartItems();
+  Future<GetCartResponseModel> getCartItems();
   Future<CartResponseModel> updateCartItem(String productId, String? variantId, int quantity);
   Future<void> removeFromCart(String productId, String? variantId);
   Future<void> removeCartItem(String cartItemId);
@@ -41,33 +42,25 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   }
 
   @override
-  Future<List<CartItemModel>> getCartItems() async {
+  Future<GetCartResponseModel> getCartItems() async {
     try {
       final url = ApiUrlHelper.getFullUrl('/api/carts');
       final response = await dio.get(url);
       
-      final data = response.data['data'];
-      if (data != null && data['cartItemByShop'] != null) {
-        List<CartItemModel> allItems = [];
-        for (var shop in data['cartItemByShop']) {
-          if (shop['products'] != null) {
-            for (var product in shop['products']) {
-              allItems.add(CartItemModel.fromJson(product));
-            }
-          }
-        }
-        return allItems;
-      }
-      return [];
+      return GetCartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         throw Exception('Vui lòng đăng nhập để xem giỏ hàng');
       } else if (e.response?.statusCode == 400) {
-        // Kiểm tra message cụ thể từ server
         final responseData = e.response?.data;
         if (responseData != null && responseData['message'] == 'Không tìm thấy giỏ hàng') {
-          // Giỏ hàng chưa được tạo - trả về empty list
-          return [];
+          // Giỏ hàng chưa được tạo - trả về empty cart response
+          return GetCartResponseModel(
+            success: true,
+            message: 'Giỏ hàng trống',
+            data: null,
+            errors: [],
+          );
         }
         throw Exception('Yêu cầu không hợp lệ');
       }
@@ -81,14 +74,20 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   Future<CartResponseModel> updateCartItem(String productId, String? variantId, int quantity) async {
     try {
       // Trước tiên get cart items để tìm cartItemId
-      final cartItems = await getCartItems();
+      final cartResponse = await getCartItems();
       
       // Tìm cart item tương ứng
       CartItemModel? targetItem;
-      for (var item in cartItems) {
-        if (item.productId == productId && item.variantId == variantId) {
-          targetItem = item;
-          break;
+      
+      if (cartResponse.data != null && cartResponse.data!.cartItemByShop.isNotEmpty) {
+        for (var shop in cartResponse.data!.cartItemByShop) {
+          for (var product in shop.products) {
+            if (product.productId == productId && product.variantId == variantId) {
+              targetItem = product;
+              break;
+            }
+          }
+          if (targetItem != null) break;
         }
       }
       
@@ -104,16 +103,6 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         'variantId': variantId ?? targetItem.variantId,
         'quantity': quantity,
       };
-      
-      // Debug logging
-      print('🔧 UpdateCartItem Request Data:');
-      print('   productId: $productId');
-      print('   variantId input: $variantId');
-      print('   cartItemId: ${targetItem.cartItemId}');
-      print('   quantity: $quantity');
-      print('   URL: $url');
-      print('   Full data: $data');
-      
       final response = await dio.put(url, data: data);
       return CartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
@@ -138,8 +127,6 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   Future<void> removeFromCart(String productId, String? variantId) async {
     try {
       final url = ApiUrlHelper.getFullUrl('/api/carts');
-      // Sử dụng variantID thay vì variantId để match với API
-      // Đảm bảo variantID là null nếu chuỗi rỗng hoặc null
       await dio.delete(url, data: {
         'productId': productId,
         'variantID': (variantId == null || variantId.isEmpty) ? null : variantId,
@@ -162,10 +149,6 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   Future<void> removeCartItem(String cartItemId) async {
     try {
       final url = ApiUrlHelper.getFullUrl('/api/carts');
-      
-      print('🗑️ RemoveCartItem Request:');
-      print('   URL: $url');
-      print('   CartItemId: $cartItemId');
       
       await dio.delete(url, queryParameters: {
         'id': cartItemId,
@@ -209,17 +192,7 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     final data = {
       'cartItemId': cartItemIds,
     };
-    
-    print('🔍 PreviewOrder Request:');
-    print('   URL: $url');
-    print('   CartItemIds: $cartItemIds');
-    
     final response = await dio.get(url, queryParameters: data);
-    
-    print('🔍 PreviewOrder Response:');
-    print('   Status: ${response.statusCode}');
-    print('   Data: ${response.data}');
-    
     return CartSummaryModel.fromJson(response.data['data']);
   }
 }

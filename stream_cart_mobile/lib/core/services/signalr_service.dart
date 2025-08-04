@@ -40,10 +40,13 @@ class SignalRService {
   }) {
     _connection = HubConnectionBuilder()
         .withUrl(
-          '$baseUrl/chatHub',
+          baseUrl,
           HttpConnectionOptions(
             transport: HttpTransportType.webSockets,
-            accessTokenFactory: () async => await storageService.getAccessToken() ?? "",
+            accessTokenFactory: () async {
+              final token = await storageService.getAccessToken();
+              return token ?? "";
+            },
           ),
         )
         .withAutomaticReconnect()
@@ -59,6 +62,7 @@ class SignalRService {
       _isConnected = true;
       return;
     }
+    
     onStatusChanged?.call("Đang kết nối SignalR...");
     try {
       await _connection.start();
@@ -144,13 +148,21 @@ class SignalRService {
     // Lắng nghe tin nhắn mới
     _connection.on("ReceiveMessage", (arguments) {
       try {
-        if (arguments == null || arguments.isEmpty) return;
+        if (arguments == null || arguments.isEmpty) {
+          return;
+        }
+        
         final data = arguments[0];
+        
         if (data is Map<String, dynamic>) {
           onReceiveMessage?.call(data);
+          onStatusChanged?.call("✅ Đã nhận tin nhắn qua SignalR");
         } else if (data is String) {
           final map = jsonDecode(data);
           onReceiveMessage?.call(map);
+          onStatusChanged?.call("✅ Đã nhận tin nhắn qua SignalR (JSON)");
+        } else {
+          onError?.call("Dữ liệu tin nhắn không đúng định dạng: ${data.runtimeType}");
         }
       } catch (e) {
         onError?.call("Lỗi xử lý tin nhắn: $e");
