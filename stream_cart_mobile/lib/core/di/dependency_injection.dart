@@ -341,7 +341,6 @@ Future<void> setupDependencies() async {
     getProductDetailUseCase: getIt(),
     getProductImagesUseCase: getIt(),
     addToCartUseCase: getIt(),
-    cartBloc: getIt(),
   ));
 
   getIt.registerFactory(() => CategoryDetailBloc(
