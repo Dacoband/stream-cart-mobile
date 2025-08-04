@@ -33,24 +33,18 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
     GetProductVariantsByProductIdEvent event,
     Emitter<ProductVariantsState> emit,
   ) async {
-    print('[ProductVariantsBloc] Loading variants for product: ${event.productId}');
     emit(ProductVariantsLoading());
     
     try {
       final result = await getProductVariantsByProductId(event.productId);
       
-      print('[ProductVariantsBloc] Variants result type: ${result.runtimeType}');
-      
       await result.fold(
         (failure) async {
-          print('[ProductVariantsBloc] Error: ${failure.message}');
           if (!emit.isDone) { 
             emit(ProductVariantsError(failure.message));
           }
         },
         (variants) async {
-          print('[ProductVariantsBloc] Loaded ${variants.length} variants');
-          
           if (!emit.isDone) { 
             if (variants.isEmpty) {
               emit(const ProductVariantsLoaded(variants: []));
@@ -61,7 +55,7 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
                 ProductVariantEntity? cheapestVariant;
 
                 cheapestResult.fold(
-                  (failure) => print('[ProductVariantsBloc] Could not get cheapest variant: ${failure.message}'),
+                  (failure) => null,
                   (cheapest) => cheapestVariant = cheapest,
                 );
                 
@@ -71,7 +65,6 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
                   cheapestVariant: cheapestVariant,
                 ));
               } catch (e) {
-                print('[ProductVariantsBloc] Error getting cheapest variant: $e');
                 emit(ProductVariantsLoaded(
                   variants: variants,
                   selectedVariant: variants.isNotEmpty ? variants.first : null,
@@ -82,8 +75,6 @@ class ProductVariantsBloc extends Bloc<ProductVariantsEvent, ProductVariantsStat
         },
       );
     } catch (e, stackTrace) {
-      print('[ProductVariantsBloc] Exception: $e');
-      print('[ProductVariantsBloc] StackTrace: $stackTrace');
       if (!emit.isDone) {
         emit(ProductVariantsError('Unexpected error: $e'));
       }

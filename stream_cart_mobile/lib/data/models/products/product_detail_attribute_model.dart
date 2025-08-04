@@ -8,8 +8,6 @@ class ProductDetailAttributeModel extends ProductDetailAttributeEntity {
 
   factory ProductDetailAttributeModel.fromJson(Map<String, dynamic> json) {
     try {
-      print('🔍 Parse detail attribute JSON: $json');
-
       String attributeName = json['attributeName']?.toString() ?? '';
 
       List<ValueImagePair> valueImagePairs = [];
@@ -27,7 +25,6 @@ class ProductDetailAttributeModel extends ProductDetailAttributeEntity {
                 imageUrl: imageUrl,
               ));
             } catch (e) {
-              print('❌ Error processing pair $i: $e');
               continue;
             }
           }
@@ -39,7 +36,6 @@ class ProductDetailAttributeModel extends ProductDetailAttributeEntity {
         valueImagePairs: valueImagePairs,
       );
     } catch (e, stackTrace) {
-      print('❌ Lỗi parse ProductDetailAttributeModel: $e');
       return const ProductDetailAttributeModel(
         attributeName: '',
         valueImagePairs: [],

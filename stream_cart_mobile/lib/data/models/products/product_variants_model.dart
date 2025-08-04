@@ -22,9 +22,6 @@ class ProductVariantsModel extends ProductVariantEntity {
 
   factory ProductVariantsModel.fromJson(Map<String, dynamic> json) {
     try {
-      print('🔍 Parse variant JSON: $json');
-      
-      // Determine which API structure this is from
       bool isFromProductDetailAPI = json.containsKey('variantId');
       bool isFromVariantsAPI = json.containsKey('id') && !json.containsKey('variantId');
       
@@ -35,7 +32,6 @@ class ProductVariantsModel extends ProductVariantEntity {
         variantId = json['id']?.toString() ?? '';
       }
       
-      // Handle variant image from Product Detail API
       String? variantImageUrl;
       if (json['variantImage'] != null) {
         if (json['variantImage'] is Map) {
@@ -52,7 +48,6 @@ class ProductVariantsModel extends ProductVariantEntity {
         price: (json['price'] as num?)?.toDouble() ?? 0.0,
         flashSalePrice: (json['flashSalePrice'] as num?)?.toDouble() ?? 0.0,
         stock: (json['stock'] as num?)?.toInt() ?? 0,
-        // Handle DateTime fields
         createdAt: json['createdAt'] != null 
             ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
             : DateTime.now(),
@@ -61,11 +56,9 @@ class ProductVariantsModel extends ProductVariantEntity {
             ? DateTime.tryParse(json['lastModifiedAt'].toString())
             : null,
         lastModifiedBy: json['lastModifiedBy']?.toString(),
-        // Handle attributeValues (only in Product Detail API)
         attributeValues: json['attributeValues'] != null
             ? Map<String, String>.from(json['attributeValues'] as Map)
             : {},
-        // Handle dimensions (only in Product Detail API)
         weight: json['weight'] != null 
             ? (json['weight'] as num).toDouble()
             : null,
@@ -81,10 +74,6 @@ class ProductVariantsModel extends ProductVariantEntity {
         variantImage: variantImageUrl,
       );
     } catch (e, stackTrace) {
-      print('❌ Lỗi parse ProductVariantsModel: $e');
-      print('📍 StackTrace: $stackTrace');
-      print('📄 Variant JSON: $json');
-      
       // Return default variant instead of throwing
       return ProductVariantsModel(
         id: json['variantId']?.toString() ?? json['id']?.toString() ?? '',
