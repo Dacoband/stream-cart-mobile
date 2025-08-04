@@ -9,20 +9,20 @@ import 'order_loading_widget.dart';
 import 'emty_order_widget.dart';
 import 'pull_to_refresh_wrapper_widget.dart';
 
-// Main layout với AppBar, tabs
-class OrderListViewWidget extends StatefulWidget {
+// Body content widget - chỉ handle tabs và content
+class OrderListBodyWidget extends StatefulWidget {
   final String accountId;
 
-  const OrderListViewWidget({
+  const OrderListBodyWidget({
     Key? key,
     required this.accountId,
   }) : super(key: key);
 
   @override
-  State<OrderListViewWidget> createState() => _OrderListViewWidgetState();
+  State<OrderListBodyWidget> createState() => _OrderListBodyWidgetState();
 }
 
-class _OrderListViewWidgetState extends State<OrderListViewWidget>
+class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
@@ -100,34 +100,37 @@ class _OrderListViewWidgetState extends State<OrderListViewWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Đơn hàng của tôi',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
+    return Column(
+      children: [
+        // Tab bar section
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+            ),
+          ),
+          child: OrderTabBarWidget(
+            tabController: _tabController,
+            tabs: _tabTitles,
+            onTap: _onTabChanged,
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+        
+        // Tab content section
+        Expanded(
           child: Container(
-            color: Colors.white,
-            child: OrderTabBarWidget(
-              tabController: _tabController,
-              tabs: _tabTitles,
-              onTap: _onTabChanged,
+            color: Colors.grey[50],
+            child: TabBarView(
+              controller: _tabController,
+              children: _tabTitles.map((title) => _buildOrderList()).toList(),
             ),
           ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _tabTitles.map((title) => _buildOrderList()).toList(),
-      ),
+      ],
     );
   }
 
@@ -277,4 +280,13 @@ class _OrderListViewWidgetState extends State<OrderListViewWidget>
         return 'Bạn chưa có đơn hàng nào.\nHãy bắt đầu mua sắm ngay!';
     }
   }
+}
+
+// Keep compatibility - Deprecated, use OrderListBodyWidget instead
+@Deprecated('Use OrderListBodyWidget instead')
+class OrderListViewWidget extends OrderListBodyWidget {
+  const OrderListViewWidget({
+    Key? key,
+    required String accountId,
+  }) : super(key: key, accountId: accountId);
 }
