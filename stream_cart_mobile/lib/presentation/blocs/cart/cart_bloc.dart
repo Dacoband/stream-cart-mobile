@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/cart/cart_entity.dart';
 import '../../../domain/usecases/cart/add_to_cart_usecase.dart';
 import '../../../domain/usecases/cart/get_cart_items_usecase.dart';
 import '../../../domain/usecases/cart/update_cart_item_usecase.dart';

@@ -42,7 +42,6 @@ class CartItemEntity extends Equatable {
   final Map<String, dynamic>? attributes;
   final int stockQuantity;
   final bool productStatus;
-  // THIẾU trong code hiện tại:
   final double weight;
   final double length;
   final double width;
@@ -74,7 +73,7 @@ class CartItemEntity extends Equatable {
     return CartItemEntity(
       cartItemId: json['cartItemId'] ?? '',
       productId: json['productId'] ?? '',
-      variantId: json['variantID'], // Chú ý: API dùng variantID không phải variantId
+      variantId: json['variantID'], // API uses 'variantID'
       productName: json['productName'] ?? '',
       priceData: PriceDataEntity.fromJson(json['priceData'] ?? {}),
       quantity: json['quantity'] ?? 0,

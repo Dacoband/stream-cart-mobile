@@ -50,7 +50,7 @@ class CartItemModel {
   @JsonKey(name: 'productId')
   final String productId;
   
-  @JsonKey(name: 'variantID')  // API uses 'variantID' not 'variantId'
+  @JsonKey(name: 'variantID')
   final String? variantId;
   
   @JsonKey(name: 'productName')
@@ -103,7 +103,25 @@ class CartItemModel {
     required this.height,
   });
 
-  factory CartItemModel.fromJson(Map<String, dynamic> json) => _$CartItemModelFromJson(json);
+  factory CartItemModel.fromJson(Map<String, dynamic> json) {
+    return CartItemModel(
+      cartItemId: json['cartItemId'] ?? '',
+      productId: json['productId'] ?? '',
+      variantId: json['variantID'],
+      productName: json['productName'] ?? '',
+      priceData: PriceDataModel.fromJson(json['priceData'] ?? {}),
+      quantity: json['quantity'] ?? 0,
+      primaryImage: json['primaryImage'] ?? '',
+      attributes: json['attributes'],
+      stockQuantity: json['stockQuantity'] ?? 0,
+      productStatus: json['productStatus'] ?? false,
+      weight: (json['weight'] ?? 0).toDouble(),
+      length: (json['length'] ?? 0).toDouble(),
+      width: (json['width'] ?? 0).toDouble(),
+      height: (json['height'] ?? 0).toDouble(),
+    );
+  }
+  
   Map<String, dynamic> toJson() => _$CartItemModelToJson(this);
 
   CartItemEntity toEntity() {

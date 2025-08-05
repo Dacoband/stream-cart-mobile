@@ -441,7 +441,6 @@ Future<void> setupDependencies() async {
     final cartBloc = CartBloc(
       addToCartUseCase: getIt(),
       getCartItemsUseCase: getIt(),
-      getAllCartItemsUseCase: getIt(),
       updateCartItemUseCase: getIt(),
       removeFromCartUseCase: getIt(),
       removeCartItemUseCase: getIt(),
@@ -449,7 +448,6 @@ Future<void> setupDependencies() async {
       clearCartUseCase: getIt(),
       getCartPreviewUseCase: getIt(),
       getPreviewOrderUseCase: getIt(),
-      getCartSummaryUseCase: getIt(), // ✅ ADD nếu CartBloc cần
     );
     return cartBloc;
   });
