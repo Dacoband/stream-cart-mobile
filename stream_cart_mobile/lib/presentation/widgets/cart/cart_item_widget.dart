@@ -86,23 +86,22 @@ class CartItemWidget extends StatelessWidget {
                   Text(
                     item.productName,
                     style: const TextStyle(
-                      fontSize: 14, 
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   
-                  // ✅ Fix: Use priceData properties
                   Row(
                     children: [
                       Text(
                         _formatPrice(item.priceData.currentPrice),
                         style: const TextStyle(
-                          fontSize: 14, 
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF4CAF50),
+                          fontSize: 12, 
+                          fontWeight: FontWeight.w600,
+                          color: Color.fromARGB(255, 66, 153, 69),
                         ),
                       ),
                       if (item.priceData.originalPrice > item.priceData.currentPrice) ...[
@@ -118,6 +117,19 @@ class CartItemWidget extends StatelessWidget {
                       ],
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  
+                  // Show discount if any
+                  if (item.priceData.discount > 0)
+                    Text(
+                      'Giảm ${item.priceData.discount}%',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  
                   const SizedBox(height: 4),
                   
                   // Stock status
