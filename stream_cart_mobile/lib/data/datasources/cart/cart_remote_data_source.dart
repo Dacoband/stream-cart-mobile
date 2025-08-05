@@ -1,198 +1,196 @@
 import 'package:dio/dio.dart';
-import '../../models/cart/cart_model.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../models/cart/cart_response_model.dart';
-import '../../../core/utils/api_url_helper.dart';
 
 abstract class CartRemoteDataSource {
-  Future<CartResponseModel> addToCart(CartItemModel cartItem);
   Future<GetCartResponseModel> getCartItems();
-  Future<CartResponseModel> updateCartItem(String productId, String? variantId, int quantity);
-  Future<void> removeFromCart(String productId, String? variantId);
-  Future<void> removeCartItem(String cartItemId);
-  Future<void> clearCart();
-  Future<CartModel> getCartPreview();
-  Future<CartSummaryModel> getPreviewOrder(List<String> cartItemIds);
+  Future<AddToCartResponseModel> addToCart(
+    String productId,
+    String? variantId,
+    int quantity,
+  );
+  Future<UpdateCartResponseModel> updateCartItem(
+    String cartItemId,
+    int quantity,
+  );
+  Future<DeleteCartResponseModel> removeCartItem(String cartItemId);
+  Future<DeleteCartResponseModel> removeMultipleCartItems(List<String> cartItemIds);
+  Future<DeleteCartResponseModel> clearCart();
+  Future<PreviewOrderResponseModel> getPreviewOrder(List<String> cartItemIds);
 }
 
 class CartRemoteDataSourceImpl implements CartRemoteDataSource {
-  final Dio dio;
+  final Dio _dioClient;
 
-  CartRemoteDataSourceImpl(this.dio);
-
-  @override
-  Future<CartResponseModel> addToCart(CartItemModel cartItem) async {
-    try {
-      final url = ApiUrlHelper.getFullUrl('/api/carts');
-      final response = await dio.post(url, data: cartItem.toJson());
-      return CartResponseModel.fromJson(response.data);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw Exception('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        if (responseData != null && responseData['message'] != null) {
-          throw Exception(responseData['message']);
-        }
-        throw Exception('Không thể thêm sản phẩm vào giỏ hàng');
-      }
-      throw Exception('Lỗi kết nối: ${e.message}');
-    } catch (e) {
-      throw Exception('Lỗi không xác định: $e');
-    }
-  }
+  CartRemoteDataSourceImpl({required Dio dioClient}) : _dioClient = dioClient;
 
   @override
   Future<GetCartResponseModel> getCartItems() async {
     try {
-      final url = ApiUrlHelper.getFullUrl('/api/carts');
-      final response = await dio.get(url);
-      
+      final response = await _dioClient.get(
+        ApiConstants.cartEndpoint, 
+      );
+
       return GetCartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw Exception('Vui lòng đăng nhập để xem giỏ hàng');
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        if (responseData != null && responseData['message'] == 'Không tìm thấy giỏ hàng') {
-          // Giỏ hàng chưa được tạo - trả về empty cart response
-          return GetCartResponseModel(
-            success: true,
-            message: 'Giỏ hàng trống',
-            data: null,
-            errors: [],
-          );
-        }
-        throw Exception('Yêu cầu không hợp lệ');
-      }
-      throw Exception('Lỗi kết nối: ${e.message}');
+      throw _handleDioException(e);
     } catch (e) {
-      throw Exception('Lỗi không xác định: $e');
+      throw Exception('Failed to get cart items: $e');
     }
   }
 
   @override
-  Future<CartResponseModel> updateCartItem(String productId, String? variantId, int quantity) async {
+  Future<AddToCartResponseModel> addToCart(
+    String productId,
+    String? variantId,
+    int quantity,
+  ) async {
     try {
-      // Trước tiên get cart items để tìm cartItemId
-      final cartResponse = await getCartItems();
+      final requestData = {
+        'productId': productId,
+        if (variantId != null) 'variantId': variantId,
+        'quantity': quantity,
+      };
+
+      final response = await _dioClient.post(
+        ApiConstants.cartEndpoint, 
+        data: requestData,
+      );
+
+      return AddToCartResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Failed to add to cart: $e');
+    }
+  }
+
+  @override
+  Future<UpdateCartResponseModel> updateCartItem(
+    String cartItemId,
+    int quantity,
+  ) async {
+    try {
+      // Need to get variant info first since API requires variantId
+      final cartItems = await getCartItems();
       
-      // Tìm cart item tương ứng
-      CartItemModel? targetItem;
-      
-      if (cartResponse.data != null && cartResponse.data!.cartItemByShop.isNotEmpty) {
-        for (var shop in cartResponse.data!.cartItemByShop) {
+      // Find the cart item to get its variantId
+      String? variantId;
+      if (cartItems.data != null) {
+        for (var shop in cartItems.data!.cartItemByShop) {
           for (var product in shop.products) {
-            if (product.productId == productId && product.variantId == variantId) {
-              targetItem = product;
+            if (product.cartItemId == cartItemId) {
+              variantId = product.variantId;
               break;
             }
           }
-          if (targetItem != null) break;
+          if (variantId != null) break;
         }
       }
-      
-      if (targetItem == null) {
-        throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
-      }
-      
-      // Sử dụng PUT endpoint theo API spec
-      final url = ApiUrlHelper.getFullUrl('/api/carts');
-      
-      final data = {
-        'cartItem': targetItem.cartItemId,
-        'variantId': variantId ?? targetItem.variantId,
-        'quantity': quantity,
-      };
-      final response = await dio.put(url, data: data);
-      return CartResponseModel.fromJson(response.data);
+
+      final response = await _dioClient.put(
+        ApiConstants.cartEndpoint,
+        data: {
+          'cartItem': cartItemId,
+          'variantId': variantId,
+          'quantity': quantity,
+        },
+      );
+
+      return UpdateCartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw Exception('Vui lòng đăng nhập để cập nhật giỏ hàng');
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        if (responseData != null && responseData['message'] != null) {
-          throw Exception(responseData['message']);
-        }
-        throw Exception('Không thể cập nhật sản phẩm trong giỏ hàng');
-      } else if (e.response?.statusCode == 404) {
-        throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
-      }
-      throw Exception('Lỗi kết nối: ${e.message}');
+      throw _handleDioException(e);
     } catch (e) {
-      throw Exception('Lỗi không xác định: $e');
+      throw Exception('Failed to update cart item: $e');
     }
   }
 
   @override
-  Future<void> removeFromCart(String productId, String? variantId) async {
+  Future<DeleteCartResponseModel> removeCartItem(String cartItemId) async {
     try {
-      final url = ApiUrlHelper.getFullUrl('/api/carts');
-      await dio.delete(url, data: {
-        'productId': productId,
-        'variantID': (variantId == null || variantId.isEmpty) ? null : variantId,
-      });
+      final response = await _dioClient.delete(
+        ApiConstants.cartEndpoint,
+        queryParameters: {
+          'id': cartItemId,
+        },
+      );
+
+      return DeleteCartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        if (responseData != null && responseData['message'] != null) {
-          throw Exception(responseData['message']);
-        }
-        throw Exception('Không thể xóa sản phẩm khỏi giỏ hàng');
-      }
-      throw Exception('Lỗi kết nối: ${e.message}');
+      throw _handleDioException(e);
     } catch (e) {
-      throw Exception('Lỗi không xác định: $e');
+      throw Exception('Failed to remove cart item: $e');
     }
   }
 
   @override
-  Future<void> removeCartItem(String cartItemId) async {
+  Future<DeleteCartResponseModel> removeMultipleCartItems(List<String> cartItemIds) async {
     try {
-      final url = ApiUrlHelper.getFullUrl('/api/carts');
-      
-      await dio.delete(url, queryParameters: {
-        'id': cartItemId,
-      });
-      
-      print('✅ Cart item removed successfully');
+      final response = await _dioClient.delete(
+        ApiConstants.cartEndpoint,
+        queryParameters: {
+          'id': cartItemIds,
+        },
+      );
+
+      return DeleteCartResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      print('❌ RemoveCartItem Error: ${e.response?.statusCode} - ${e.message}');
-      if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        if (responseData != null && responseData['message'] != null) {
-          throw Exception(responseData['message']);
-        }
-        throw Exception('Không thể xóa sản phẩm khỏi giỏ hàng');
-      } else if (e.response?.statusCode == 404) {
-        throw Exception('Không tìm thấy sản phẩm trong giỏ hàng');
-      }
-      throw Exception('Lỗi kết nối: ${e.message}');
+      throw _handleDioException(e);
     } catch (e) {
-      print('❌ RemoveCartItem Unexpected Error: $e');
-      throw Exception('Lỗi không xác định: $e');
+      throw Exception('Failed to remove multiple cart items: $e');
     }
   }
 
   @override
-  Future<void> clearCart() async {
-    final url = ApiUrlHelper.getFullUrl('/api/carts');
-    await dio.delete(url);
+  Future<DeleteCartResponseModel> clearCart() async {
+    try {
+      final response = await _dioClient.delete(
+        ApiConstants.cartEndpoint,
+      );
+
+      return DeleteCartResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Failed to clear cart: $e');
+    }
   }
 
   @override
-  Future<CartModel> getCartPreview() async {
-    final url = ApiUrlHelper.getFullUrl('/api/carts/PreviewOrder');
-    final response = await dio.get(url);
-    return CartModel.fromJson(response.data['data']);
+  Future<PreviewOrderResponseModel> getPreviewOrder(List<String> cartItemIds) async {
+    try {
+
+      final response = await _dioClient.get(
+        ApiConstants.cartPreviewEndpoint,
+        queryParameters: {
+          'CartItemId': cartItemIds,
+        },
+      );
+
+      return PreviewOrderResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Failed to get preview order: $e');
+    }
   }
 
-  @override
-  Future<CartSummaryModel> getPreviewOrder(List<String> cartItemIds) async {
-    final url = ApiUrlHelper.getFullUrl('/api/carts/PreviewOrder');
-    final data = {
-      'cartItemId': cartItemIds,
-    };
-    final response = await dio.get(url, queryParameters: data);
-    return CartSummaryModel.fromJson(response.data['data']);
+  Exception _handleDioException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return Exception('Connection timeout');
+      case DioExceptionType.badResponse:
+        final statusCode = e.response?.statusCode;
+        final message = e.response?.data?['message'] ?? 'Request failed';
+        return Exception('HTTP $statusCode: $message');
+      case DioExceptionType.cancel:
+        return Exception('Request cancelled');
+      case DioExceptionType.connectionError:
+        return Exception('No internet connection');
+      default:
+        return Exception('Network error: ${e.message}');
+    }
   }
 }

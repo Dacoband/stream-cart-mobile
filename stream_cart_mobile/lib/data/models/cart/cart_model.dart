@@ -3,8 +3,9 @@ import '../../../domain/entities/cart/cart_entity.dart';
 
 part 'cart_model.g.dart';
 
+// Price Data Model - match với PriceDataEntity
 @JsonSerializable()
-class PriceData {
+class PriceDataModel {
   @JsonKey(name: 'currentPrice')
   final double currentPrice;
   
@@ -14,130 +15,178 @@ class PriceData {
   @JsonKey(name: 'discount')
   final double discount;
 
-  const PriceData({
+  const PriceDataModel({
     required this.currentPrice,
     required this.originalPrice,
     required this.discount,
   });
 
-  factory PriceData.fromJson(Map<String, dynamic> json) => _$PriceDataFromJson(json);
-  Map<String, dynamic> toJson() => _$PriceDataToJson(this);
+  factory PriceDataModel.fromJson(Map<String, dynamic> json) => _$PriceDataModelFromJson(json);
+  Map<String, dynamic> toJson() => _$PriceDataModelToJson(this);
+
+  PriceDataEntity toEntity() {
+    return PriceDataEntity(
+      currentPrice: currentPrice,
+      originalPrice: originalPrice,
+      discount: discount,
+    );
+  }
+
+  factory PriceDataModel.fromEntity(PriceDataEntity entity) {
+    return PriceDataModel(
+      currentPrice: entity.currentPrice,
+      originalPrice: entity.originalPrice,
+      discount: entity.discount,
+    );
+  }
 }
 
+// CartItemModel - Core cart item structure
 @JsonSerializable()
 class CartItemModel {
   @JsonKey(name: 'cartItemId')
-  final String? cartItemId;
+  final String cartItemId;
   
   @JsonKey(name: 'productId')
   final String productId;
   
-  @JsonKey(name: 'variantID')  // Note: API uses 'variantID' not 'variantId'
+  @JsonKey(name: 'variantID')
   final String? variantId;
   
   @JsonKey(name: 'productName')
-  final String? productName;
+  final String productName;
+  
+  @JsonKey(name: 'priceData')
+  final PriceDataModel priceData;
   
   @JsonKey(name: 'quantity')
   final int quantity;
   
   @JsonKey(name: 'primaryImage')
-  final String? primaryImage;
-  
-  @JsonKey(name: 'priceData')
-  final PriceData? priceData;
+  final String primaryImage;
   
   @JsonKey(name: 'attributes')
   final Map<String, dynamic>? attributes;
   
   @JsonKey(name: 'stockQuantity')
-  final int? stockQuantity;
+  final int stockQuantity;
   
   @JsonKey(name: 'productStatus')
-  final bool? productStatus;
+  final bool productStatus;
+
+  @JsonKey(name: 'weight')
+  final double weight;
+  
+  @JsonKey(name: 'length')
+  final double length;
+  
+  @JsonKey(name: 'width')
+  final double width;
+  
+  @JsonKey(name: 'height')
+  final double height;
 
   const CartItemModel({
-    this.cartItemId,
+    required this.cartItemId,
     required this.productId,
     this.variantId,
-    this.productName,
+    required this.productName,
+    required this.priceData,
     required this.quantity,
-    this.primaryImage,
-    this.priceData,
+    required this.primaryImage,
     this.attributes,
-    this.stockQuantity,
-    this.productStatus,
+    required this.stockQuantity,
+    required this.productStatus,
+    required this.weight,
+    required this.length,
+    required this.width,
+    required this.height,
   });
 
-  factory CartItemModel.fromJson(Map<String, dynamic> json) => _$CartItemModelFromJson(json);
-  
-  Map<String, dynamic> toJson() {
-    final json = _$CartItemModelToJson(this);
-    if (variantId == null || variantId!.isEmpty) {
-      json['variantId'] = '';
-    }
-    return json;
+  factory CartItemModel.fromJson(Map<String, dynamic> json) {
+    return CartItemModel(
+      cartItemId: json['cartItemId'] ?? '',
+      productId: json['productId'] ?? '',
+      variantId: json['variantID'],
+      productName: json['productName'] ?? '',
+      priceData: PriceDataModel.fromJson(json['priceData'] ?? {}),
+      quantity: json['quantity'] ?? 0,
+      primaryImage: json['primaryImage'] ?? '',
+      attributes: json['attributes'],
+      stockQuantity: json['stockQuantity'] ?? 0,
+      productStatus: json['productStatus'] ?? false,
+      weight: (json['weight'] ?? 0).toDouble(),
+      length: (json['length'] ?? 0).toDouble(),
+      width: (json['width'] ?? 0).toDouble(),
+      height: (json['height'] ?? 0).toDouble(),
+    );
   }
+  
+  Map<String, dynamic> toJson() => _$CartItemModelToJson(this);
 
   CartItemEntity toEntity() {
     return CartItemEntity(
-      cartItemId: cartItemId ?? '',
+      cartItemId: cartItemId,
       productId: productId,
-      variantId: variantId,  // Keep null as null instead of converting to empty string
-      productName: productName ?? '',
+      variantId: variantId,
+      productName: productName,
+      priceData: priceData.toEntity(),
       quantity: quantity,
-      primaryImage: primaryImage ?? '',
-      currentPrice: priceData?.currentPrice ?? 0.0,
-      originalPrice: priceData?.originalPrice ?? 0.0,
+      primaryImage: primaryImage,
       attributes: attributes,
-      stockQuantity: stockQuantity ?? 0,
-      productStatus: productStatus ?? true,
+      stockQuantity: stockQuantity,
+      productStatus: productStatus,
+      weight: weight,
+      length: length,
+      width: width,
+      height: height,
     );
   }
 
   factory CartItemModel.fromEntity(CartItemEntity entity) {
     return CartItemModel(
-      cartItemId: entity.cartItemId.isEmpty ? null : entity.cartItemId,
+      cartItemId: entity.cartItemId,
       productId: entity.productId,
-      variantId: entity.variantId,  // Keep null as null
-      productName: entity.productName.isEmpty ? null : entity.productName,
+      variantId: entity.variantId,
+      productName: entity.productName,
+      priceData: PriceDataModel.fromEntity(entity.priceData),
       quantity: entity.quantity,
-      primaryImage: entity.primaryImage.isEmpty ? null : entity.primaryImage,
-      priceData: PriceData(
-        currentPrice: entity.currentPrice,
-        originalPrice: entity.originalPrice,
-        discount: 1.0, // Default discount
-      ),
+      primaryImage: entity.primaryImage,
       attributes: entity.attributes,
       stockQuantity: entity.stockQuantity,
       productStatus: entity.productStatus,
+      weight: entity.weight,
+      length: entity.length,
+      width: entity.width,
+      height: entity.height,
     );
   }
 }
 
+// CartShopModel - Shop with products
 @JsonSerializable()
 class CartShopModel {
   @JsonKey(name: 'shopId')
-  final String? shopId;
+  final String shopId;
   
   @JsonKey(name: 'shopName')
-  final String? shopName;
+  final String shopName;
   
   @JsonKey(name: 'products')
   final List<CartItemModel> products;
   
   @JsonKey(name: 'numberOfProduct')
-  final int? numberOfProduct;
+  final int numberOfProduct;
   
   @JsonKey(name: 'totalPriceInShop')
-  final double? totalPriceInShop;
+  final double totalPriceInShop;
 
   const CartShopModel({
-    this.shopId,
-    this.shopName,
+    required this.shopId,
+    required this.shopName,
     required this.products,
-    this.numberOfProduct,
-    this.totalPriceInShop,
+    required this.numberOfProduct,
+    required this.totalPriceInShop,
   });
 
   factory CartShopModel.fromJson(Map<String, dynamic> json) => _$CartShopModelFromJson(json);
@@ -145,154 +194,95 @@ class CartShopModel {
 
   CartShopEntity toEntity() {
     return CartShopEntity(
-      shopId: shopId ?? '',
-      shopName: shopName ?? '',
+      shopId: shopId,
+      shopName: shopName,
       products: products.map((product) => product.toEntity()).toList(),
-      numberOfProduct: numberOfProduct ?? 0,
-      totalPriceInShop: totalPriceInShop ?? 0,
+      numberOfProduct: numberOfProduct,
+      totalPriceInShop: totalPriceInShop,
+    );
+  }
+
+  factory CartShopModel.fromEntity(CartShopEntity entity) {
+    return CartShopModel(
+      shopId: entity.shopId,
+      shopName: entity.shopName,
+      products: entity.products.map((item) => CartItemModel.fromEntity(item)).toList(),
+      numberOfProduct: entity.numberOfProduct,
+      totalPriceInShop: entity.totalPriceInShop,
     );
   }
 }
 
+// CreateOrderFromCheckoutModel - Request model cho checkout
 @JsonSerializable()
-class CartSummaryModel {
-  @JsonKey(name: 'totalItem')
-  final int? totalItem;
+class CreateOrderFromCheckoutModel {
+  @JsonKey(name: 'selectedCartItemIds')
+  final List<String> selectedCartItemIds;
   
-  @JsonKey(name: 'subTotal')
-  final double? subTotal;
+  @JsonKey(name: 'deliveryAddressId')
+  final String deliveryAddressId;
   
-  @JsonKey(name: 'discount')
-  final double? discount;
+  @JsonKey(name: 'paymentMethod')
+  final String paymentMethod;
   
-  @JsonKey(name: 'totalAmount')
-  final double? totalAmount;
+  @JsonKey(name: 'customerNotes')
+  final String? customerNotes;
   
-  @JsonKey(name: 'listCartItem')
-  final List<CartShopModel>? listCartItem;
+  @JsonKey(name: 'expectedDeliveryDate')
+  final String? expectedDeliveryDate;
 
-  const CartSummaryModel({
-    this.totalItem,
-    this.subTotal,
-    this.discount,
-    this.totalAmount,
-    this.listCartItem,
+  const CreateOrderFromCheckoutModel({
+    required this.selectedCartItemIds,
+    required this.deliveryAddressId,
+    required this.paymentMethod,
+    this.customerNotes,
+    this.expectedDeliveryDate,
   });
 
-  factory CartSummaryModel.fromJson(Map<String, dynamic> json) => _$CartSummaryModelFromJson(json);
-  Map<String, dynamic> toJson() => _$CartSummaryModelToJson(this);
+  factory CreateOrderFromCheckoutModel.fromJson(Map<String, dynamic> json) => _$CreateOrderFromCheckoutModelFromJson(json);
+  Map<String, dynamic> toJson() => _$CreateOrderFromCheckoutModelToJson(this);
 
-  CartSummaryEntity toEntity() {
-    return CartSummaryEntity(
-      totalItem: totalItem ?? 0,
-      subTotal: subTotal ?? 0,
-      discount: discount ?? 0,
-      totalAmount: totalAmount ?? 0,
-      listCartItem: listCartItem?.map((shop) => shop.toEntity()).toList() ?? [],
+  CreateOrderFromCheckoutEntity toEntity() {
+    return CreateOrderFromCheckoutEntity(
+      selectedCartItemIds: selectedCartItemIds,
+      deliveryAddressId: deliveryAddressId,
+      paymentMethod: paymentMethod,
+      customerNotes: customerNotes,
+      expectedDeliveryDate: expectedDeliveryDate != null 
+          ? DateTime.parse(expectedDeliveryDate!)
+          : null,
+    );
+  }
+
+  factory CreateOrderFromCheckoutModel.fromEntity(CreateOrderFromCheckoutEntity entity) {
+    return CreateOrderFromCheckoutModel(
+      selectedCartItemIds: entity.selectedCartItemIds,
+      deliveryAddressId: entity.deliveryAddressId,
+      paymentMethod: entity.paymentMethod,
+      customerNotes: entity.customerNotes,
+      expectedDeliveryDate: entity.expectedDeliveryDate?.toIso8601String(),
     );
   }
 }
 
+// Cart Update Response Model (cho operations)
 @JsonSerializable()
 class CartUpdateResponseModel {
   @JsonKey(name: 'cartItem')
-  final String? cartItem;
+  final String cartItem;
   
   @JsonKey(name: 'variantId')
   final String? variantId;
   
   @JsonKey(name: 'quantity')
-  final int? quantity;
+  final int quantity;
 
   const CartUpdateResponseModel({
-    this.cartItem,
+    required this.cartItem,
     this.variantId,
-    this.quantity,
+    required this.quantity,
   });
 
   factory CartUpdateResponseModel.fromJson(Map<String, dynamic> json) => _$CartUpdateResponseModelFromJson(json);
   Map<String, dynamic> toJson() => _$CartUpdateResponseModelToJson(this);
-}
-
-@JsonSerializable()
-class CartResponseModel {
-  @JsonKey(name: 'success')
-  final bool success;
-  
-  @JsonKey(name: 'message')
-  final String message;
-  
-  @JsonKey(name: 'data')
-  final dynamic data; // Can be CartSummaryModel or CartUpdateResponseModel or CartItemModel
-  
-  @JsonKey(name: 'errors')
-  final List<String> errors;
-
-  const CartResponseModel({
-    required this.success,
-    required this.message,
-    this.data,
-    required this.errors,
-  });
-
-  factory CartResponseModel.fromJson(Map<String, dynamic> json) => _$CartResponseModelFromJson(json);
-  Map<String, dynamic> toJson() => _$CartResponseModelToJson(this);
-
-  CartResponseEntity toEntity() {
-    return CartResponseEntity(
-      success: success,
-      message: message,
-      data: null, // We'll handle data differently for different operations
-      errors: errors,
-    );
-  }
-}
-
-@JsonSerializable()
-class CartModel {
-  @JsonKey(name: 'id')
-  final String id;
-  
-  @JsonKey(name: 'items')
-  final List<CartItemModel> items;
-  
-  @JsonKey(name: 'totalAmount')
-  final double totalAmount;
-  
-  @JsonKey(name: 'createdAt')
-  final DateTime createdAt;
-  
-  @JsonKey(name: 'updatedAt')
-  final DateTime updatedAt;
-
-  const CartModel({
-    required this.id,
-    required this.items,
-    required this.totalAmount,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory CartModel.fromJson(Map<String, dynamic> json) => _$CartModelFromJson(json);
-  Map<String, dynamic> toJson() => _$CartModelToJson(this);
-
-  CartEntity toEntity() {
-    return CartEntity(
-      id: id,
-      items: items.map((item) => item.toEntity()).toList(),
-      totalAmount: totalAmount,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }
-
-  factory CartModel.fromEntity(CartEntity entity) {
-    return CartModel(
-      id: entity.id,
-      items: entity.items.map((item) => CartItemModel.fromEntity(item)).toList(),
-      totalAmount: entity.totalAmount,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    );
-  }
 }

@@ -13,9 +13,9 @@ class GetAllCartItemsUseCase {
     
     return result.fold(
       (failure) => Left(failure),
-      (cartSummary) {
+      (cartData) {
         List<CartItemEntity> allItems = [];
-        for (var shop in cartSummary.listCartItem) {
+        for (var shop in cartData.cartItemByShop) {
           allItems.addAll(shop.products);
         }
         return Right(allItems);

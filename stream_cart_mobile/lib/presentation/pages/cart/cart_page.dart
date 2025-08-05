@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_event.dart';
 import '../../blocs/cart/cart_state.dart';
-import '../../widgets/cart/cart_item_widget_new.dart' as cart_widget;
+import '../../widgets/cart/cart_item_widget.dart';
 import '../../widgets/cart/cart_summary_widget.dart';
 import '../../widgets/cart/empty_cart_widget.dart';
 
@@ -43,7 +43,7 @@ class CartView extends StatelessWidget {
         actions: [
           BlocBuilder<CartBloc, CartState>(
             builder: (context, state) {
-              if (state is CartLoaded && state.items.isNotEmpty) {
+              if (state is CartLoaded && state.allItems.isNotEmpty) { // ✅ Fix: dùng allItems
                 return PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'clear') {
@@ -106,6 +106,12 @@ class CartView extends StatelessWidget {
                 backgroundColor: Colors.blue,
               ),
             );
+          } else if (state is CartPreviewOrderLoaded) { // ✅ Add: Handle preview order
+            Navigator.pushNamed(
+              context, 
+              '/preview-order',
+              arguments: state.previewData,
+            );
           }
         },
         builder: (context, state) {
@@ -116,7 +122,7 @@ class CartView extends StatelessWidget {
           }
 
           if (state is CartLoaded) {
-            if (state.items.isEmpty) {
+            if (state.allItems.isEmpty) { // ✅ Fix: dùng allItems
               return EmptyCartWidget(
                 onContinueShopping: () {
                   Navigator.pushReplacementNamed(context, '/home');
@@ -145,7 +151,7 @@ class CartView extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          'Chọn tất cả (${state.items.length} sản phẩm)',
+                          'Chọn tất cả (${state.allItems.length} sản phẩm)', // ✅ Fix
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -195,41 +201,73 @@ class CartView extends StatelessWidget {
                 ),
                 const Divider(height: 1),
                 
+                // ✅ Build by shop grouping
                 Expanded(
                   child: ListView.builder(
-                    itemCount: state.items.length,
-                    itemBuilder: (context, index) {
-                      final item = state.items[index];
-                      return cart_widget.CartItemWidget(
-                        item: item,
-                        isSelected: state.selectedCartItemIds.contains(item.cartItemId),
-                        onSelectionChanged: (selected) {
-                          final cartBloc = context.read<CartBloc>();
-                          print('CartBloc instance in selection: ${cartBloc.hashCode}'); // Debug log
-                          print('Triggering selection for: ${item.cartItemId}, selected: $selected'); // Debug log
-                          cartBloc.add(
-                            ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
-                          );
-                        },
-                        onQuantityChanged: (newQuantity) {
-                          context.read<CartBloc>().add(
-                            UpdateCartItemEvent(
-                              cartItemId: item.cartItemId,
-                              productId: item.productId,
-                              variantId: item.variantId,
-                              quantity: newQuantity,
+                    itemCount: state.cartData.cartItemByShop.length,
+                    itemBuilder: (context, shopIndex) {
+                      final shop = state.cartData.cartItemByShop[shopIndex];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Shop Header
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            color: Colors.grey[100],
+                            child: Row(
+                              children: [
+                                Icon(Icons.store, size: 18, color: Colors.grey[600]),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    shop.shopName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${shop.numberOfProduct} sản phẩm',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        onRemove: () {
-                          _showRemoveItemDialog(context, item);
-                        },
+                          ),
+                          // Shop Products
+                          ...shop.products.map((item) {
+                            return CartItemWidget(
+                              item: item,
+                              isSelected: state.selectedCartItemIds.contains(item.cartItemId),
+                              onSelectionChanged: (selected) {
+                                context.read<CartBloc>().add(
+                                  ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
+                                );
+                              },
+                              onQuantityChanged: (newQuantity) {
+                                context.read<CartBloc>().add(
+                                  UpdateCartItemEvent(
+                                    cartItemId: item.cartItemId,
+                                    quantity: newQuantity,
+                                  ),
+                                );
+                              },
+                              onRemove: () {
+                                _showRemoveItemDialog(context, item);
+                              },
+                            );
+                          }).toList(),
+                          const SizedBox(height: 8),
+                        ],
                       );
                     },
                   ),
                 ),
                 CartSummaryWidget(
-                  items: state.items,
+                  items: state.allItems, // ✅ Fix
                   totalAmount: state.totalAmount,
                   selectedItems: state.selectedItems,
                   selectedTotalAmount: state.selectedTotalAmount,
@@ -417,13 +455,11 @@ class CartView extends StatelessWidget {
       return;
     }
 
-    // Call PreviewOrder API with selected items
     final selectedCartItemIds = state.selectedCartItemIds.toList();
     context.read<CartBloc>().add(
       GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
     );
 
-    // Show preview dialog or navigate to checkout
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -445,7 +481,6 @@ class CartView extends StatelessWidget {
       return;
     }
 
-    // Call PreviewOrder API with selected items
     final selectedCartItemIds = state.selectedCartItemIds.toList();
     context.read<CartBloc>().add(
       GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),

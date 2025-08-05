@@ -2,16 +2,18 @@ import 'package:dartz/dartz.dart';
 import '../../repositories/cart_repository.dart';
 import '../../../core/error/failures.dart';
 
+@Deprecated('Use RemoveCartItemUseCase instead')
 class RemoveFromCartParams {
   final String productId;
   final String? variantId;
 
   RemoveFromCartParams({
     required this.productId,
-    required this.variantId,
+    this.variantId,
   });
 }
 
+@Deprecated('Use RemoveCartItemUseCase instead')
 class RemoveFromCartUseCase {
   final CartRepository repository;
 

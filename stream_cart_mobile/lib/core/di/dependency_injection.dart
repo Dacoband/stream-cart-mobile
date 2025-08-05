@@ -21,6 +21,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/search_repository.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/shop_repository.dart';
+import '../../domain/usecases/cart/get_cart_summary_usecase.dart';
 import '../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../domain/usecases/auth/login_usecase.dart';
 import '../../domain/usecases/auth/register_usecase.dart';
@@ -204,7 +205,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
 
   // Cart
-  getIt.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(getIt()));
+  getIt.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(dioClient: getIt()));
   getIt.registerLazySingleton<CartRepository>(() => CartRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => AddToCartUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCartItemsUseCase(getIt()));
@@ -214,8 +215,9 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => RemoveCartItemUseCase(getIt()));
   getIt.registerLazySingleton(() => RemoveMultipleCartItemsUseCase(getIt()));
   getIt.registerLazySingleton(() => ClearCartUseCase(getIt()));
-  getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt()));
-  getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt())); 
+  getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt())); 
+  getIt.registerLazySingleton(() => GetCartSummaryUseCase(getIt()));
 
   // === ORDER ===
   // Data sources
@@ -439,7 +441,6 @@ Future<void> setupDependencies() async {
     final cartBloc = CartBloc(
       addToCartUseCase: getIt(),
       getCartItemsUseCase: getIt(),
-      getAllCartItemsUseCase: getIt(),
       updateCartItemUseCase: getIt(),
       removeFromCartUseCase: getIt(),
       removeCartItemUseCase: getIt(),

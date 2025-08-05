@@ -6,13 +6,15 @@ part of 'cart_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-PriceData _$PriceDataFromJson(Map<String, dynamic> json) => PriceData(
+PriceDataModel _$PriceDataModelFromJson(Map<String, dynamic> json) =>
+    PriceDataModel(
       currentPrice: (json['currentPrice'] as num).toDouble(),
       originalPrice: (json['originalPrice'] as num).toDouble(),
       discount: (json['discount'] as num).toDouble(),
     );
 
-Map<String, dynamic> _$PriceDataToJson(PriceData instance) => <String, dynamic>{
+Map<String, dynamic> _$PriceDataModelToJson(PriceDataModel instance) =>
+    <String, dynamic>{
       'currentPrice': instance.currentPrice,
       'originalPrice': instance.originalPrice,
       'discount': instance.discount,
@@ -20,18 +22,21 @@ Map<String, dynamic> _$PriceDataToJson(PriceData instance) => <String, dynamic>{
 
 CartItemModel _$CartItemModelFromJson(Map<String, dynamic> json) =>
     CartItemModel(
-      cartItemId: json['cartItemId'] as String?,
+      cartItemId: json['cartItemId'] as String,
       productId: json['productId'] as String,
       variantId: json['variantID'] as String?,
-      productName: json['productName'] as String?,
+      productName: json['productName'] as String,
+      priceData:
+          PriceDataModel.fromJson(json['priceData'] as Map<String, dynamic>),
       quantity: (json['quantity'] as num).toInt(),
-      primaryImage: json['primaryImage'] as String?,
-      priceData: json['priceData'] == null
-          ? null
-          : PriceData.fromJson(json['priceData'] as Map<String, dynamic>),
+      primaryImage: json['primaryImage'] as String,
       attributes: json['attributes'] as Map<String, dynamic>?,
-      stockQuantity: (json['stockQuantity'] as num?)?.toInt(),
-      productStatus: json['productStatus'] as bool?,
+      stockQuantity: (json['stockQuantity'] as num).toInt(),
+      productStatus: json['productStatus'] as bool,
+      weight: (json['weight'] as num).toDouble(),
+      length: (json['length'] as num).toDouble(),
+      width: (json['width'] as num).toDouble(),
+      height: (json['height'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$CartItemModelToJson(CartItemModel instance) =>
@@ -40,23 +45,27 @@ Map<String, dynamic> _$CartItemModelToJson(CartItemModel instance) =>
       'productId': instance.productId,
       'variantID': instance.variantId,
       'productName': instance.productName,
+      'priceData': instance.priceData,
       'quantity': instance.quantity,
       'primaryImage': instance.primaryImage,
-      'priceData': instance.priceData,
       'attributes': instance.attributes,
       'stockQuantity': instance.stockQuantity,
       'productStatus': instance.productStatus,
+      'weight': instance.weight,
+      'length': instance.length,
+      'width': instance.width,
+      'height': instance.height,
     };
 
 CartShopModel _$CartShopModelFromJson(Map<String, dynamic> json) =>
     CartShopModel(
-      shopId: json['shopId'] as String?,
-      shopName: json['shopName'] as String?,
+      shopId: json['shopId'] as String,
+      shopName: json['shopName'] as String,
       products: (json['products'] as List<dynamic>)
           .map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      numberOfProduct: (json['numberOfProduct'] as num?)?.toInt(),
-      totalPriceInShop: (json['totalPriceInShop'] as num?)?.toDouble(),
+      numberOfProduct: (json['numberOfProduct'] as num).toInt(),
+      totalPriceInShop: (json['totalPriceInShop'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$CartShopModelToJson(CartShopModel instance) =>
@@ -68,32 +77,34 @@ Map<String, dynamic> _$CartShopModelToJson(CartShopModel instance) =>
       'totalPriceInShop': instance.totalPriceInShop,
     };
 
-CartSummaryModel _$CartSummaryModelFromJson(Map<String, dynamic> json) =>
-    CartSummaryModel(
-      totalItem: (json['totalItem'] as num?)?.toInt(),
-      subTotal: (json['subTotal'] as num?)?.toDouble(),
-      discount: (json['discount'] as num?)?.toDouble(),
-      totalAmount: (json['totalAmount'] as num?)?.toDouble(),
-      listCartItem: (json['listCartItem'] as List<dynamic>?)
-          ?.map((e) => CartShopModel.fromJson(e as Map<String, dynamic>))
+CreateOrderFromCheckoutModel _$CreateOrderFromCheckoutModelFromJson(
+        Map<String, dynamic> json) =>
+    CreateOrderFromCheckoutModel(
+      selectedCartItemIds: (json['selectedCartItemIds'] as List<dynamic>)
+          .map((e) => e as String)
           .toList(),
+      deliveryAddressId: json['deliveryAddressId'] as String,
+      paymentMethod: json['paymentMethod'] as String,
+      customerNotes: json['customerNotes'] as String?,
+      expectedDeliveryDate: json['expectedDeliveryDate'] as String?,
     );
 
-Map<String, dynamic> _$CartSummaryModelToJson(CartSummaryModel instance) =>
+Map<String, dynamic> _$CreateOrderFromCheckoutModelToJson(
+        CreateOrderFromCheckoutModel instance) =>
     <String, dynamic>{
-      'totalItem': instance.totalItem,
-      'subTotal': instance.subTotal,
-      'discount': instance.discount,
-      'totalAmount': instance.totalAmount,
-      'listCartItem': instance.listCartItem,
+      'selectedCartItemIds': instance.selectedCartItemIds,
+      'deliveryAddressId': instance.deliveryAddressId,
+      'paymentMethod': instance.paymentMethod,
+      'customerNotes': instance.customerNotes,
+      'expectedDeliveryDate': instance.expectedDeliveryDate,
     };
 
 CartUpdateResponseModel _$CartUpdateResponseModelFromJson(
         Map<String, dynamic> json) =>
     CartUpdateResponseModel(
-      cartItem: json['cartItem'] as String?,
+      cartItem: json['cartItem'] as String,
       variantId: json['variantId'] as String?,
-      quantity: (json['quantity'] as num?)?.toInt(),
+      quantity: (json['quantity'] as num).toInt(),
     );
 
 Map<String, dynamic> _$CartUpdateResponseModelToJson(
@@ -102,39 +113,4 @@ Map<String, dynamic> _$CartUpdateResponseModelToJson(
       'cartItem': instance.cartItem,
       'variantId': instance.variantId,
       'quantity': instance.quantity,
-    };
-
-CartResponseModel _$CartResponseModelFromJson(Map<String, dynamic> json) =>
-    CartResponseModel(
-      success: json['success'] as bool,
-      message: json['message'] as String,
-      data: json['data'],
-      errors:
-          (json['errors'] as List<dynamic>).map((e) => e as String).toList(),
-    );
-
-Map<String, dynamic> _$CartResponseModelToJson(CartResponseModel instance) =>
-    <String, dynamic>{
-      'success': instance.success,
-      'message': instance.message,
-      'data': instance.data,
-      'errors': instance.errors,
-    };
-
-CartModel _$CartModelFromJson(Map<String, dynamic> json) => CartModel(
-      id: json['id'] as String,
-      items: (json['items'] as List<dynamic>)
-          .map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-    );
-
-Map<String, dynamic> _$CartModelToJson(CartModel instance) => <String, dynamic>{
-      'id': instance.id,
-      'items': instance.items,
-      'totalAmount': instance.totalAmount,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
     };
