@@ -82,7 +82,12 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Either<Failure, void>> removeCartItem(String cartItemId) async {
     try {
-      await remoteDataSource.removeCartItem(cartItemId);
+      final result = await remoteDataSource.removeCartItem(cartItemId);
+      
+      // Check if API actually deleted the item
+      if (!result.success) {
+        return Left(ServerFailure(result.message));
+      }
       return const Right(null);
     } on DioException catch (e) {
       return Left(_handleDioException(e));

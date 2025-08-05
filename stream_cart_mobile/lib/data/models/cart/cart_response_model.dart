@@ -269,7 +269,7 @@ class DeleteCartResponseModel {
   final String message;
   
   @JsonKey(name: 'data')
-  final dynamic data; // Thường null khi delete
+  final dynamic data; 
   
   @JsonKey(name: 'errors')
   final List<String> errors;

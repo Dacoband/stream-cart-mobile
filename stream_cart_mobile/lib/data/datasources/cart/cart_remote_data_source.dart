@@ -71,15 +71,29 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     int quantity,
   ) async {
     try {
-      final requestData = {
-        'quantity': quantity,
-      };
+      // Need to get variant info first since API requires variantId
+      final cartItems = await getCartItems();
+      
+      // Find the cart item to get its variantId
+      String? variantId;
+      if (cartItems.data != null) {
+        for (var shop in cartItems.data!.cartItemByShop) {
+          for (var product in shop.products) {
+            if (product.cartItemId == cartItemId) {
+              variantId = product.variantId;
+              break;
+            }
+          }
+          if (variantId != null) break;
+        }
+      }
 
       final response = await _dioClient.put(
         ApiConstants.cartEndpoint,
         data: {
-          'cartItemId': cartItemId,
-          ...requestData,
+          'cartItem': cartItemId,
+          'variantId': variantId,
+          'quantity': quantity,
         },
       );
 
@@ -96,8 +110,8 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
     try {
       final response = await _dioClient.delete(
         ApiConstants.cartEndpoint,
-        data: {
-          'cartItemId': cartItemId,
+        queryParameters: {
+          'id': cartItemId,
         },
       );
 
@@ -112,13 +126,11 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<DeleteCartResponseModel> removeMultipleCartItems(List<String> cartItemIds) async {
     try {
-      final requestData = {
-        'cartItemIds': cartItemIds,
-      };
-
       final response = await _dioClient.delete(
         ApiConstants.cartEndpoint,
-        data: requestData,
+        queryParameters: {
+          'id': cartItemIds,
+        },
       );
 
       return DeleteCartResponseModel.fromJson(response.data);

@@ -255,8 +255,4 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   void _onNavigateToPreviewOrder(NavigateToPreviewOrderEvent event, Emitter<CartState> emit) {
     add(GetSelectedItemsPreviewEvent(selectedCartItemIds: event.selectedCartItemIds));
   }
-
-  String _formatPrice(double price) {
-    return '${price.toStringAsFixed(0)}₫';
-  }
 }
