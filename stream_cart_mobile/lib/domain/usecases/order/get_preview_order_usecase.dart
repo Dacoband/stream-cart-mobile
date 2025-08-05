@@ -16,7 +16,7 @@ class GetPreviewOrderUseCase {
 
   GetPreviewOrderUseCase(this.repository);
 
-  Future<Either<Failure, CartSummaryEntity>> call(GetPreviewOrderParams params) async {
+  Future<Either<Failure, PreviewOrderDataEntity>> call(GetPreviewOrderParams params) async {
     return await repository.getPreviewOrder(params.cartItemIds);
   }
 }

@@ -5,12 +5,12 @@ import '../../../core/error/failures.dart';
 
 class AddToCartParams {
   final String productId;
-  final String variantId;
+  final String? variantId;
   final int quantity;
 
   AddToCartParams({
     required this.productId,
-    required this.variantId,
+    this.variantId,
     required this.quantity,
   });
 }

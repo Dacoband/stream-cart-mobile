@@ -4,13 +4,11 @@ import '../../repositories/cart_repository.dart';
 import '../../../core/error/failures.dart';
 
 class UpdateCartItemParams {
-  final String productId;
-  final String? variantId;
+  final String cartItemId;
   final int quantity;
 
   UpdateCartItemParams({
-    required this.productId,
-    required this.variantId,
+    required this.cartItemId,
     required this.quantity,
   });
 }
@@ -22,8 +20,7 @@ class UpdateCartItemUseCase {
 
   Future<Either<Failure, CartResponseEntity>> call(UpdateCartItemParams params) async {
     return await repository.updateCartItem(
-      params.productId,
-      params.variantId,
+      params.cartItemId,
       params.quantity,
     );
   }
