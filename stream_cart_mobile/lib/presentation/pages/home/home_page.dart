@@ -304,7 +304,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, cartState) {
                 int itemCount = 0;
                 if (cartState is CartLoaded) {
-                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                  itemCount = cartState.allItems.fold<int>(0, (sum, item) => sum + item.quantity);
                 }
 
                 return Stack(
@@ -676,7 +676,7 @@ class _HomePageState extends State<HomePage> {
               builder: (context, cartState) {
                 int itemCount = 0;
                 if (cartState is CartLoaded) {
-                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                  itemCount = cartState.allItems.fold<int>(0, (sum, item) => sum + item.quantity);
                 }
 
                 return Stack(

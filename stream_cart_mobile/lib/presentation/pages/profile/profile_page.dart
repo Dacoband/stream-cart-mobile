@@ -205,7 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
               builder: (context, cartState) {
                 int itemCount = 0;
                 if (cartState is CartLoaded) {
-                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                  itemCount = cartState.allItems.fold<int>(0, (sum, item) => sum + item.quantity);
                 }
 
                 return Stack(
