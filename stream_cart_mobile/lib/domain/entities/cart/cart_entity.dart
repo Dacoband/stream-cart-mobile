@@ -339,19 +339,19 @@ class PreviewOrderDataEntity extends Equatable {
   final double subTotal;
   final double discount;
   final double totalAmount;
-  final double length;
-  final double width;
-  final double height;
-  final List<CartShopEntity> listCartItem; 
+  final double? length;
+  final double? width;
+  final double? height;
+  final List<CartShopEntity> listCartItem;
 
   const PreviewOrderDataEntity({
     required this.totalItem,
     required this.subTotal,
     required this.discount,
     required this.totalAmount,
-    required this.length,
-    required this.width,
-    required this.height,
+    this.length,
+    this.width,
+    this.height,
     required this.listCartItem,
   });
 
@@ -361,9 +361,9 @@ class PreviewOrderDataEntity extends Equatable {
       subTotal: (json['subTotal'] ?? 0).toDouble(),
       discount: (json['discount'] ?? 0).toDouble(),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
-      length: (json['length'] ?? 0).toDouble(),
-      width: (json['width'] ?? 0).toDouble(),
-      height: (json['height'] ?? 0).toDouble(),
+      length: json['length']?.toDouble(),
+      width: json['width']?.toDouble(),
+      height: json['height']?.toDouble(),
       listCartItem: (json['listCartItem'] as List<dynamic>?)
           ?.map((shop) => CartShopEntity.fromJson(shop))
           .toList() ?? [],

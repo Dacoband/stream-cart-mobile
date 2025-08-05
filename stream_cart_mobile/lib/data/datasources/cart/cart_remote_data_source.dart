@@ -159,13 +159,12 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
   @override
   Future<PreviewOrderResponseModel> getPreviewOrder(List<String> cartItemIds) async {
     try {
-      final requestData = {
-        'cartItemIds': cartItemIds,
-      };
 
-      final response = await _dioClient.post(
+      final response = await _dioClient.get(
         ApiConstants.cartPreviewEndpoint,
-        data: requestData,
+        queryParameters: {
+          'CartItemId': cartItemIds,
+        },
       );
 
       return PreviewOrderResponseModel.fromJson(response.data);

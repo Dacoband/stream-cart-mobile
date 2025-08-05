@@ -104,19 +104,19 @@ class PreviewOrderDataModel {
   
   @JsonKey(name: 'discount')
   final double discount;
-  
+
   @JsonKey(name: 'totalAmount')
   final double totalAmount;
   
   @JsonKey(name: 'length')
-  final double length;
+  final double? length;
   
   @JsonKey(name: 'width')
-  final double width;
-  
+  final double? width;
+
   @JsonKey(name: 'height')
-  final double height;
-  
+  final double? height;
+
   @JsonKey(name: 'listCartItem')
   final List<CartShopModel> listCartItem;
 
@@ -125,9 +125,9 @@ class PreviewOrderDataModel {
     required this.subTotal,
     required this.discount,
     required this.totalAmount,
-    required this.length,
-    required this.width,
-    required this.height,
+    this.length,
+    this.width,
+    this.height,
     required this.listCartItem,
   });
 

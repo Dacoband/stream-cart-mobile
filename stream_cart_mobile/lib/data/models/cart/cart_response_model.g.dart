@@ -55,9 +55,9 @@ PreviewOrderDataModel _$PreviewOrderDataModelFromJson(
       subTotal: (json['subTotal'] as num).toDouble(),
       discount: (json['discount'] as num).toDouble(),
       totalAmount: (json['totalAmount'] as num).toDouble(),
-      length: (json['length'] as num).toDouble(),
-      width: (json['width'] as num).toDouble(),
-      height: (json['height'] as num).toDouble(),
+      length: (json['length'] as num?)?.toDouble(),
+      width: (json['width'] as num?)?.toDouble(),
+      height: (json['height'] as num?)?.toDouble(),
       listCartItem: (json['listCartItem'] as List<dynamic>)
           .map((e) => CartShopModel.fromJson(e as Map<String, dynamic>))
           .toList(),
