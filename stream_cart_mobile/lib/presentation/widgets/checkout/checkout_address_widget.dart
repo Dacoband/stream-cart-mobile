@@ -5,11 +5,13 @@ import '../../../domain/entities/address/address_entity.dart';
 class CheckoutAddressWidget extends StatelessWidget {
   final AddressState addressState;
   final VoidCallback onChangeAddress;
+  final VoidCallback onAddAddress;
 
   const CheckoutAddressWidget({
     super.key,
     required this.addressState,
     required this.onChangeAddress,
+    required this.onAddAddress,
   });
 
   @override
@@ -110,6 +112,18 @@ class CheckoutAddressWidget extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onAddAddress,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Thêm địa chỉ'),
+          ),
         ],
       );
     }
@@ -143,6 +157,18 @@ class CheckoutAddressWidget extends StatelessWidget {
               fontSize: 12,
               color: Colors.grey,
             ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onAddAddress,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Thêm địa chỉ'),
           ),
         ],
       ),

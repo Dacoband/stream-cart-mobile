@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/address/address_bloc.dart';
+import '../../blocs/address/address_event.dart';
 import '../../blocs/address/address_state.dart';
 import '../../blocs/deliveries/deliveries_bloc.dart';
 import '../../blocs/deliveries/deliveries_event.dart';
@@ -31,7 +32,13 @@ class CheckoutView extends StatefulWidget {
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
-  String selectedPaymentMethod = 'COD'; // Default payment method
+  String selectedPaymentMethod = 'COD'; 
+  
+  @override
+  void initState() {
+    super.initState();
+    context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -64,6 +71,17 @@ class _CheckoutViewState extends State<CheckoutView> {
                   PreviewOrderDeliveryEvent(
                     cartItemIds: cartItemIds,
                     shippingAddress: addressState.address!,
+                  ),
+                );
+              } else if (addressState is DefaultShippingAddressSet) {
+                // When default address is set successfully, reload the default shipping address
+                context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã cập nhật địa chỉ giao hàng'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 1),
                   ),
                 );
               } else if (addressState is AddressError) {
@@ -133,6 +151,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                         return CheckoutAddressWidget(
                           addressState: addressState,
                           onChangeAddress: () => _showAddressSelection(context),
+                          onAddAddress: () => _showAddAddressPage(context),
                         );
                       },
                     ),
@@ -198,20 +217,23 @@ class _CheckoutViewState extends State<CheckoutView> {
     );
   }
 
+  void _showAddAddressPage(BuildContext context) {
+    Navigator.pushNamed(context, AppRouter.addAddress).then((result) {
+      if (result == true) {
+        context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
+      }
+    });
+  }
+
   void _showAddressSelection(BuildContext context) {
-    Navigator.pushNamed(context, '/address-selection').then((selectedAddress) {
+    Navigator.pushNamed(
+      context, 
+      AppRouter.addressList,
+      arguments: {'isSelectionMode': true},
+    ).then((selectedAddress) {
       if (selectedAddress != null) {
-        // Update delivery with new address
-        final cartItemIds = widget.previewOrderData.listCartItem
-            .expand((shop) => shop.products)
-            .map((item) => item.cartItemId)
-            .toList();
-            
-        context.read<DeliveryBloc>().add(
-          ChangeShippingAddressEvent(
-            newAddress: selectedAddress as AddressEntity,
-            cartItemIds: cartItemIds,
-          ),
+        context.read<AddressBloc>().add(
+          SetDefaultShippingAddressEvent(id: (selectedAddress as AddressEntity).id),
         );
       }
     });

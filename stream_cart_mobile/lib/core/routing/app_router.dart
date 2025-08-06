@@ -216,10 +216,12 @@ class AppRouter {
           ),
         );
       case addressList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final isSelectionMode = args?['isSelectionMode'] ?? false;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => getIt<AddressBloc>(),
-            child: const AddressListPage(),
+            child: AddressListPage(isSelectionMode: isSelectionMode),
           ),
         );
 
