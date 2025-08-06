@@ -115,7 +115,7 @@ class CartView extends StatelessWidget {
           } else if (state is CartPreviewOrderLoaded) { 
             Navigator.pushNamed(
               context, 
-              '/preview-order',
+              '/checkout',
               arguments: state.previewData,
             );
           }
@@ -280,9 +280,6 @@ class CartView extends StatelessWidget {
                   hasSelectedItems: state.hasSelectedItems,
                   onCheckout: () {
                     _handleCheckout(context, state);
-                  },
-                  onPreviewOrder: () {
-                    _handlePreviewOrder(context, state);
                   },
                 ),
               ],
@@ -467,43 +464,17 @@ class CartView extends StatelessWidget {
       return;
     }
 
+    // Get preview order data first, then navigate to checkout
     final selectedCartItemIds = state.selectedCartItemIds.toList();
     context.read<CartBloc>().add(
       GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
     );
-
+    
+    // Show loading message
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đang xử lý ${state.selectedItems.length} sản phẩm được chọn...',
-        ),
+      const SnackBar(
+        content: Text('Đang chuẩn bị thông tin thanh toán...'),
         backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _handlePreviewOrder(BuildContext context, CartLoaded state) {
-    if (!state.hasSelectedItems) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn ít nhất một sản phẩm để xem trước'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    final selectedCartItemIds = state.selectedCartItemIds.toList();
-    context.read<CartBloc>().add(
-      GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đang lấy thông tin xem trước cho ${state.selectedItems.length} sản phẩm...',
-        ),
-        backgroundColor: Colors.green,
       ),
     );
   }
