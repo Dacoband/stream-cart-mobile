@@ -43,6 +43,16 @@ class GetProductsByShopUseCase {
   }
 }
 
+class GetProductCountByShopUseCase {
+  final ShopRepository repository;
+
+  GetProductCountByShopUseCase(this.repository);
+
+  Future<Either<Failure, int>> call(String shopId) async {
+    return await repository.getProductCountByShop(shopId);
+  }
+}
+
 class GetShopsParams {
   final int pageNumber;
   final int pageSize;

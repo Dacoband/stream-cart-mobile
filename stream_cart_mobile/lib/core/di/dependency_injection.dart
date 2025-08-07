@@ -253,6 +253,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetShopsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetShopByIdUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductCountByShopUseCase(getIt()));
 
   // === CHAT (SignalR only) ===
   // Data sources
