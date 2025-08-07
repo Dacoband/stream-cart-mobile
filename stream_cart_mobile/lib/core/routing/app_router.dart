@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/cart/cart_entity.dart';
 import '../../presentation/blocs/address/address_bloc.dart';
-import '../../presentation/blocs/deliveries/deliveries_bloc.dart';
-import '../../presentation/blocs/order/order_bloc.dart';
 import '../../presentation/pages/address/add_edit_address_page.dart';
 import '../../presentation/pages/address/address_list_page.dart';
 import '../../presentation/pages/chat/chat_detail_page.dart';
@@ -22,7 +20,7 @@ import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
-import '../../presentation/pages/checkout/check_out_view.dart';
+import '../../presentation/pages/checkout/check_out_page.dart';
 import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/pages/notification/notification_page.dart';
 import '../../presentation/pages/shop/shop_list_page.dart';
@@ -139,20 +137,7 @@ class AppRouter {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => MultiBlocProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => getIt<AddressBloc>(),
-              ),
-              BlocProvider(
-                create: (context) => getIt<DeliveryBloc>(),
-              ),
-              BlocProvider(
-                create: (context) => getIt<OrderBloc>(),
-              ),
-            ],
-            child: CheckoutView(previewOrderData: previewOrderData),
-          ), 
+          builder: (_) => CheckoutPage(previewOrderData: previewOrderData),
         );
       case categoryDetail:
         final Map<String, dynamic> args = settings.arguments as Map<String, dynamic>;
