@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/address/address_entity.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 
 abstract class DeliveryEvent extends Equatable {
   const DeliveryEvent();
@@ -9,29 +10,29 @@ abstract class DeliveryEvent extends Equatable {
 }
 
 class PreviewOrderDeliveryEvent extends DeliveryEvent {
-  final List<String> cartItemIds;
+  final PreviewOrderDataEntity previewOrderData;
   final AddressEntity shippingAddress;
 
   const PreviewOrderDeliveryEvent({
-    required this.cartItemIds,
+    required this.previewOrderData,
     required this.shippingAddress,
   });
 
   @override
-  List<Object?> get props => [cartItemIds, shippingAddress];
+  List<Object?> get props => [previewOrderData, shippingAddress];
 }
 
 class ChangeShippingAddressEvent extends DeliveryEvent {
   final AddressEntity newAddress;
-  final List<String> cartItemIds;
+  final PreviewOrderDataEntity previewOrderData;
 
   const ChangeShippingAddressEvent({
     required this.newAddress,
-    required this.cartItemIds,
+    required this.previewOrderData,
   });
 
   @override
-  List<Object?> get props => [newAddress, cartItemIds];
+  List<Object?> get props => [newAddress, previewOrderData];
 }
 
 class SelectDeliveryServiceEvent extends DeliveryEvent {

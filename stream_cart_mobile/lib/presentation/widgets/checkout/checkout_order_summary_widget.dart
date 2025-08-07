@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/entities/cart/cart_entity.dart';
+import '../../blocs/deliveries/deliveries_state.dart';
 
 
 class CurrencyFormatter {
@@ -10,10 +11,12 @@ class CurrencyFormatter {
 
 class CheckoutOrderSummaryWidget extends StatelessWidget {
   final PreviewOrderDataEntity previewOrderData;
+  final DeliveryState? deliveryState;
 
   const CheckoutOrderSummaryWidget({
     super.key,
     required this.previewOrderData,
+    this.deliveryState,
   });
 
   @override
@@ -169,6 +172,12 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
   }
 
   Widget _buildTotalSummary() {
+    // Calculate delivery fee
+    final deliveryFee = deliveryState is DeliveryLoaded 
+        ? (deliveryState as DeliveryLoaded).totalDeliveryFee 
+        : 0.0;
+    final double finalTotal = previewOrderData.totalAmount + deliveryFee;
+    
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -178,11 +187,7 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
             CurrencyFormatter.format(previewOrderData.subTotal),
           ),
           const SizedBox(height: 8),
-          _buildSummaryRow(
-            'Phí vận chuyển',
-            'Tính khi chọn',
-            isDeliveryFee: true,
-          ),
+          _buildDeliveryFeeRow(deliveryFee),
           const SizedBox(height: 8),
           if (previewOrderData.discount > 0) ...[
             _buildSummaryRow(
@@ -196,11 +201,29 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
           const SizedBox(height: 8),
           _buildSummaryRow(
             'Tổng cộng',
-            CurrencyFormatter.format(previewOrderData.totalAmount),
+            CurrencyFormatter.format(finalTotal),
             isTotal: true,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDeliveryFeeRow(double deliveryFee) {
+    if (deliveryState is! DeliveryLoaded) {
+      return _buildSummaryRow(
+        'Phí vận chuyển',
+        'Tính khi chọn',
+        isDeliveryFee: true,
+      );
+    }
+
+    return _buildSummaryRow(
+      'Phí vận chuyển',
+      deliveryFee > 0 
+          ? CurrencyFormatter.format(deliveryFee)
+          : 'Chưa chọn',
+      isDeliveryFee: true,
     );
   }
 

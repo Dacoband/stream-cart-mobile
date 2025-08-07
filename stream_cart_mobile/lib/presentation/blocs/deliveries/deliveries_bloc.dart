@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/deliveries/preview_deliveries_entity.dart';
+import '../../../domain/entities/deliveries/from_shop_entity.dart';
+import '../../../domain/entities/deliveries/shipping_item_entity.dart';
 import '../../../domain/entities/deliveries/service_response_entity.dart';
 import '../../../domain/usecases/deliveries/preview_order_delivery_usecase.dart';
 import 'deliveries_event.dart';
@@ -23,9 +25,26 @@ class DeliveryBloc extends Bloc<DeliveryEvent, DeliveryState> {
     Emitter<DeliveryState> emit,
   ) async {
     emit(const DeliveryLoading());
+    final fromShops = event.previewOrderData.listCartItem.map((shop) {
+      final items = shop.products.map((product) {
+        return ShippingItemEntity(
+          name: product.productName,
+          quantity: product.quantity,
+          weight: product.weight,
+          length: product.length,
+          width: product.width,
+          height: product.height,
+        );
+      }).toList();
+
+      return FromShopEntity(
+        fromShopId: shop.shopId,
+        items: items,
+      );
+    }).toList();
 
     final deliveryRequest = PreviewDeliveriesEntity(
-      fromShops: [],
+      fromShops: fromShops,
       toProvince: event.shippingAddress.city,
       toDistrict: event.shippingAddress.district,
       toWard: event.shippingAddress.ward,
@@ -67,7 +86,7 @@ class DeliveryBloc extends Bloc<DeliveryEvent, DeliveryState> {
   ) async {
     // Re-preview with new address
     add(PreviewOrderDeliveryEvent(
-      cartItemIds: event.cartItemIds,
+      previewOrderData: event.previewOrderData,
       shippingAddress: event.newAddress,
     ));
   }

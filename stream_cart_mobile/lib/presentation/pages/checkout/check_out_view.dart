@@ -33,7 +33,7 @@ class CheckoutView extends StatefulWidget {
 
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedPaymentMethod = 'COD'; 
-  AddressEntity? selectedShippingAddress; // Store temporarily selected address
+  AddressEntity? selectedShippingAddress; 
   
   @override
   void initState() {
@@ -66,16 +66,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                     selectedShippingAddress = addressState.address;
                   });
                 }
-                final cartItemIds = widget.previewOrderData.listCartItem
-                    .expand((shop) => shop.products)
-                    .map((item) => item.cartItemId)
-                    .toList();
-                
                 final addressToUse = selectedShippingAddress ?? addressState.address;
                 if (addressToUse != null) {
                   context.read<DeliveryBloc>().add(
                     PreviewOrderDeliveryEvent(
-                      cartItemIds: cartItemIds,
+                      previewOrderData: widget.previewOrderData,
                       shippingAddress: addressToUse,
                     ),
                   );
@@ -146,7 +141,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       builder: (context, addressState) {
                         return CheckoutAddressWidget(
                           addressState: addressState,
-                          selectedAddress: selectedShippingAddress, // Pass selected address
+                          selectedAddress: selectedShippingAddress,
                           onChangeAddress: () => _showAddressSelection(context),
                           onAddAddress: () => _showAddAddressPage(context),
                         );
@@ -156,8 +151,13 @@ class _CheckoutViewState extends State<CheckoutView> {
                     const SizedBox(height: 16),
                     
                     // 2. Order Summary Section
-                    CheckoutOrderSummaryWidget(
-                      previewOrderData: widget.previewOrderData,
+                    BlocBuilder<DeliveryBloc, DeliveryState>(
+                      builder: (context, deliveryState) {
+                        return CheckoutOrderSummaryWidget(
+                          previewOrderData: widget.previewOrderData,
+                          deliveryState: deliveryState,
+                        );
+                      },
                     ),
                     
                     const SizedBox(height: 16),
@@ -167,6 +167,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       builder: (context, deliveryState) {
                         return CheckoutDeliveryOptionsWidget(
                           deliveryState: deliveryState,
+                          totalOrderAmount: widget.previewOrderData.totalAmount,
                           onServiceSelected: (shopId, serviceTypeId) {
                             context.read<DeliveryBloc>().add(
                               SelectDeliveryServiceEvent(
@@ -193,7 +194,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       },
                     ),
                     
-                    const SizedBox(height: 100), // Space for bottom bar
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -234,14 +235,9 @@ class _CheckoutViewState extends State<CheckoutView> {
         });
         
         // Update delivery preview with selected address
-        final cartItemIds = widget.previewOrderData.listCartItem
-            .expand((shop) => shop.products)
-            .map((item) => item.cartItemId)
-            .toList();
-        
         context.read<DeliveryBloc>().add(
           PreviewOrderDeliveryEvent(
-            cartItemIds: cartItemIds,
+            previewOrderData: widget.previewOrderData,
             shippingAddress: selectedAddress,
           ),
         );

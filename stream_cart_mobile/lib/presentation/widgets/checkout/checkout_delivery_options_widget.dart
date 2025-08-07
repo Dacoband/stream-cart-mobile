@@ -5,11 +5,13 @@ import '../../../domain/entities/deliveries/service_response_entity.dart';
 class CheckoutDeliveryOptionsWidget extends StatelessWidget {
   final DeliveryState deliveryState;
   final Function(String shopId, int serviceTypeId) onServiceSelected;
+  final double? totalOrderAmount;
 
   const CheckoutDeliveryOptionsWidget({
     super.key,
     required this.deliveryState,
     required this.onServiceSelected,
+    this.totalOrderAmount,
   });
 
   @override
@@ -103,7 +105,6 @@ class CheckoutDeliveryOptionsWidget extends StatelessWidget {
   }
 
   Widget _buildDeliveryOptions(DeliveryLoaded state) {
-    // Group services by shop
     final servicesByShop = <String, List<ServiceResponseEntity>>{};
     for (final service in state.deliveryPreview.serviceResponses) {
       servicesByShop.putIfAbsent(service.shopId, () => []).add(service);
