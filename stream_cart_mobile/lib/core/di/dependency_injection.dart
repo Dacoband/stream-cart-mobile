@@ -10,14 +10,17 @@ import '../../core/services/search_history_service.dart';
 import '../../core/services/image_upload_service.dart';
 import '../../data/datasources/auth/auth_local_data_source.dart';
 import '../../data/datasources/auth/auth_remote_data_source.dart';
+import '../../data/datasources/deliveries/deliveries_remote_data_source.dart';
 import '../../data/datasources/search/search_remote_data_source.dart';
 import '../../data/datasources/cart/cart_remote_data_source.dart';
 import '../../data/datasources/shop/shop_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/deliveries/deliveries_repository_impl.dart';
 import '../../data/repositories/search_repository_impl.dart';
 import '../../data/repositories/cart_repository_impl.dart';
 import '../../data/repositories/shop_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/repositories/deliveries/deliveries_repository.dart';
 import '../../domain/repositories/search_repository.dart';
 import '../../domain/repositories/cart_repository.dart';
 import '../../domain/repositories/shop_repository.dart';
@@ -27,6 +30,7 @@ import '../../domain/usecases/auth/login_usecase.dart';
 import '../../domain/usecases/auth/register_usecase.dart';
 import '../../domain/usecases/auth/otp_usecases.dart';
 import '../../domain/usecases/category/get_category_detail_usecase.dart';
+import '../../domain/usecases/deliveries/preview_order_delivery_usecase.dart';
 import '../../domain/usecases/product/get_products_by_category_usecase.dart';
 import '../../domain/usecases/category/get_categories_usecase.dart';
 import '../../domain/usecases/product/get_products_usecase.dart';
@@ -67,6 +71,7 @@ import '../../data/datasources/account/profile_remote_data_source.dart';
 import '../../data/repositories/profile_repository_impl.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
+import '../../presentation/blocs/deliveries/deliveries_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
@@ -248,6 +253,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetShopsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetShopByIdUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductCountByShopUseCase(getIt()));
 
   // === CHAT (SignalR only) ===
   // Data sources
@@ -346,6 +352,15 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetDistrictsUseCase(getIt<AddressRepository>()));
   getIt.registerLazySingleton(() => GetWardsUseCase(getIt<AddressRepository>()));
 
+  // === DELIVERIES ===
+  getIt.registerLazySingleton<DeliveriesRemoteDataSource>(() => 
+    DeliveriesRemoteDataSourceImpl(dioClient: getIt<Dio>()));
+  
+  getIt.registerLazySingleton<DeliveriesRepository>(() => 
+    DeliveriesRepositoryImpl(getIt<DeliveriesRemoteDataSource>()));
+  
+  getIt.registerLazySingleton(() => 
+    PreviewOrderDeliveryUseCase(repository: getIt<DeliveriesRepository>()));
 
 
   // === BLOCS === (Factory registrations)
@@ -419,6 +434,10 @@ Future<void> setupDependencies() async {
     getProvincesUseCase: getIt(),
     getDistrictsUseCase: getIt(),
     getWardsUseCase: getIt(),
+  ));
+
+  getIt.registerFactory(() => DeliveryBloc(
+    previewOrderDeliveryUseCase: getIt(),
   ));
 
   getIt.registerFactory(() => OrderBloc(

@@ -18,6 +18,8 @@ abstract class ShopRemoteDataSource {
   Future<ShopModel> getShopById(String shopId);
 
   Future<ProductResponseModel> getProductsByShop(String shopId);
+  
+  Future<int> getProductCountByShop(String shopId);
 }
 
 class ShopRemoteDataSourceImpl implements ShopRemoteDataSource {
@@ -46,20 +48,13 @@ class ShopRemoteDataSourceImpl implements ShopRemoteDataSource {
       if (approvalStatus != null) queryParameters['approvalStatus'] = approvalStatus;
       if (searchTerm != null) queryParameters['searchTerm'] = searchTerm;
       if (sortBy != null) queryParameters['sortBy'] = sortBy;
-
-      print('🏪 Fetching shops with params: $queryParameters');
-
       final endpoint = ApiUrlHelper.getEndpoint(ApiConstants.shopsEndpoint);
       final response = await dio.get(
         endpoint,
         queryParameters: queryParameters,
       );
-
-      print('📦 Shops response: ${response.data}');
-
       return ShopResponse.fromJson(response.data);
     } on DioException catch (e) {
-      print('❌ Error fetching shops: ${e.message}');
       throw Exception('Failed to fetch shops: ${e.message}');
     }
   }
@@ -67,17 +62,11 @@ class ShopRemoteDataSourceImpl implements ShopRemoteDataSource {
   @override
   Future<ShopModel> getShopById(String shopId) async {
     try {
-      print('🏪 Fetching shop details for ID: $shopId');
-
       final url = ApiConstants.shopDetailEndpoint.replaceAll('{id}', shopId);
       final endpoint = ApiUrlHelper.getEndpoint(url);
       final response = await dio.get(endpoint);
-
-      print('📦 Shop detail response: ${response.data}');
-
       return ShopModel.fromJson(response.data);
     } on DioException catch (e) {
-      print('❌ Error fetching shop details: ${e.message}');
       throw Exception('Failed to fetch shop details: ${e.message}');
     }
   }
@@ -85,21 +74,34 @@ class ShopRemoteDataSourceImpl implements ShopRemoteDataSource {
   @override
   Future<ProductResponseModel> getProductsByShop(String shopId) async {
     try {
-      print('🛍️ Fetching products for shop ID: $shopId');
-
-      // Log: Trước khi gọi API
-      print('🛍️ [DEBUG] ShopRemoteDataSource - shopId: $shopId');
-
       final url = ApiConstants.productsByShopEndpoint.replaceAll('{shopId}', shopId);
       final endpoint = ApiUrlHelper.getEndpoint(url);
-      final response = await dio.get(endpoint);
-
-      print('📦 [DEBUG] Shop products response: ${response.data}');
-
+      final response = await dio.get(
+        endpoint,
+        queryParameters: {
+          'activeOnly': true,
+        },
+      );
       return ProductResponseModel.fromJson(response.data);
     } on DioException catch (e) {
-      print('❌ Error fetching shop products: ${e.message}');
       throw Exception('Failed to fetch shop products: ${e.message}');
+    }
+  }
+
+  @override
+  Future<int> getProductCountByShop(String shopId) async {
+    try {
+      final url = ApiConstants.countProductsByShopEndpoint.replaceAll('{shopId}', shopId);
+      final endpoint = ApiUrlHelper.getEndpoint(url);
+      final response = await dio.get(
+        endpoint,
+        queryParameters: {
+          'activeOnly': true,
+        },
+      );
+      return response.data['data'] as int;
+    } on DioException catch (e) {
+      throw Exception('Failed to fetch shop product count: ${e.message}');
     }
   }
 }

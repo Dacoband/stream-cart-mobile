@@ -39,6 +39,7 @@ class ApiConstants {
   static const String shopsEndpoint = '/api/shops'; // Lấy tất cả shop
   static const String shopDetailEndpoint = '/api/shops/{id}';
   static const String shopSearchEndpoint = '/api/shops/search'; // Tìm kiếm shop theo tên
+  static const String countProductsByShopEndpoint = '/api/products/shop/{shopId}/count'; // Lấy số lượng sản phẩm của shop
 
 
   

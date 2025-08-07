@@ -10,7 +10,12 @@ import '../../widgets/address/empty_address.dart';
 import 'add_edit_address_page.dart';
 
 class AddressListPage extends StatefulWidget {
-  const AddressListPage({Key? key}) : super(key: key);
+  final bool isSelectionMode;
+  
+  const AddressListPage({
+    Key? key,
+    this.isSelectionMode = false,
+  }) : super(key: key);
 
   @override
   State<AddressListPage> createState() => _AddressListPageState();
@@ -28,9 +33,9 @@ class _AddressListPageState extends State<AddressListPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text(
-          'Địa chỉ giao hàng',
-          style: TextStyle(
+        title: Text(
+          widget.isSelectionMode ? 'Chọn địa chỉ giao hàng' : 'Địa chỉ giao hàng',
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Color(0xFF202328),
@@ -156,6 +161,39 @@ class _AddressListPageState extends State<AddressListPage> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Selection mode instruction
+              if (widget.isSelectionMode) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Color(0xFF4CAF50),
+                        size: 20,
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Nhấn vào địa chỉ để chọn làm địa chỉ giao hàng',
+                          style: TextStyle(
+                            color: Color(0xFF4CAF50),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
               // Default Address Section
               ...addresses.where((addr) => addr.isDefaultShipping).map((address) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,8 +210,9 @@ class _AddressListPageState extends State<AddressListPage> {
                   AddressCard(
                     address: address,
                     isDefault: true,
-                    onEdit: () => _navigateToEditAddress(address),
-                    onDelete: () => _showDeleteDialog(address),
+                    onEdit: widget.isSelectionMode ? null : () => _navigateToEditAddress(address),
+                    onDelete: widget.isSelectionMode ? null : () => _showDeleteDialog(address),
+                    onTap: widget.isSelectionMode ? () => _selectAddress(address) : null,
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -195,9 +234,10 @@ class _AddressListPageState extends State<AddressListPage> {
                     .map((address) => AddressCard(
                           address: address,
                           isDefault: false,
-                          onEdit: () => _navigateToEditAddress(address),
-                          onDelete: () => _showDeleteDialog(address),
-                          onSetDefault: () => _setDefaultAddress(address),
+                          onEdit: widget.isSelectionMode ? null : () => _navigateToEditAddress(address),
+                          onDelete: widget.isSelectionMode ? null : () => _showDeleteDialog(address),
+                          onSetDefault: widget.isSelectionMode ? null : () => _setDefaultAddress(address),
+                          onTap: widget.isSelectionMode ? () => _selectAddress(address) : null,
                         ))
                     .toList(),
               ],
@@ -350,5 +390,9 @@ class _AddressListPageState extends State<AddressListPage> {
         );
       },
     );
+  }
+  
+  void _selectAddress(AddressEntity address) {
+    Navigator.pop(context, address);
   }
 }

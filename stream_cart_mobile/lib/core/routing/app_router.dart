@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/cart/cart_entity.dart';
 import '../../presentation/blocs/address/address_bloc.dart';
 import '../../presentation/pages/address/add_edit_address_page.dart';
 import '../../presentation/pages/address/address_list_page.dart';
 import '../../presentation/pages/chat/chat_detail_page.dart';
 import '../../presentation/pages/chat/chat_list_page.dart';
 import '../../presentation/pages/order/order_list_page.dart';
+import '../../presentation/pages/order/order_success_page.dart';
 import '../di/dependency_injection.dart';
 import '../../presentation/pages/auth/login_page.dart' as auth;
 import '../../presentation/pages/auth/register_page.dart';
@@ -18,6 +20,7 @@ import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
 import '../../presentation/pages/cart/cart_page.dart';
+import '../../presentation/pages/checkout/check_out_page.dart';
 import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/pages/notification/notification_page.dart';
 import '../../presentation/pages/shop/shop_list_page.dart';
@@ -28,6 +31,7 @@ import '../../presentation/blocs/search/advanced_search_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/notification/notification_bloc.dart';
 import '../../domain/entities/account/user_profile_entity.dart';
+import '../../domain/entities/order/order_entity.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -44,6 +48,7 @@ class AppRouter {
   static const String livestreamList = '/livestream-list';
   static const String livestreamDetail = '/livestream-detail';
   static const String cart = '/cart';
+  static const String checkout = '/checkout';
   static const String orders = '/orders';
   static const String notification = '/notification';
   static const String shopList = '/shop-list';
@@ -53,6 +58,7 @@ class AppRouter {
   static const String addressList = '/address-list';
   static const String addAddress = '/add-address';
   static const String editAddress = '/edit-address';
+  static const String orderSuccess = '/order-success';
 
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -119,6 +125,20 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const CartPage(), 
         );
+      case checkout:
+        final previewOrderData = settings.arguments as PreviewOrderDataEntity?;
+        if (previewOrderData == null) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(
+                child: Text('Không tìm thấy dữ liệu đơn hàng'),
+              ),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CheckoutPage(previewOrderData: previewOrderData),
+        );
       case categoryDetail:
         final Map<String, dynamic> args = settings.arguments as Map<String, dynamic>;
         final String categoryId = args['categoryId'] as String;
@@ -181,10 +201,12 @@ class AppRouter {
           ),
         );
       case addressList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final isSelectionMode = args?['isSelectionMode'] ?? false;
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => getIt<AddressBloc>(),
-            child: const AddressListPage(),
+            child: AddressListPage(isSelectionMode: isSelectionMode),
           ),
         );
 
@@ -206,6 +228,11 @@ class AppRouter {
               initialAddress: address,
             ),
           ),
+        );
+      case orderSuccess:
+        final orders = settings.arguments as List<OrderEntity>;
+        return MaterialPageRoute(
+          builder: (_) => OrderSuccessPage(orders: orders),
         );
       default:
         return MaterialPageRoute(

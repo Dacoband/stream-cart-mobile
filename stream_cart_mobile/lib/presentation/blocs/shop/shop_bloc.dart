@@ -103,17 +103,13 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
     if (state is ShopDetailLoaded) {
       final currentState = state as ShopDetailLoaded;
       emit(currentState.copyWith(isLoadingProducts: true));
-
-      print('🛍️ [DEBUG] ShopBloc - LoadShopProducts for shopId: ${event.shopId}');
       final result = await getProductsByShopUseCase(event.shopId);
 
       result.fold(
         (failure) {
-          print('🛍️ [DEBUG] ShopBloc - LoadShopProducts FAILURE: $failure');
           emit(ShopError(_mapFailureToMessage(failure)));
         },
         (products) {
-          print('🛍️ [DEBUG] ShopBloc - LoadShopProducts SUCCESS: $products');
           emit(currentState.copyWith(
             products: products,
             isLoadingProducts: false,

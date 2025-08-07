@@ -18,4 +18,6 @@ abstract class ShopRepository {
   Future<Either<Failure, Shop>> getShopById(String shopId);
 
   Future<Either<Failure, List<ProductEntity>>> getProductsByShop(String shopId);
+  
+  Future<Either<Failure, int>> getProductCountByShop(String shopId);
 }
