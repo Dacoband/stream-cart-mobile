@@ -33,6 +33,7 @@ class CheckoutView extends StatefulWidget {
 
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedPaymentMethod = 'COD'; 
+  AddressEntity? selectedShippingAddress; // Store temporarily selected address
   
   @override
   void initState() {
@@ -57,33 +58,28 @@ class _CheckoutViewState extends State<CheckoutView> {
       ),
       body: MultiBlocListener(
         listeners: [
-          // Address Bloc Listener
           BlocListener<AddressBloc, AddressState>(
             listener: (context, addressState) {
               if (addressState is DefaultShippingAddressLoaded) {
-                // Auto-trigger delivery preview when address is loaded
+                if (selectedShippingAddress == null) {
+                  setState(() {
+                    selectedShippingAddress = addressState.address;
+                  });
+                }
                 final cartItemIds = widget.previewOrderData.listCartItem
                     .expand((shop) => shop.products)
                     .map((item) => item.cartItemId)
                     .toList();
                 
-                context.read<DeliveryBloc>().add(
-                  PreviewOrderDeliveryEvent(
-                    cartItemIds: cartItemIds,
-                    shippingAddress: addressState.address!,
-                  ),
-                );
-              } else if (addressState is DefaultShippingAddressSet) {
-                // When default address is set successfully, reload the default shipping address
-                context.read<AddressBloc>().add(const GetDefaultShippingAddressEvent());
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã cập nhật địa chỉ giao hàng'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 1),
-                  ),
-                );
+                final addressToUse = selectedShippingAddress ?? addressState.address;
+                if (addressToUse != null) {
+                  context.read<DeliveryBloc>().add(
+                    PreviewOrderDeliveryEvent(
+                      cartItemIds: cartItemIds,
+                      shippingAddress: addressToUse,
+                    ),
+                  );
+                }
               } else if (addressState is AddressError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -150,6 +146,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       builder: (context, addressState) {
                         return CheckoutAddressWidget(
                           addressState: addressState,
+                          selectedAddress: selectedShippingAddress, // Pass selected address
                           onChangeAddress: () => _showAddressSelection(context),
                           onAddAddress: () => _showAddAddressPage(context),
                         );
@@ -231,9 +228,22 @@ class _CheckoutViewState extends State<CheckoutView> {
       AppRouter.addressList,
       arguments: {'isSelectionMode': true},
     ).then((selectedAddress) {
-      if (selectedAddress != null) {
-        context.read<AddressBloc>().add(
-          SetDefaultShippingAddressEvent(id: (selectedAddress as AddressEntity).id),
+      if (selectedAddress != null && selectedAddress is AddressEntity) {
+        setState(() {
+          selectedShippingAddress = selectedAddress;
+        });
+        
+        // Update delivery preview with selected address
+        final cartItemIds = widget.previewOrderData.listCartItem
+            .expand((shop) => shop.products)
+            .map((item) => item.cartItemId)
+            .toList();
+        
+        context.read<DeliveryBloc>().add(
+          PreviewOrderDeliveryEvent(
+            cartItemIds: cartItemIds,
+            shippingAddress: selectedAddress,
+          ),
         );
       }
     });

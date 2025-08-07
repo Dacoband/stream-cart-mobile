@@ -6,12 +6,14 @@ class CheckoutAddressWidget extends StatelessWidget {
   final AddressState addressState;
   final VoidCallback onChangeAddress;
   final VoidCallback onAddAddress;
+  final AddressEntity? selectedAddress; 
 
   const CheckoutAddressWidget({
     super.key,
     required this.addressState,
     required this.onChangeAddress,
     required this.onAddAddress,
+    this.selectedAddress, 
   });
 
   @override
@@ -75,6 +77,10 @@ class CheckoutAddressWidget extends StatelessWidget {
   }
 
   Widget _buildAddressContent() {
+    if (selectedAddress != null) {
+      return _buildAddressCard(selectedAddress!);
+    }
+
     if (addressState is AddressLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -176,6 +182,10 @@ class CheckoutAddressWidget extends StatelessWidget {
   }
 
   Widget _buildAddressCard(AddressEntity address) {
+    final isSelectedTemporary = selectedAddress != null && 
+        selectedAddress!.id == address.id && 
+        !address.isDefaultShipping;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,7 +200,23 @@ class CheckoutAddressWidget extends StatelessWidget {
                 ),
               ),
             ),
-            if (address.isDefaultShipping)
+            if (isSelectedTemporary)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2196F3).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Text(
+                  'Đã chọn cho đơn hàng này',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF2196F3),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              )
+            else if (address.isDefaultShipping)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
