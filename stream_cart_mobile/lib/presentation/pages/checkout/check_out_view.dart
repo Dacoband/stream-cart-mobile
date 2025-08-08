@@ -13,6 +13,8 @@ import '../../../domain/entities/cart/cart_entity.dart';
 import '../../../domain/entities/address/address_entity.dart';
 import '../../../domain/entities/order/create_order_request_entity.dart';
 import '../../../core/routing/app_router.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_event.dart';
 import '../../widgets/checkout/checkout_address_widget.dart';
 import '../../widgets/checkout/checkout_order_summary_widget.dart';
 import '../../widgets/checkout/checkout_delivery_options_widget.dart';
@@ -104,6 +106,16 @@ class _CheckoutViewState extends State<CheckoutView> {
           BlocListener<OrderBloc, OrderState>(
             listener: (context, orderState) {
               if (orderState is OrdersCreated) {
+                final cartItemIds = widget.previewOrderData.listCartItem
+                    .expand((shop) => shop.products)
+                    .map((item) => item.cartItemId)
+                    .toList();
+                if (cartItemIds.isNotEmpty) {
+                  context.read<CartBloc>().add(
+                        RemoveSelectedCartItemsEvent(cartItemIds: cartItemIds),
+                      );
+                }
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Đơn hàng đã được tạo thành công!'),
