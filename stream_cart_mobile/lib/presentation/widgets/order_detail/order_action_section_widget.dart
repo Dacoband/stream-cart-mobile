@@ -27,9 +27,8 @@ class OrderActionSectionWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -37,15 +36,6 @@ class OrderActionSectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Thao tác',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
           _buildActionButtons(context),
         ],
       ),
@@ -60,7 +50,7 @@ class OrderActionSectionWidget extends StatelessWidget {
       actions.add(
         _buildActionButton(
           context: context,
-          title: 'Hủy đơn hàng',
+          title: 'Hủy đơn',
           icon: Icons.cancel_outlined,
           color: Colors.red,
           onTap: () => _showCancelOrderDialog(context),
@@ -73,8 +63,8 @@ class OrderActionSectionWidget extends StatelessWidget {
       actions.add(
         _buildActionButton(
           context: context,
-          title: 'Đặt lại',
-          icon: Icons.refresh,
+          title: 'Mua lại',
+          icon: Icons.shopping_cart_outlined,
           color: Colors.blue,
           onTap: onReorder ?? () => _handleReorder(context),
         ),
@@ -97,9 +87,9 @@ class OrderActionSectionWidget extends StatelessWidget {
       actions.add(
         _buildActionButton(
           context: context,
-          title: 'Theo dõi đơn hàng',
+          title: 'Theo dõi đơn',
           icon: Icons.local_shipping_outlined,
-          color: Colors.orange,
+          color: Colors.purple,
           onTap: () => _handleTrackOrder(context),
         ),
       );
@@ -111,8 +101,8 @@ class OrderActionSectionWidget extends StatelessWidget {
         _buildActionButton(
           context: context,
           title: 'Đánh giá',
-          icon: Icons.star_outline,
-          color: Colors.amber,
+          icon: Icons.star_rate_outlined,
+          color: Colors.amber[800]!,
           onTap: () => _handleRateOrder(context),
         ),
       );
@@ -136,26 +126,22 @@ class OrderActionSectionWidget extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: color.withOpacity(0.08),
           borderRadius: BorderRadius.circular(8),
-          color: color.withOpacity(0.05),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: color,
-            ),
+            Icon(icon, size: 18, color: color),
             const SizedBox(width: 8),
             Text(
               title,
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
                 color: color,
               ),
             ),
@@ -167,49 +153,41 @@ class OrderActionSectionWidget extends StatelessWidget {
 
   // Logic kiểm tra có thể cancel order không
   bool _canCancelOrder() {
-    // Chỉ có thể cancel khi order ở trạng thái pending hoặc confirmed
-    return order.orderStatus == 0 || order.orderStatus == 1; // 0: pending, 1: confirmed
+    return order.orderStatus == 0 || order.orderStatus == 1;
   }
 
   // Logic kiểm tra có thể reorder không
   bool _canReorder() {
-    // Có thể reorder khi order đã hoàn thành hoặc bị hủy
-    return order.orderStatus == 4 || order.orderStatus == 5; // 4: completed, 5: cancelled
+    return order.orderStatus == 4 || order.orderStatus == 5;
   }
 
   // Logic kiểm tra có thể track order không
   bool _canTrackOrder() {
-    // Có thể track khi order đang được chuẩn bị hoặc đang giao
-    return order.orderStatus == 2 || order.orderStatus == 3; // 2: preparing, 3: shipping
+    return order.orderStatus == 2 || order.orderStatus == 3;
   }
 
   // Logic kiểm tra có thể rate order không
   bool _canRateOrder() {
-    // Chỉ có thể rate khi order đã hoàn thành
-    return order.orderStatus == 4; // 4: completed
+    return order.orderStatus == 4;
   }
 
   void _showCancelOrderDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận hủy đơn hàng'),
-        content: const Text(
-          'Bạn có chắc chắn muốn hủy đơn hàng này? '
-          'Hành động này không thể hoàn tác.',
-        ),
+        title: const Text('Xác nhận hủy đơn'),
+        content: const Text('Bạn có chắc muốn hủy đơn hàng này?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Không'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _handleCancelOrder(context);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hủy đơn hàng'),
+            child: const Text('Hủy đơn'),
           ),
         ],
       ),
@@ -217,20 +195,17 @@ class OrderActionSectionWidget extends StatelessWidget {
   }
 
   void _handleCancelOrder(BuildContext context) {
-    context.read<OrderBloc>().add(
-      CancelOrderEvent(id: order.id),
-    );
+    context.read<OrderBloc>().add(CancelOrderEvent(id: order.id));
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Đang xử lý hủy đơn hàng...'),
+        content: Text('Đã gửi yêu cầu hủy đơn'),
         backgroundColor: Colors.orange,
       ),
     );
   }
 
   void _handleReorder(BuildContext context) {
-    // Navigate to cart với các items từ order này
     Navigator.pushNamed(
       context,
       '/cart',
@@ -246,7 +221,6 @@ class OrderActionSectionWidget extends StatelessWidget {
   }
 
   void _handleContactShop(BuildContext context) {
-    // Navigate to chat hoặc contact page
     Navigator.pushNamed(
       context,
       '/contact-shop',
@@ -255,7 +229,6 @@ class OrderActionSectionWidget extends StatelessWidget {
   }
 
   void _handleTrackOrder(BuildContext context) {
-    // Navigate to tracking page
     Navigator.pushNamed(
       context,
       '/track-order',
@@ -264,7 +237,6 @@ class OrderActionSectionWidget extends StatelessWidget {
   }
 
   void _handleRateOrder(BuildContext context) {
-    // Navigate to rating page
     Navigator.pushNamed(
       context,
       '/rate-order',
@@ -295,48 +267,24 @@ class SimpleOrderActionSectionWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          if (orderStatus == 0 || orderStatus == 1) // Can cancel
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: onCancel,
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Hủy đơn'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                ),
-              ),
+          if (orderStatus == 0 || orderStatus == 1)
+            ElevatedButton.icon(
+              onPressed: onCancel,
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Hủy đơn'),
             ),
-          
-          if (orderStatus == 0 || orderStatus == 1) const SizedBox(width: 12),
-          
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: onContact,
-              icon: const Icon(Icons.chat_outlined),
-              label: const Text('Liên hệ'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
+          ElevatedButton.icon(
+            onPressed: onReorder,
+            icon: const Icon(Icons.shopping_cart_outlined),
+            label: const Text('Mua lại'),
           ),
-          
-          if (orderStatus == 4 || orderStatus == 5) ...[
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onReorder,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Đặt lại'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ),
-          ],
+          OutlinedButton.icon(
+            onPressed: onContact,
+            icon: const Icon(Icons.chat_outlined),
+            label: const Text('Liên hệ'),
+          ),
         ],
       ),
     );

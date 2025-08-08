@@ -37,8 +37,7 @@ class OrderTabBarWidget extends StatelessWidget {
         // Pill indicator using accent color
         indicator: BoxDecoration(
           color: accent.withOpacity(0.14),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accent, width: 1),
+          borderRadius: BorderRadius.circular(15),
         ),
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: accent,
