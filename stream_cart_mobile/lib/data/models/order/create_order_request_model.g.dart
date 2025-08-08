@@ -25,7 +25,7 @@ Map<String, dynamic> _$CreateOrderRequestModelToJson(
       'addressId': instance.addressId,
       'livestreamId': instance.livestreamId,
       'createdFromCommentId': instance.createdFromCommentId,
-      'ordersByShop': instance.ordersByShop,
+      'ordersByShop': instance.ordersByShop.map((e) => e.toJson()).toList(),
     };
 
 OrderByShopModel _$OrderByShopModelFromJson(Map<String, dynamic> json) =>
@@ -48,8 +48,8 @@ Map<String, dynamic> _$OrderByShopModelToJson(OrderByShopModel instance) =>
       'shippingFee': instance.shippingFee,
       'expectedDeliveryDay': instance.expectedDeliveryDay,
       'voucherCode': instance.voucherCode,
+      'items': instance.items.map((e) => e.toJson()).toList(),
       'customerNotes': instance.customerNotes,
-      'items': instance.items,
     };
 
 CreateOrderItemModel _$CreateOrderItemModelFromJson(

@@ -26,6 +26,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
+  int? _lastTabIndex; // guard to prevent duplicate fetches
   
   // Order status values
   final List<int?> _orderStatuses = [null, 0, 1, 2, 3, 4]; // null = all, 0-4 = specific statuses
@@ -43,8 +44,16 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     super.initState();
     _tabController = TabController(length: _tabTitles.length, vsync: this);
     _scrollController.addListener(_onScroll);
+
+    // Listen tab changes (swipe or tap) and fetch data once per index
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return; // wait until animation completes
+      if (_lastTabIndex == _tabController.index) return; // no-op if same
+      _onTabChanged();
+    });
     
     // Load initial orders
+    _lastTabIndex = 0;
     _loadOrders(status: _orderStatuses[0]);
   }
 
@@ -94,7 +103,10 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
   }
 
   void _onTabChanged() {
-    final currentStatus = _orderStatuses[_tabController.index];
+    final newIndex = _tabController.index;
+    if (_lastTabIndex == newIndex) return;
+    _lastTabIndex = newIndex;
+    final currentStatus = _orderStatuses[newIndex];
     _loadOrders(status: currentStatus);
   }
 
@@ -116,7 +128,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
           child: OrderTabBarWidget(
             tabController: _tabController,
             tabs: _tabTitles,
-            onTap: _onTabChanged,
+            onTap: _onTabChanged, // tap fetches immediately; listener covers swipe
           ),
         ),
         

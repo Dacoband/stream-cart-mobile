@@ -13,6 +13,8 @@ import '../../../domain/entities/cart/cart_entity.dart';
 import '../../../domain/entities/address/address_entity.dart';
 import '../../../domain/entities/order/create_order_request_entity.dart';
 import '../../../core/routing/app_router.dart';
+import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/cart/cart_event.dart';
 import '../../widgets/checkout/checkout_address_widget.dart';
 import '../../widgets/checkout/checkout_order_summary_widget.dart';
 import '../../widgets/checkout/checkout_delivery_options_widget.dart';
@@ -104,6 +106,16 @@ class _CheckoutViewState extends State<CheckoutView> {
           BlocListener<OrderBloc, OrderState>(
             listener: (context, orderState) {
               if (orderState is OrdersCreated) {
+                final cartItemIds = widget.previewOrderData.listCartItem
+                    .expand((shop) => shop.products)
+                    .map((item) => item.cartItemId)
+                    .toList();
+                if (cartItemIds.isNotEmpty) {
+                  context.read<CartBloc>().add(
+                        RemoveSelectedCartItemsEvent(cartItemIds: cartItemIds),
+                      );
+                }
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Đơn hàng đã được tạo thành công!'),
@@ -233,8 +245,6 @@ class _CheckoutViewState extends State<CheckoutView> {
         setState(() {
           selectedShippingAddress = selectedAddress;
         });
-        
-        // Update delivery preview with selected address
         context.read<DeliveryBloc>().add(
           PreviewOrderDeliveryEvent(
             previewOrderData: widget.previewOrderData,
@@ -269,17 +279,17 @@ class _CheckoutViewState extends State<CheckoutView> {
     // Show confirmation dialog
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận đặt hàng'),
         content: const Text('Bạn có chắc chắn muốn đặt hàng?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               _createOrder(context, deliveryState);
             },
             style: ElevatedButton.styleFrom(
@@ -299,19 +309,27 @@ class _CheckoutViewState extends State<CheckoutView> {
       addressId: deliveryState.shippingAddress.id,
       ordersByShop: widget.previewOrderData.listCartItem.map((shop) {
         final selectedService = deliveryState.getSelectedServiceForShop(shop.shopId);
+        
+        // Use the same hardcoded GUID as in web app
+        const shippingProviderId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        
         return OrderByShopEntity(
           shopId: shop.shopId,
-          shippingProviderId: selectedService?.serviceTypeId.toString(),
+          shippingProviderId: shippingProviderId,
           shippingFee: selectedService?.totalAmount ?? 0.0,
-          items: shop.products.map((product) => CreateOrderItemEntity(
-            productId: product.productId,
-            variantId: product.variantId,
-            quantity: product.quantity,
-          )).toList(),
+          expectedDeliveryDay: selectedService?.expectedDeliveryDate.toIso8601String(),
+          customerNotes: "",
+          items: shop.products.map((product) {
+            return CreateOrderItemEntity(
+              productId: product.productId,
+              variantId: product.variantId,
+              quantity: product.quantity,
+            );
+          }).toList(),
         );
       }).toList(),
     );
-
+    
     context.read<OrderBloc>().add(
       CreateMultipleOrdersEvent(request: orderRequest),
     );

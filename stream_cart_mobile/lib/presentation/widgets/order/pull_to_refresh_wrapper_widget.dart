@@ -19,8 +19,8 @@ class PullToRefreshWrapperWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: refreshIndicatorColor ?? Theme.of(context).primaryColor,
-      backgroundColor: backgroundColor ?? Colors.white,
+      color: refreshIndicatorColor ??  Color(0xFFB0F847),
+      backgroundColor: backgroundColor ?? Color(0xFF202328),
       strokeWidth: 2.5,
       displacement: 40,
       child: child,

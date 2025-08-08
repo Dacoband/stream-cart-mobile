@@ -25,10 +25,11 @@ class OrderListPage extends StatelessWidget {
           'Đơn hàng của tôi',
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF202328),
+        foregroundColor: Color(0xFFB0F847),
         elevation: 0,
       ),
       body: AuthGuard(

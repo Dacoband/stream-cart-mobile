@@ -75,10 +75,19 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<List<OrderModel>> createMultipleOrders(CreateOrderRequestModel request) async {
     try {
+      final requestData = request.toJson();   
       final response = await _dioClient.post(
         ApiConstants.ordersEndpoint,
-        data: request.toJson(),
+        data: requestData,
       );
+
+      if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+        if (responseMap.containsKey('data')) {
+          final List<dynamic> data = responseMap['data'];
+          return data.map((json) => OrderModel.fromJson(json)).toList();
+        }
+      }
 
       final List<dynamic> data = response.data;
       return data.map((json) => OrderModel.fromJson(json)).toList();

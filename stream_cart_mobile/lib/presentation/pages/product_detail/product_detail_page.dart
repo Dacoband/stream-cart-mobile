@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/dependency_injection.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/routing/app_router.dart';
 import '../../blocs/product_detail/product_detail_bloc.dart';
 import '../../blocs/product_detail/product_detail_event.dart';
 import '../../blocs/product_detail/product_detail_state.dart';
@@ -924,18 +925,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB0F847),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Xem shop',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRouter.shopDetail,
+                    arguments: product.shopId,
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB0F847),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Xem shop',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

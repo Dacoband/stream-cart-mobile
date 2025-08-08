@@ -15,13 +15,15 @@ class OrderTabBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const dark = Color(0xFF202328);
+    const accent = Color(0xFFB0F847);
     return Container(
       height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: dark,
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey[200]!,
+            color: Colors.white10,
             width: 1,
           ),
         ),
@@ -32,29 +34,36 @@ class OrderTabBarWidget extends StatelessWidget {
         isScrollable: true,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         tabAlignment: TabAlignment.start,
-        indicatorColor: Theme.of(context).primaryColor,
-        indicatorWeight: 2,
+        // Pill indicator using accent color
+        indicator: BoxDecoration(
+          color: accent.withOpacity(0.14),
+          borderRadius: BorderRadius.circular(15),
+        ),
         indicatorSize: TabBarIndicatorSize.label,
-        labelColor: Theme.of(context).primaryColor,
+        labelColor: accent,
         labelStyle: const TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
-        unselectedLabelColor: Colors.grey[600],
+        unselectedLabelColor: Colors.white70,
         unselectedLabelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-        tabs: tabs.map((title) => Tab(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        )).toList(),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+        tabs: tabs
+            .map(
+              (title) => Tab(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -75,13 +84,15 @@ class CustomOrderTabBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const dark = Color(0xFF202328);
+    const accent = Color(0xFFB0F847);
     return Container(
       height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: dark,
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey[200]!,
+            color: Colors.white10,
             width: 1,
           ),
         ),
@@ -98,26 +109,17 @@ class CustomOrderTabBarWidget extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                    : Colors.transparent,
+                color: isSelected ? accent.withOpacity(0.14) : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
-                border: isSelected
-                    ? Border.all(
-                        color: Theme.of(context).primaryColor,
-                        width: 1,
-                      )
-                    : null,
+                border: isSelected ? Border.all(color: accent, width: 1) : null,
               ),
               child: Center(
                 child: Text(
                   tabs[index],
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected 
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[600],
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? accent : Colors.white70,
                   ),
                 ),
               ),
@@ -146,13 +148,15 @@ class OrderTabBarWithBadgeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const dark = Color(0xFF202328);
+    const accent = Color(0xFFB0F847);
     return Container(
       height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(
+        color: dark,
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey[200]!,
+            color: Colors.white10,
             width: 1,
           ),
         ),
@@ -163,28 +167,31 @@ class OrderTabBarWithBadgeWidget extends StatelessWidget {
         isScrollable: true,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         tabAlignment: TabAlignment.start,
-        indicatorColor: Theme.of(context).primaryColor,
-        indicatorWeight: 2,
+        indicator: BoxDecoration(
+          color: accent.withOpacity(0.14),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: accent, width: 1),
+        ),
         indicatorSize: TabBarIndicatorSize.label,
-        labelColor: Theme.of(context).primaryColor,
+        labelColor: accent,
         labelStyle: const TextStyle(
           fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
-        unselectedLabelColor: Colors.grey[600],
+        unselectedLabelColor: Colors.white70,
         unselectedLabelStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 12),
         tabs: tabs.asMap().entries.map((entry) {
           final index = entry.key;
           final title = entry.value;
           final count = badgeCounts?[index];
-          
+
           return Tab(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -197,15 +204,15 @@ class OrderTabBarWithBadgeWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: accent,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         count > 99 ? '99+' : count.toString(),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: dark,
                           fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
