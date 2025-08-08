@@ -233,8 +233,6 @@ class _CheckoutViewState extends State<CheckoutView> {
         setState(() {
           selectedShippingAddress = selectedAddress;
         });
-        
-        // Update delivery preview with selected address
         context.read<DeliveryBloc>().add(
           PreviewOrderDeliveryEvent(
             previewOrderData: widget.previewOrderData,
@@ -269,17 +267,17 @@ class _CheckoutViewState extends State<CheckoutView> {
     // Show confirmation dialog
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận đặt hàng'),
         content: const Text('Bạn có chắc chắn muốn đặt hàng?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               _createOrder(context, deliveryState);
             },
             style: ElevatedButton.styleFrom(
@@ -299,19 +297,27 @@ class _CheckoutViewState extends State<CheckoutView> {
       addressId: deliveryState.shippingAddress.id,
       ordersByShop: widget.previewOrderData.listCartItem.map((shop) {
         final selectedService = deliveryState.getSelectedServiceForShop(shop.shopId);
+        
+        // Use the same hardcoded GUID as in web app
+        const shippingProviderId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+        
         return OrderByShopEntity(
           shopId: shop.shopId,
-          shippingProviderId: selectedService?.serviceTypeId.toString(),
+          shippingProviderId: shippingProviderId,
           shippingFee: selectedService?.totalAmount ?? 0.0,
-          items: shop.products.map((product) => CreateOrderItemEntity(
-            productId: product.productId,
-            variantId: product.variantId,
-            quantity: product.quantity,
-          )).toList(),
+          expectedDeliveryDay: selectedService?.expectedDeliveryDate.toIso8601String(),
+          customerNotes: "",
+          items: shop.products.map((product) {
+            return CreateOrderItemEntity(
+              productId: product.productId,
+              variantId: product.variantId,
+              quantity: product.quantity,
+            );
+          }).toList(),
         );
       }).toList(),
     );
-
+    
     context.read<OrderBloc>().add(
       CreateMultipleOrdersEvent(request: orderRequest),
     );
