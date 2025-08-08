@@ -147,15 +147,29 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                   bottom: 20,
                   left: 20,
                   right: 20,
-                  child: Row(
-                    children: [
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.35),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
                       // Shop Logo
                       Container(
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white, width: 1.9),
+                          border: Border.all(color: Colors.white, width: 1.6),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(13),
@@ -207,63 +221,45 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            // Quick Stats - No background, just text with shadow
+                            // Quick Stats - chips
                             Row(
                               children: [
-                                // Rating
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      color: Colors.orange,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      shop.ratingAverage.toStringAsFixed(1),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        shadows: [
-                                          Shadow(
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
-                                            color: Colors.black54,
-                                          ),
-                                        ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.orange, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        shop.ratingAverage.toStringAsFixed(1),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 16),
-                                // Products Count
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.inventory,
-                                      color: Colors.blue,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      shop.totalProduct.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        shadows: [
-                                          Shadow(
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
-                                            color: Colors.black54,
-                                          ),
-                                        ],
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.inventory, color: Colors.lightBlueAccent, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        shop.totalProduct.toString(),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -271,6 +267,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               ],
@@ -290,9 +287,9 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: const Color(0xFFB0F847).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
+                      border: Border.all(color: const Color(0xFFB0F847).withOpacity(0.45), width: 1.5),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +299,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Color(0xFF202328),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -329,13 +326,13 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow('Ngân hàng', '${shop.bankName} - ${shop.bankAccountNumber}'),
-                _buildInfoRow('Mã số thuế', shop.taxNumber),
-                _buildInfoRow('Trạng thái', shop.status ? 'Hoạt động' : 'Ngừng hoạt động'),
-                _buildInfoRow('Đánh giá', shop.totalReview.toString()),
-                _buildInfoRow('Ngày đăng ký', _formatDate(shop.registrationDate)),
+                _buildInfoRowWithIcon('Ngân hàng', '${shop.bankName} - ${shop.bankAccountNumber}', Icons.account_balance),
+                _buildInfoRowWithIcon('Mã số thuế', shop.taxNumber, Icons.receipt_long),
+                _buildInfoRowWithIcon('Trạng thái', shop.status ? 'Hoạt động' : 'Ngừng hoạt động', Icons.verified),
+                _buildInfoRowWithIcon('Đánh giá', shop.totalReview.toString(), Icons.reviews),
+                _buildInfoRowWithIcon('Ngày đăng ký', _formatDate(shop.registrationDate), Icons.calendar_today),
                 if (shop.approvalDate != null)
-                  _buildInfoRow('Ngày phê duyệt', _formatDate(shop.approvalDate!)),
+                  _buildInfoRowWithIcon('Ngày phê duyệt', _formatDate(shop.approvalDate!), Icons.check_circle),
               ],
             ),
           ),
@@ -396,6 +393,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 (context, index) {
                   final product = products[index];
                   return Card(
+                    elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     clipBehavior: Clip.hardEdge,
                     child: InkWell(
@@ -412,29 +410,53 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: (product.primaryImageUrl != null &&
-                                        product.primaryImageUrl.isNotEmpty &&
-                                        product.primaryImageUrl.startsWith('http'))
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          product.primaryImageUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Center(
-                                              child: Icon(Icons.shopping_bag, size: 40),
-                                            );
-                                          },
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: (product.primaryImageUrl != null &&
+                                            product.primaryImageUrl.isNotEmpty &&
+                                            product.primaryImageUrl.startsWith('http'))
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              product.primaryImageUrl,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return const Center(
+                                                  child: Icon(Icons.shopping_bag, size: 40),
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const Center(
+                                            child: Icon(Icons.shopping_bag, size: 40),
+                                          ),
+                                  ),
+                                  if (product.discountPrice > 0 && product.discountPrice < product.basePrice)
+                                    Positioned(
+                                      top: 8,
+                                      left: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                      )
-                                    : const Center(
-                                        child: Icon(Icons.shopping_bag, size: 40),
+                                        child: const Text(
+                                          'SALE',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ),
+                                    ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -535,26 +557,43 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRowWithIcon(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB0F847).withOpacity(0.2),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, size: 18, color: const Color(0xFF202328)),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w400),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
