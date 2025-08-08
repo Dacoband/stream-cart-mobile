@@ -5,6 +5,7 @@ import '../../blocs/shop/shop_bloc.dart';
 import '../../blocs/shop/shop_event.dart';
 import '../../blocs/shop/shop_state.dart';
 import '../../../domain/entities/shop/shop.dart';
+import '../../../core/routing/app_router.dart';
 
 class ShopDetailPage extends StatefulWidget {
   final String shopId;
@@ -40,7 +41,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
             if (state is ShopError) {
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text('Shop Details'),
+                  title: const Text('Chi tiết cửa hàng'),
                 ),
                 body: Center(
                   child: Column(
@@ -79,10 +80,10 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
 
             return Scaffold(
               appBar: AppBar(
-                title: const Text('Shop Details'),
+                title: const Text('Chi tiết cửa hàng'),
               ),
               body: const Center(
-                child: Text('Something went wrong'),
+                child: Text('Đã có lỗi xảy ra'),
               ),
             );
           },
@@ -297,7 +298,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'About Shop',
+                          'Về cửa hàng',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -321,21 +322,20 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 
                 // Shop Info
                 const Text(
-                  'Shop Information',
+                  'Thông tin cửa hàng',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow('Bank', '${shop.bankName} - ${shop.bankAccountNumber}'),
-                _buildInfoRow('Tax Number', shop.taxNumber),
-                _buildInfoRow('Complete Rate', '${shop.completeRate.toStringAsFixed(1)}%'),
-                _buildInfoRow('Status', shop.status ? 'Active' : 'Inactive'),
-                _buildInfoRow('Reviews', shop.totalReview.toString()),
-                _buildInfoRow('Registration Date', _formatDate(shop.registrationDate)),
+                _buildInfoRow('Ngân hàng', '${shop.bankName} - ${shop.bankAccountNumber}'),
+                _buildInfoRow('Mã số thuế', shop.taxNumber),
+                _buildInfoRow('Trạng thái', shop.status ? 'Hoạt động' : 'Ngừng hoạt động'),
+                _buildInfoRow('Đánh giá', shop.totalReview.toString()),
+                _buildInfoRow('Ngày đăng ký', _formatDate(shop.registrationDate)),
                 if (shop.approvalDate != null)
-                  _buildInfoRow('Approval Date', _formatDate(shop.approvalDate!)),
+                  _buildInfoRow('Ngày phê duyệt', _formatDate(shop.approvalDate!)),
               ],
             ),
           ),
@@ -348,12 +348,27 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
             child: Row(
               children: [
                 const Text(
-                  'Products',
+                  'Sản phẩm của cửa hàng',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF202328),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${products.length}',
+                      style: const TextStyle(
+                        color: Color(0xFFB0F847),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 const Spacer(),
                 if (isLoadingProducts)
                   const SizedBox(
@@ -381,52 +396,103 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 (context, index) {
                   final product = products[index];
                   return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: (product.primaryImageUrl != null &&
-                                      product.primaryImageUrl.isNotEmpty &&
-                                      product.primaryImageUrl.startsWith('http'))
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        product.primaryImageUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Center(
-                                            child: Icon(Icons.shopping_bag, size: 40),
-                                          );
-                                        },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    clipBehavior: Clip.hardEdge,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRouter.productDetails,
+                          arguments: product.id,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: (product.primaryImageUrl != null &&
+                                        product.primaryImageUrl.isNotEmpty &&
+                                        product.primaryImageUrl.startsWith('http'))
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          product.primaryImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Center(
+                                              child: Icon(Icons.shopping_bag, size: 40),
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : const Center(
+                                        child: Icon(Icons.shopping_bag, size: 40),
                                       ),
-                                    )
-                                  : const Center(
-                                      child: Icon(Icons.shopping_bag, size: 40),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              product.productName,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _formatPrice(
+                                      (product.discountPrice > 0 && product.discountPrice < product.basePrice)
+                                          ? product.finalPrice
+                                          : product.basePrice,
                                     ),
+                                    style: const TextStyle(
+                                      color: Color(0xFF4CAF50),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (product.discountPrice > 0 && product.discountPrice < product.basePrice) ...[
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      _formatPrice(product.basePrice),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            product.productName ?? 'Product',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '₫${product.finalPrice?.toStringAsFixed(0) ?? '0'}',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 4),
+                            Text(
+                              'Còn lại: ${product.stockQuantity}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: product.stockQuantity > 10
+                                    ? Colors.green
+                                    : product.stockQuantity > 0
+                                        ? Colors.orange
+                                        : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -498,5 +564,12 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
 
   String _formatDate(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
+
+  String _formatPrice(double price) {
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String priceStr = price.toInt().toString();
+    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+    return '${priceStr}₫';
   }
 }
