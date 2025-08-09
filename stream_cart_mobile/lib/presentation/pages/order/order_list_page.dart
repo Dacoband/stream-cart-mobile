@@ -21,6 +21,9 @@ class OrderListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+    leading: Navigator.canPop(context)
+      ? const BackButton()
+      : null,
         title: const Text(
           'Đơn hàng của tôi',
           style: TextStyle(

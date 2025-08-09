@@ -19,9 +19,27 @@ class DeliveriesRemoteDataSourceImpl implements DeliveriesRemoteDataSource {
     PreviewDeliveriesModel request,
   ) async {
     try {
+      final Map<String, dynamic> jsonBody = request.toJson();
+      final fromShops = jsonBody['fromShops'];
+      if (fromShops is List) {
+        for (final shop in fromShops) {
+          if (shop is Map && shop['items'] is List) {
+            for (final item in (shop['items'] as List)) {
+              if (item is Map) {
+                for (final key in ['weight', 'length', 'width', 'height']) {
+                  final v = item[key];
+                  if (v is double && v == v.toInt().toDouble()) {
+                    item[key] = v.toInt();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       final response = await _dioClient.post(
         ApiConstants.deliveryEndpoint,
-        data: request.toJson(),
+        data: jsonBody,
       );
 
       final data = response.data;
