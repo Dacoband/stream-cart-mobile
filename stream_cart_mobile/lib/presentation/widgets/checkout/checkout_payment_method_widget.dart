@@ -49,14 +49,14 @@ class CheckoutPaymentMethodWidget extends StatelessWidget {
             Colors.green,
           ),
           
-          // Bank Transfer (Coming soon)
+          // Bank Transfer (enabled)
           _buildPaymentOption(
             'BANK_TRANSFER',
             'Chuyển khoản ngân hàng',
-            'Chuyển khoản qua ngân hàng (Sắp có)',
+            'Chuyển khoản qua ngân hàng',
             Icons.account_balance,
             Colors.blue,
-            isEnabled: false,
+            isEnabled: true,
           ),
           
           // E-wallet (Coming soon)
@@ -143,20 +143,7 @@ class CheckoutPaymentMethodWidget extends StatelessWidget {
               ),
             ),
             if (!isEnabled)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'Sắp có',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
+              const SizedBox.shrink(),
           ],
         ),
       ),
