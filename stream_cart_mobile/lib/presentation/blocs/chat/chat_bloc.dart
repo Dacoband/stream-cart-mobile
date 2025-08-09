@@ -52,7 +52,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   // State tracking
   String? _currentChatRoomId;
   bool _isSignalRConnected = false;
-  String? _pendingJoinChatRoomId; // lưu room cần join khi chưa kết nối
+  String? _pendingJoinChatRoomId;
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 3;
