@@ -313,6 +313,22 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                     },
                     child: const Text('Join Room'),
                   ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      print('🧪 Direct SignalR send (skip REST)');
+                      final bloc = context.read<ChatBloc>();
+                      try {
+                        await bloc.signalRService.sendChatMessage(
+                          chatRoomId: widget.chatRoomId,
+                          message: 'direct-${DateTime.now().millisecondsSinceEpoch}',
+                        );
+                      } catch (e) {
+                        print('❌ Direct send error: $e');
+                      }
+                    },
+                    child: const Text('Direct Send'),
+                  ),
                 ],
               ),
             ),

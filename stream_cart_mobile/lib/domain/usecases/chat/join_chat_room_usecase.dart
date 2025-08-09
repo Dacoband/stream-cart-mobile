@@ -10,7 +10,7 @@ class JoinChatRoomUseCase {
 
   Future<Either<Failure, void>> call(JoinChatRoomParams params) async {
     try {
-      await signalRService.joinRoom(params.chatRoomId);
+  await signalRService.joinChatRoom(params.chatRoomId);
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure('Failed to join chat room: $e'));

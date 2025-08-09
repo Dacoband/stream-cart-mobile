@@ -52,6 +52,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   // State tracking
   String? _currentChatRoomId;
   bool _isSignalRConnected = false;
+  String? _pendingJoinChatRoomId; // lưu room cần join khi chưa kết nối
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 3;
@@ -110,38 +111,52 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _setupSignalRListeners() {
-    signalRService.onUserTyping = (userId, chatRoomId, isTyping, userName) {
+    // Updated callback signatures according to refactored SignalRService
+    signalRService.onUserTyping = (userId, isTyping) {
       add(TypingReceivedEvent(
         userId: userId,
-        chatRoomId: chatRoomId,
-        userName: userName ?? 'Unknown User',
+        chatRoomId: _currentChatRoomId ?? '',
+        userName: 'Unknown User',
         isTyping: isTyping,
         timestamp: DateTime.now(),
       ));
     };
 
-    signalRService.onReceiveMessage = (messageData) {
+    signalRService.onReceiveChatMessage = (messageData) {
       add(ReceiveMessageEvent(messageData: messageData));
     };
+  // Legacy callback compatibility if service were to expose onReceiveMessage again
+  // (No-op if not provided)
 
-    signalRService.onUserJoinedRoom = (userId, chatRoomId, userName) {
+    signalRService.onUserJoinedRoom = (userId, userName) {
       add(UserJoinedRoomEvent(
-        userId: userId, 
-        chatRoomId: chatRoomId,
+        userId: userId,
+        chatRoomId: _currentChatRoomId ?? '',
         userName: userName,
       ));
     };
 
-    signalRService.onUserLeftRoom = (userId, chatRoomId, userName) {
+    signalRService.onUserLeftRoom = (userId, userName) {
       add(UserLeftRoomEvent(
-        userId: userId, 
-        chatRoomId: chatRoomId,
+        userId: userId,
+        chatRoomId: _currentChatRoomId ?? '',
         userName: userName,
       ));
     };
 
     signalRService.onStatusChanged = (status) {
       // Handle status changes if needed
+    };
+
+    signalRService.onConnectionStateChanged = (state) {
+      if (state == HubConnectionState.connected) {
+        // ignore: avoid_print
+        print('[ChatBloc] onConnectionStateChanged connected. currentChatRoomId=$_currentChatRoomId pending=$_pendingJoinChatRoomId');
+        final target = _currentChatRoomId ?? _pendingJoinChatRoomId;
+        if (target != null) {
+          add(JoinChatRoomEvent(chatRoomId: target));
+        }
+      }
     };
   }
 
@@ -285,21 +300,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           tempMessageId: tempMessageId,
         ));
       },
-      (message) {
+      (message) async {
         emit(MessageSent(message: message));
         
         // Send via SignalR for real-time if connected
         if (_isSignalRConnected) {
           try {
-            signalRService.sendMessage(
+            // Ensure đã join đúng room trước khi gửi
+            if (_currentChatRoomId != event.chatRoomId) {
+              // ignore: avoid_print
+              print('[ChatBloc] Not in room ${event.chatRoomId} yet. Joining before send.');
+              final joinResult = await joinChatRoomUseCase(JoinChatRoomParams(chatRoomId: event.chatRoomId));
+              joinResult.fold(
+                (l) => print('[ChatBloc] Join before send failed: ${l.message}'),
+                (r) {
+                  _currentChatRoomId = event.chatRoomId;
+                  // ignore: avoid_print
+                  print('[ChatBloc] Joined room ${event.chatRoomId} prior to send');
+                },
+              );
+            }
+            // ignore: avoid_print
+            print('[ChatBloc] Sending realtime message to ${event.chatRoomId}: ${event.content}');
+            await signalRService.sendChatMessage(
               chatRoomId: event.chatRoomId,
-              content: event.content,
-              messageType: event.messageType,
-              attachmentUrl: event.attachmentUrl,
+              message: event.content,
             );
           } catch (e) {
-            // Handle error silently or emit error state if needed
+            // ignore: avoid_print
+            print('[ChatBloc] Realtime send failed: $e');
           }
+        } else {
+          // ignore: avoid_print
+          print('[ChatBloc] SignalR not connected, skip realtime send (current state=$_isSignalRConnected, room=$_currentChatRoomId, pending=$_pendingJoinChatRoomId)');
         }
       },
     );
@@ -415,6 +448,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         _isSignalRConnected = true;
         _reconnectAttempts = 0;
         emit(const SignalRConnected());
+        // Auto join room nếu có pending
+        if (_pendingJoinChatRoomId != null) {
+          // ignore: avoid_print
+          print('[ChatBloc] Auto joining pending room after connect: $_pendingJoinChatRoomId');
+          add(JoinChatRoomEvent(chatRoomId: _pendingJoinChatRoomId!));
+        }
       },
     );
   }
@@ -448,19 +487,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Room Join/Leave
   Future<void> _onJoinChatRoom(JoinChatRoomEvent event, Emitter<ChatState> emit) async {
-    if (_currentChatRoomId != null) {
-      // Leave current room first
+    if (!_isSignalRConnected) {
+      // Chưa kết nối: lưu pending và trigger connect
+      _pendingJoinChatRoomId = event.chatRoomId;
+      // ignore: avoid_print
+      print('[ChatBloc] Join requested but SignalR not connected. Set pending: ${event.chatRoomId}');
+      add(const ConnectSignalREvent());
+      return;
+    }
+
+    if (_currentChatRoomId != null && _currentChatRoomId != event.chatRoomId) {
       await leaveChatRoomUseCase(LeaveChatRoomParams(chatRoomId: _currentChatRoomId!));
     }
 
-    final result = await joinChatRoomUseCase(JoinChatRoomParams(
-      chatRoomId: event.chatRoomId,
-    ));
-
+    final result = await joinChatRoomUseCase(JoinChatRoomParams(chatRoomId: event.chatRoomId));
     result.fold(
       (failure) => emit(ChatError(message: failure.message)),
       (_) {
         _currentChatRoomId = event.chatRoomId;
+        _pendingJoinChatRoomId = null; // clear
         emit(ChatRoomJoined(chatRoomId: event.chatRoomId));
       },
     );
@@ -582,57 +627,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   // Helper methods để check user role - CHỈ 2 ROLE
-  bool _isSellerUser() {
-    final currentUser = _getCurrentUser();
-    if (currentUser?.role == null) return false;
-    
-    // Handle both int and String role types
-    if (currentUser!.role is int) {
-      return UserRole.fromValue(currentUser.role as int) == UserRole.seller;
-    } else if (currentUser.role is String) {
-      return (currentUser.role as String).toLowerCase() == 'seller';
-    }
-    return false;
-  }
-
   bool _isCustomerUser() {
-    final currentUser = _getCurrentUser();
-    if (currentUser?.role == null) return false;
-    
-    // Handle both int and String role types
-    if (currentUser!.role is int) {
-      return UserRole.fromValue(currentUser.role as int) == UserRole.customer;
-    } else if (currentUser.role is String) {
-      return (currentUser.role as String).toLowerCase() == 'customer';
-    }
-    return false;
+    final role = _getUserRole();
+    return role == UserRole.customer;
   }
 
   // Get current user role as UserRole enum
   UserRole? _getUserRole() {
     final currentUser = _getCurrentUser();
-    if (currentUser?.role == null) return null;
-    
-    if (currentUser!.role is int) {
-      return UserRole.fromValue(currentUser.role as int);
-    } else if (currentUser.role is String) {
-      final roleString = (currentUser.role as String).toLowerCase();
-      switch (roleString) {
-        case 'customer':
-          return UserRole.customer;
-        case 'seller':
-          return UserRole.seller;
-        default:
-          return null;
-      }
+    final dynamic roleValue = currentUser?.role; // dynamic
+    if (roleValue == null) return null;
+    if (roleValue is int) {
+      return UserRole.fromValue(roleValue);
+    }
+    if (roleValue is String) {
+      final v = roleValue.toLowerCase();
+      if (v == 'customer') return UserRole.customer;
+      if (v == 'seller') return UserRole.seller;
     }
     return null;
-  }
-
-  // Get current user role as string for display
-  String? _getUserRoleString() {
-    final userRole = _getUserRole();
-    return userRole?.displayName.toLowerCase();
   }
 
   // Validate user role
