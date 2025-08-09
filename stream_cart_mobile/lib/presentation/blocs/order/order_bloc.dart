@@ -205,7 +205,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     result.fold(
       (failure) {
-        _currentPage--; // Rollback page on error
+        _currentPage--;
         emit(OrderError(message: failure.message));
       },
       (orders) {

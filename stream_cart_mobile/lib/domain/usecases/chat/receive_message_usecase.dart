@@ -8,23 +8,44 @@ class ReceiveMessageUseCase {
 
   Future<Either<Failure, ChatMessage>> call(ReceiveMessageParams params) async {
     try {
-      // Process incoming message data
+      final data = params.messageData;
+
+      T getFirst<T>(List<String> keys, {T? or}) {
+        for (final k in keys) {
+          if (data.containsKey(k) && data[k] != null) {
+            return data[k] as T;
+          }
+        }
+        return or as T;
+      }
+
+  String str(List<String> keys, {String def = ''}) => getFirst<String>(keys, or: def);
+  bool boolVal(List<String> keys, {bool def = false}) => getFirst<bool>(keys, or: def);
+
+      DateTime parseDate(List<String> keys) {
+        final raw = str(keys);
+        if (raw.isEmpty) return DateTime.now();
+        return DateTime.tryParse(raw) ?? DateTime.now();
+      }
+
       final message = ChatMessage(
-        id: params.messageData['id'] ?? '',
-        chatRoomId: params.messageData['chatRoomId'] ?? '',
-        senderUserId: params.messageData['senderUserId'] ?? '',
-        content: params.messageData['content'] ?? '',
-        sentAt: DateTime.tryParse(params.messageData['sentAt'] ?? '') ?? DateTime.now(),
-        isRead: params.messageData['isRead'] ?? false,
-        isEdited: params.messageData['isEdited'] ?? false,
-        messageType: params.messageData['messageType'] ?? 'Text',
-        attachmentUrl: params.messageData['attachmentUrl'],
-        editedAt: params.messageData['editedAt'] != null 
-            ? DateTime.tryParse(params.messageData['editedAt']) 
-            : null,
-        senderName: params.messageData['senderName'] ?? '',
-        senderAvatarUrl: params.messageData['senderAvatarUrl'],
-        isMine: params.messageData['isMine'] ?? false,
+        id: str(['id','Id','messageId','MessageId']),
+        chatRoomId: str(['chatRoomId','ChatRoomId','roomId','RoomId']),
+        senderUserId: str(['senderUserId','SenderUserId','userId','UserId','fromUserId','FromUserId']),
+        content: str(['content','Content','message','Message','body','Body']),
+        sentAt: parseDate(['sentAt','SentAt','createdAt','CreatedAt','timestamp','Timestamp']),
+        isRead: boolVal(['isRead','IsRead','read','Read']),
+        isEdited: boolVal(['isEdited','IsEdited','edited','Edited']),
+        messageType: str(['messageType','MessageType','type','Type'], def: 'Text'),
+        attachmentUrl: getFirst<String?>(['attachmentUrl','AttachmentUrl','fileUrl','FileUrl'], or: null),
+        editedAt: () {
+          final raw = str(['editedAt','EditedAt','updatedAt','UpdatedAt']);
+            if (raw.isEmpty) return null;
+            return DateTime.tryParse(raw);
+        }(),
+        senderName: str(['senderName','SenderName','fromName','FromName','userName','UserName']),
+        senderAvatarUrl: getFirst<String?>(['senderAvatarUrl','SenderAvatarUrl','avatar','Avatar'], or: null),
+        isMine: boolVal(['isMine','IsMine','mine','Mine']),
       );
 
       return Right(message);

@@ -4,6 +4,9 @@ import '../../../domain/entities/products/product_detail_entity.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_state.dart';
 import '../../blocs/cart/cart_event.dart' as cart_events;
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
+import '../../widgets/common/auth_guard.dart' show showLoginRequiredDialog;
 
 class AddToCartButton extends StatefulWidget {
   final ProductDetailEntity product;
@@ -55,6 +58,16 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
     });
   }
 
+  bool _requireLogin({required String message}) {
+    final authState = context.read<AuthBloc>().state;
+    final loggedIn = authState is AuthSuccess || authState is AuthAuthenticated;
+    if (!loggedIn) {
+      showLoginRequiredDialog(context, message: message);
+      return true; // indicates blocked due to auth
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -76,8 +89,8 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
       ),
       child: SafeArea(
         top: false,
-        child: Row( // Đổi từ Column thành Row trực tiếp
-          mainAxisAlignment: MainAxisAlignment.center, // Center theo chiều ngang
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Quantity Selector
             Container(
@@ -89,7 +102,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                   width: 1,
                 ),
               ),
-              child: IntrinsicHeight( // Đảm bảo height đồng đều
+              child: IntrinsicHeight(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -104,7 +117,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                     ),
                     Container(
                       width: 36,
-                      alignment: Alignment.center, // Center text
+                      alignment: Alignment.center,
                       child: Text(
                         '$_quantity',
                         style: const TextStyle(
@@ -145,11 +158,8 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                         child: Container(
                           height: 36,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF7B68EE),
-                                const Color(0xFF9370DB),
-                              ],
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7B68EE), Color(0xFF9370DB)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -167,9 +177,10 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: isLoading ? null : () {
+                                if (_requireLogin(message: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng')) {
+                                  return;
+                                }
                                 _animateButton();
-                                
-                                // Use CartBloc directly instead of ProductDetailBloc
                                 context.read<CartBloc>().add(
                                   cart_events.AddToCartEvent(
                                     productId: widget.product.productId,
@@ -177,19 +188,13 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                                     quantity: _quantity,
                                   ),
                                 );
-                                
-                                // Show success message
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.check_circle,
-                                          color: Colors.white,
-                                          size: 20,
-                                        ),
+                                      children: [
+                                        Icon(Icons.check_circle, color: Colors.white, size: 20),
                                         SizedBox(width: 8),
-                                        Text("Đã thêm vào giỏ hàng"),
+                                        Text('Đã thêm vào giỏ hàng'),
                                       ],
                                     ),
                                     backgroundColor: Color(0xFF4CAF50),
@@ -199,7 +204,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                                 );
                               },
                               borderRadius: BorderRadius.circular(10),
-                              child: Center( // Dùng Center thay vì Container alignment
+                              child: Center(
                                 child: isLoading 
                                   ? const SizedBox(
                                       height: 16,
@@ -212,21 +217,10 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                                   : Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.shopping_cart_outlined,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                        const SizedBox(width: 3),
-                                        const Text(
-                                          'Thêm',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
+                                      children: const [
+                                        Icon(Icons.shopping_cart_outlined, size: 14, color: Colors.white),
+                                        SizedBox(width: 3),
+                                        Text('Thêm', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
                                       ],
                                     ),
                               ),
@@ -248,11 +242,8 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
               child: Container(
                 height: 36,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFFF6B35),
-                      const Color(0xFFFF8E53),
-                    ],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6B35), Color(0xFFFF8E53)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -270,6 +261,9 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
+                      if (_requireLogin(message: 'Vui lòng đăng nhập để mua hàng')) {
+                        return;
+                      }
                       _animateButton();
                       context.read<CartBloc>().add(
                         cart_events.AddToCartEvent(
@@ -278,7 +272,6 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                           quantity: _quantity,
                         ),
                       );
-                      
                       Future.delayed(const Duration(milliseconds: 500), () {
                         Navigator.pushNamed(context, '/cart');
                       });
@@ -288,21 +281,10 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.bolt,
-                            size: 12,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 2),
-                          const Text(
-                            'Mua',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+                        children: const [
+                          Icon(Icons.bolt, size: 12, color: Colors.white),
+                          SizedBox(width: 2),
+                          Text('Mua', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
                         ],
                       ),
                     ),
@@ -344,7 +326,7 @@ class _AddToCartButtonState extends State<AddToCartButton> with TickerProviderSt
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(8),
-          child: Center( // Dùng Center để icon căn giữa hoàn hảo
+          child: Center(
             child: Icon(
               icon,
               size: 14,

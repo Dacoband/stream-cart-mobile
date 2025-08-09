@@ -145,6 +145,12 @@ import '../../domain/usecases/order/add_order_item_usecase.dart';
 import '../../domain/usecases/order/delete_order_item_usecase.dart';
 import '../../presentation/blocs/order/order_bloc.dart';
 import '../../presentation/blocs/order_item/order_item_bloc.dart';
+// Payment
+import '../../data/datasources/payment/payment_remote_data_source.dart';
+import '../../data/repositories/payment/payment_repository_impl.dart';
+import '../../domain/repositories/payment/payment_repository.dart';
+import '../../domain/usecases/payment/generate_payment_qr_usecase.dart';
+import '../../presentation/blocs/payment/payment_bloc.dart';
 
 
 final getIt = GetIt.instance;
@@ -245,6 +251,16 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetOrderItemsByOrderUseCase(getIt()));
   getIt.registerLazySingleton(() => AddOrderItemUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteOrderItemUseCase(getIt()));
+
+  // === PAYMENT ===
+  // Data source
+  getIt.registerLazySingleton<PaymentRemoteDataSource>(() => PaymentRemoteDataSourceImpl(dio: getIt()));
+  // Repository
+  getIt.registerLazySingleton<PaymentRepository>(() => PaymentRepositoryImpl(remoteDataSource: getIt()));
+  // Use case
+  getIt.registerLazySingleton(() => GeneratePaymentQrUseCase(getIt()));
+  // Bloc
+  getIt.registerFactory(() => PaymentBloc(generatePaymentQrUseCase: getIt()));
 
 
   // Shop
@@ -454,6 +470,7 @@ Future<void> setupDependencies() async {
       addOrderItemUseCase: getIt(),
       deleteOrderItemUseCase: getIt(),
     ));
+  // (Payment DI registrations defined earlier – removed duplicate block)
 
   // CartBloc as singleton (keep this at the end)
   getIt.registerLazySingleton(() {

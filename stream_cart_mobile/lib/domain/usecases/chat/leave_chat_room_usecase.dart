@@ -10,7 +10,7 @@ class LeaveChatRoomUseCase {
 
   Future<Either<Failure, void>> call(LeaveChatRoomParams params) async {
     try {
-      await signalRService.leaveRoom(params.chatRoomId);
+  await signalRService.leaveChatRoom(params.chatRoomId);
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure('Failed to leave chat room: $e'));

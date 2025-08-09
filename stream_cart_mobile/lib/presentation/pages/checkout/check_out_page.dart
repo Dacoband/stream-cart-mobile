@@ -6,6 +6,7 @@ import '../../blocs/address/address_bloc.dart';
 import '../../blocs/address/address_event.dart';
 import '../../blocs/deliveries/deliveries_bloc.dart';
 import '../../blocs/order/order_bloc.dart';
+import '../../blocs/payment/payment_bloc.dart';
 import 'check_out_view.dart';
 
 class CheckoutPage extends StatelessWidget {
@@ -29,6 +30,9 @@ class CheckoutPage extends StatelessWidget {
         ),
         BlocProvider<OrderBloc>(
           create: (context) => getIt<OrderBloc>(),
+        ),
+        BlocProvider<PaymentBloc>(
+          create: (context) => getIt<PaymentBloc>(),
         ),
       ],
       child: CheckoutView(previewOrderData: previewOrderData),

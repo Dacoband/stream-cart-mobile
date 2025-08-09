@@ -14,6 +14,8 @@ import '../../../domain/entities/address/address_entity.dart';
 import '../../../domain/entities/order/create_order_request_entity.dart';
 import '../../../core/routing/app_router.dart';
 import '../../blocs/cart/cart_bloc.dart';
+import '../../blocs/payment/payment_bloc.dart';
+import '../../blocs/payment/payment_state.dart';
 import '../../blocs/cart/cart_event.dart';
 import '../../widgets/checkout/checkout_address_widget.dart';
 import '../../widgets/checkout/checkout_order_summary_widget.dart';
@@ -115,26 +117,46 @@ class _CheckoutViewState extends State<CheckoutView> {
                         RemoveSelectedCartItemsEvent(cartItemIds: cartItemIds),
                       );
                 }
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đơn hàng đã được tạo thành công!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                // Navigate to order success page
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRouter.orderSuccess,
-                  (route) => route.settings.name == AppRouter.home,
-                  arguments: orderState.orders,
-                );
+                final isBankTransfer = selectedPaymentMethod == 'BANK_TRANSFER';
+                if (isBankTransfer) {
+                  // Điều hướng tới trang QR
+                  Navigator.pushNamed(
+                    context,
+                    AppRouter.paymentQr,
+                    arguments: {
+                      'orders': orderState.orders,
+                    },
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đơn hàng đã được tạo thành công!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    AppRouter.orderSuccess,
+                    (route) => route.settings.name == AppRouter.home,
+                    arguments: orderState.orders,
+                  );
+                }
               } else if (orderState is OrderError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(orderState.message),
                     backgroundColor: Colors.red,
                   ),
+                );
+              }
+            },
+          ),
+          // Payment listener (optional future updates)
+          BlocListener<PaymentBloc, PaymentState>(
+            listener: (context, paymentState) {
+              if (paymentState is PaymentError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(paymentState.message), backgroundColor: Colors.red),
                 );
               }
             },

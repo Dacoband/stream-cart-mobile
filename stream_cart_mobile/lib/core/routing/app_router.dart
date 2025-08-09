@@ -9,6 +9,7 @@ import '../../presentation/pages/chat/chat_list_page.dart';
 import '../../presentation/pages/order/order_list_page.dart';
 import '../../presentation/pages/order/order_success_page.dart';
 import '../../presentation/pages/order/order_detail_page.dart';
+import '../../presentation/pages/payment/payment_qr_page.dart';
 import '../di/dependency_injection.dart';
 import '../../presentation/pages/auth/login_page.dart' as auth;
 import '../../presentation/pages/auth/register_page.dart';
@@ -61,6 +62,7 @@ class AppRouter {
   static const String editAddress = '/edit-address';
   static const String orderSuccess = '/order-success';
   static const String orderDetail = '/order-detail';
+  static const String paymentQr = '/payment-qr';
 
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -240,6 +242,16 @@ class AppRouter {
         final orders = settings.arguments as List<OrderEntity>;
         return MaterialPageRoute(
           builder: (_) => OrderSuccessPage(orders: orders),
+        );
+      case paymentQr:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final orders = args?['orders'] as List<OrderEntity>?;
+        final qrUrl = args?['qrUrl'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentQrPage(
+            orders: orders ?? const [],
+            initialQrUrl: qrUrl,
+          ),
         );
       default:
         return MaterialPageRoute(

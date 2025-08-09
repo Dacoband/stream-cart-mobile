@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../domain/entities/cart/cart_entity.dart';
 
 class CartItemWidget extends StatelessWidget {
@@ -19,12 +18,10 @@ class CartItemWidget extends StatelessWidget {
   });
 
   String _formatPrice(double price) {
-    final formatter = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-    return formatter.format(price);
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String priceStr = price.toInt().toString();
+    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+    return '${priceStr}₫';
   }
 
   @override
