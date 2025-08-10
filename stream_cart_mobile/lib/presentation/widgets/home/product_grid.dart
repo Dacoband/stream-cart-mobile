@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../../core/routing/app_router.dart';
 
-class ProductGrid extends StatelessWidget {
+class ProductGrid extends StatefulWidget {
   final List<ProductEntity>? products;
   final Map<String, String>? productImages;
-  
+
   const ProductGrid({
     super.key,
     this.products,
     this.productImages,
   });
 
-  // Mock products data for fallback
+  @override
+  State<ProductGrid> createState() => _ProductGridState();
+
+}
+
+
+class _ProductGridState extends State<ProductGrid>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   static const List<Map<String, dynamic>> _mockProducts = [
     {
       'id': '1',
@@ -84,14 +94,9 @@ class ProductGrid extends StatelessWidget {
   ];
   @override
   Widget build(BuildContext context) {
-    // Use productImages from parameter, fallback to empty map
-    final Map<String, String> imageMap = productImages ?? {};
-    if (products?.isNotEmpty == true) {
-      print('🖼️ ProductGrid - products count: ${products!.length}');
-      for (var product in products!) {
-        print('🖼️ Product ID: ${product.id} -> imageUrl: ${imageMap[product.id]}');
-      }
-    }
+    super.build(context);
+    final products = widget.products;
+    final Map<String, String> imageMap = widget.productImages ?? {};
         
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -137,16 +142,26 @@ class ProductGrid extends StatelessWidget {
     final int discountPercent = hasDiscount
         ? (((product.basePrice - product.finalPrice) / product.basePrice) * 100).round().clamp(1, 99)
         : 0;
+    final heroTag = 'home_product_${product.id}';
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            precacheImage(CachedNetworkImageProvider(imageUrl), context);
+          }
           Navigator.pushNamed(
             context,
             AppRouter.productDetails,
-            arguments: product.id,
+            arguments: {
+              'productId': product.id,
+              'heroTag': heroTag,
+              'imageUrl': imageUrl,
+              'name': product.productName,
+              'price': product.finalPrice > 0 ? product.finalPrice : product.basePrice,
+            },
           );
         },
         child: Column(
@@ -159,38 +174,47 @@ class ProductGrid extends StatelessWidget {
                   children: [
                     // Product Image
                     Positioned.fill(
-                      child: imageUrl != null && imageUrl.isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
+                      child: Hero(
+                        tag: heroTag,
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(12),
+                          ),
+                          child: imageUrl != null && imageUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
                                   ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 50,
-                                    color: Colors.grey.shade400,
+                                  errorWidget: (context, url, error) => Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
                                   ),
-                                );
-                              },
-                            )
-                          : Center(
-                              child: Icon(
-                                Icons.shopping_bag,
-                                size: 50,
-                                color: Colors.grey.shade400,
-                              ),
-                            ),
+                                )
+                              : Container(
+                                  color: Colors.grey[200],
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.shopping_bag,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                     if (hasDiscount)
                       Positioned(
@@ -225,7 +249,7 @@ class ProductGrid extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      height: 38, // reserve space for up to 2 lines
+                      height: 38,
                       child: Text(
                         product.productName,
                         maxLines: 2,
@@ -309,8 +333,6 @@ class ProductGrid extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to product detail
-          print('Product tapped: ${product['name']}');
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,7 +388,7 @@ class ProductGrid extends StatelessWidget {
                   children: [
                     // Product Name
                     SizedBox(
-                      height: 20, // reserve space for up to 2 lines
+                      height: 20,
                       child: Text(
                         product['name'],
                         maxLines: 2,

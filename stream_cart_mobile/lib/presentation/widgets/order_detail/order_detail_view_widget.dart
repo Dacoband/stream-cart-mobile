@@ -11,6 +11,10 @@ import 'order_item_card_widget.dart';
 import 'order_price_breakdown_widget.dart';
 import 'shipping_info_section_widget.dart';
 import 'order_action_section_widget.dart';
+import '../../../core/routing/app_router.dart';
+import '../../blocs/order_item/order_item_bloc.dart';
+import '../../blocs/order_item/order_item_event.dart';
+import '../../blocs/order_item/order_item_state.dart';
 
 class OrderDetailViewWidget extends StatefulWidget {
   final String orderId;
@@ -25,6 +29,7 @@ class OrderDetailViewWidget extends StatefulWidget {
 }
 
 class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
+  bool _orderItemsRequested = false;
   @override
   void initState() {
     super.initState();
@@ -92,6 +97,14 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
   }
 
   Widget _buildContent(OrderEntity order) {
+    if (!_orderItemsRequested && order.items.isEmpty) {
+      _orderItemsRequested = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<OrderItemBloc>().add(GetOrderItemsByOrderEvent(orderId: order.id));
+        }
+      });
+    }
     return RefreshIndicator(
       onRefresh: _refresh,
       child: SingleChildScrollView(
@@ -104,7 +117,60 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
             const SizedBox(height: 8),
             OrderInfoSectionWidget(order: order),
             const SizedBox(height: 8),
-            OrderItemsSectionWidget(order: order),
+            BlocBuilder<OrderItemBloc, OrderItemState>(
+              builder: (context, itemState) {
+                if (itemState is OrderItemLoading || itemState is OrderItemRefreshing) {
+                  return _buildItemsLoadingSkeleton();
+                }
+                if (itemState is OrderItemsByOrderLoaded) {
+                  final mergedOrder = order.copyWith(items: itemState.orderItems);
+                  return OrderItemsSectionWidget(
+                    order: mergedOrder,
+                    onItemTap: (item) {
+                      if (item.productId.isEmpty) return;
+                      final heroTag = 'orderItem_${item.id}';
+                      // Pre-cache image for smoother hero transition
+                      if (item.productImageUrl != null && item.productImageUrl!.isNotEmpty) {
+                        precacheImage(NetworkImage(item.productImageUrl!), context);
+                      }
+                      Navigator.of(context).pushNamed(
+                        AppRouter.productDetails,
+                        arguments: {
+                          'productId': item.productId,
+                          'heroTag': heroTag,
+                          'imageUrl': item.productImageUrl,
+                          'name': item.productName,
+                          'price': item.unitPrice,
+                        },
+                      );
+                    },
+                  );
+                }
+                if (itemState is OrderItemError) {
+                  return _buildItemsError(itemState.message, order.id);
+                }
+                return OrderItemsSectionWidget(
+                  order: order,
+                  onItemTap: (item) {
+                    if (item.productId.isEmpty) return;
+                    final heroTag = 'orderItem_${item.id}';
+                    if (item.productImageUrl != null && item.productImageUrl!.isNotEmpty) {
+                      precacheImage(NetworkImage(item.productImageUrl!), context);
+                    }
+                    Navigator.of(context).pushNamed(
+                      AppRouter.productDetails,
+                      arguments: {
+                        'productId': item.productId,
+                        'heroTag': heroTag,
+                        'imageUrl': item.productImageUrl,
+                        'name': item.productName,
+                        'price': item.unitPrice,
+                      },
+                    );
+                  },
+                );
+              },
+            ),
             const SizedBox(height: 8),
             OrderPriceBreakdownWidget(order: order),
             const SizedBox(height: 8),
@@ -114,6 +180,99 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildItemsLoadingSkeleton() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.grey[400]),
+              const SizedBox(width: 8),
+              const Text(
+                'Sản phẩm',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSkeletonLine(),
+          const SizedBox(height: 12),
+          _buildSkeletonLine(widthFactor: 0.7),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLine({double widthFactor = 1}) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: Container(
+        height: 16,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemsError(String message, String orderId) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text(
+                'Sản phẩm',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Lỗi tải sản phẩm: $message', style: const TextStyle(color: Colors.red, fontSize: 12)),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              context.read<OrderItemBloc>().add(GetOrderItemsByOrderEvent(orderId: orderId));
+            },
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Thử lại'),
+          ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../domain/entities/order/order_entity.dart';
 import '../../../domain/entities/order/order_item_entity.dart';
 
@@ -94,22 +95,38 @@ class OrderItemsSectionWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Product Image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
+            Hero(
+              tag: 'orderItem_${item.id}',
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                image: (item.productImageUrl != null && item.productImageUrl!.isNotEmpty)
-                    ? DecorationImage(
-                        image: NetworkImage(item.productImageUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: (item.productImageUrl != null && item.productImageUrl!.isNotEmpty)
+                      ? CachedNetworkImage(
+                          imageUrl: item.productImageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[200],
+                            child: Icon(Icons.image_outlined, size: 24, color: Colors.grey[400]),
+                          ),
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image_outlined, size: 24, color: Colors.grey[400]),
+                        ),
+                ),
               ),
-              child: (item.productImageUrl == null || item.productImageUrl!.isEmpty)
-                  ? Icon(Icons.image_outlined, size: 24, color: Colors.grey[400])
-                  : null,
             ),
 
             const SizedBox(width: 12),
