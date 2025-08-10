@@ -43,17 +43,17 @@ class SignalRService {
   }) {
     _connection = HubConnectionBuilder()
         .withUrl(
-          "$baseUrl/signalrchat", // ✅ Correct hub path
+          "$baseUrl/signalrchat", 
           HttpConnectionOptions(
             transport: HttpTransportType.webSockets,
-            skipNegotiation: true, // ✅ Skip negotiation for WebSocket
+            skipNegotiation: true,
             accessTokenFactory: () async {
               final token = await storageService.getAccessToken();
               return token ?? "";
             },
           ),
         )
-        .withAutomaticReconnect([0, 2000, 10000, 30000]) // ✅ Better reconnect strategy
+        .withAutomaticReconnect([0, 2000, 10000, 30000]) 
         .build();
 
     _setupListeners();
@@ -83,21 +83,17 @@ class SignalRService {
       final err = e.toString().toLowerCase();
       final needFallback = err.contains('handshake') || err.contains('websocket') || err.contains('connection failed');
       if (needFallback) {
-        // Fallback: rebuild connection WITH negotiation (allow server pick transport)
         try {
           onStatusChanged?.call('🔄 Thử kết nối lại với negotiation...');
-          // Dispose old connection references
           try { await _connection.stop(); } catch (_) {}
           _connection = HubConnectionBuilder()
               .withUrl(
                 "$baseUrl/signalrchat",
                 HttpConnectionOptions(
-                  // Cho phép negotiation chọn: WebSockets / SSE / LongPolling
                   accessTokenFactory: () async {
                     final token = await storageService.getAccessToken();
                     return token ?? "";
                   },
-                  // Không set transport để signalr tự thương lượng
                 ),
               )
               .withAutomaticReconnect([0, 2000, 10000, 30000])
