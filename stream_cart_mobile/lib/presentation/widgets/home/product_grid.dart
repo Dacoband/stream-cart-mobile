@@ -24,74 +24,6 @@ class _ProductGridState extends State<ProductGrid>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-  static const List<Map<String, dynamic>> _mockProducts = [
-    {
-      'id': '1',
-      'name': 'iPhone 15 Pro Max',
-      'price': 29990000,
-      'originalPrice': 34990000,
-      'rating': 4.8,
-      'reviewCount': 256,
-      'imageColor': Colors.blue,
-      'isOnSale': true,
-      'stockQuantity': 50,
-    },
-    {
-      'id': '2',
-      'name': 'Samsung Galaxy S24 Ultra',
-      'price': 27990000,
-      'originalPrice': null,
-      'rating': 4.7,
-      'reviewCount': 189,
-      'imageColor': Colors.green,
-      'isOnSale': false,
-      'stockQuantity': 30,
-    },
-    {
-      'id': '3',
-      'name': 'MacBook Air M3',
-      'price': 31990000,
-      'originalPrice': 35990000,
-      'rating': 4.9,
-      'reviewCount': 324,
-      'imageColor': Colors.purple,
-      'isOnSale': true,
-      'stockQuantity': 15,
-    },
-    {
-      'id': '4',
-      'name': 'iPad Pro 12.9',
-      'price': 26990000,
-      'originalPrice': null,
-      'rating': 4.6,
-      'reviewCount': 152,
-      'imageColor': Colors.orange,
-      'isOnSale': false,
-      'stockQuantity': 25,
-    },
-    {
-      'id': '5',
-      'name': 'AirPods Pro',
-      'price': 6990000,
-      'originalPrice': 7990000,
-      'rating': 4.8,
-      'reviewCount': 892,
-      'imageColor': Colors.cyan,
-      'isOnSale': true,
-      'stockQuantity': 100,
-    },
-    {
-      'id': '6',
-      'name': 'Apple Watch Series 9',
-      'price': 9990000,
-      'originalPrice': null,
-      'rating': 4.7,
-      'reviewCount': 445,
-      'imageColor': Colors.red,
-      'isOnSale': false,
-      'stockQuantity': 40,
-    },
-  ];
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -117,6 +49,10 @@ class _ProductGridState extends State<ProductGrid>
             aspectRatio = 0.68; 
           }
           
+          if (products == null || products.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -126,18 +62,11 @@ class _ProductGridState extends State<ProductGrid>
               crossAxisSpacing: 12,
               mainAxisSpacing: 16,
             ),
-            itemCount: products?.isNotEmpty == true 
-                ? products!.length 
-                : _mockProducts.length,
+            itemCount: products.length,
             itemBuilder: (context, index) {
-              if (products?.isNotEmpty == true) {
-                final product = products![index];
-                final imageUrl = imageMap[product.id];
-                return _buildProductFromEntity(context, product, imageUrl);
-              } else {
-                final product = _mockProducts[index];
-                return _buildProductFromMock(context, product);
-              }
+              final product = products[index];
+              final imageUrl = imageMap[product.id];
+              return _buildProductFromEntity(context, product, imageUrl);
             },
           );
         },
@@ -316,145 +245,7 @@ class _ProductGridState extends State<ProductGrid>
     );
   }
 
-  Widget _buildProductFromMock(BuildContext context, Map<String, dynamic> product) {
-    final bool isOnSale = product['isOnSale'] == true && product['originalPrice'] != null;
-    final int discountPercent = isOnSale
-        ? (((product['originalPrice'] - product['price']) / product['originalPrice']) * 100).round().clamp(1, 99)
-        : 0;
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Expanded(
-              flex: 3,
-              child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Container(
-                        color: (product['imageColor'] as Color).withOpacity(0.1),
-                        child: Center(
-                          child: Icon(
-                            Icons.shopping_bag,
-                            size: 50,
-                            color: product['imageColor'] as Color,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (isOnSale)
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '-$discountPercent%',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-            ),
-            // Product Info
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Product Name
-                    SizedBox(
-                      height: 20,
-                      child: Text(
-                        product['name'],
-                        maxLines: 2,
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 10, 
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    // Price
-                    Flexible(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              _formatPrice(product['price'].toDouble()),
-                              style: const TextStyle(
-                                fontSize: 13, 
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 245, 104, 38),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (product['originalPrice'] != null) ...[
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                _formatPrice(product['originalPrice'].toDouble()),
-                                style: TextStyle(
-                                  fontSize: 11, 
-                                  color: Colors.grey.shade600,
-                                  decoration: TextDecoration.lineThrough,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Stock quantity
-                    Flexible(
-                      child: Text(
-                        'Còn lại: ${product['stockQuantity']}',
-                        style: TextStyle(
-                          fontSize: 11, 
-                          color: product['stockQuantity'] > 10 
-                              ? Colors.green 
-                              : product['stockQuantity'] > 0 
-                                  ? Colors.orange 
-                                  : Colors.red,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Removed mock builder as real data is always provided now.
 
   String _formatPrice(double price) {
     final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
