@@ -101,9 +101,43 @@ class AppRouter {
           ),
         );
       case productDetails:
-        final String productId = settings.arguments as String;
-        return MaterialPageRoute(
-          builder: (_) => ProductDetailPage(productId: productId),
+        String productId;
+        String? heroTag;
+        String? imageUrl;
+        String? name;
+        double? price;
+        final args = settings.arguments;
+        if (args is String) {
+          productId = args;
+        } else if (args is Map) {
+          productId = args['productId'] as String;
+          heroTag = args['heroTag'] as String?;
+          imageUrl = args['imageUrl'] as String?;
+          name = args['name'] as String?;
+          price = args['price'] is num ? (args['price'] as num).toDouble() : null;
+        } else {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(body: Center(child: Text('Thiếu productId'))),
+          );
+        }
+        return PageRouteBuilder(
+          pageBuilder: (_, animation, secondaryAnimation) => ProductDetailPage(
+            productId: productId,
+            heroTag: heroTag,
+            initialImageUrl: imageUrl,
+            initialName: name,
+            initialPrice: price,
+          ),
+          transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero).animate(curved),
+                child: child,
+              ),
+            );
+          },
         );
       case search:
         final String? initialQuery = settings.arguments as String?;

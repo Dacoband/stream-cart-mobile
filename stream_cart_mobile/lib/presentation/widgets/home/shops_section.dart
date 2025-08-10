@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/di/dependency_injection.dart';
@@ -243,32 +244,43 @@ class ShopsSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min, 
               children: [
                 
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey[300],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: shop.logoURL.isNotEmpty
-                        ? Image.network(
-                            shop.logoURL,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
+                Hero(
+                  tag: 'shop_logo_${shop.id}',
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey[300],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: shop.logoURL.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: shop.logoURL,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => const Icon(
                                 Icons.store,
                                 color: Colors.grey,
                                 size: 30,
-                              );
-                            },
-                          )
-                        : const Icon(
-                            Icons.store,
-                            color: Colors.grey,
-                            size: 30,
-                          ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.store,
+                              color: Colors.grey,
+                              size: 30,
+                            ),
+                    ),
                   ),
                 ),
 

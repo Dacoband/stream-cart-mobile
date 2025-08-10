@@ -21,10 +21,18 @@ import '../../blocs/cart/cart_state.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
+  final String? heroTag;
+  final String? initialImageUrl;
+  final String? initialName;
+  final double? initialPrice;
 
   const ProductDetailPage({
     super.key,
     required this.productId,
+    this.heroTag,
+    this.initialImageUrl,
+    this.initialName,
+    this.initialPrice,
   });
 
   @override
@@ -52,9 +60,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ],
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Chi tiết sản phẩm',
-            style: TextStyle(
+          title: Text(
+            widget.initialName ?? 'Chi tiết sản phẩm',
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -632,11 +641,30 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         } else {
           imageUrls = product.primaryImage;
         }
-        
-        return ImageCarousel(
+        if (imageUrls.isEmpty && widget.initialImageUrl != null) {
+          imageUrls = [widget.initialImageUrl!];
+        }
+
+        final carousel = ImageCarousel(
           images: imageUrls,
           height: 300,
         );
+
+        if (widget.heroTag != null) {
+          return Hero(
+            tag: widget.heroTag!,
+            flightShuttleBuilder: (flightContext, animation, direction, fromContext, toContext) {
+              final curved = CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+              return ScaleTransition(
+                scale: Tween<double>(begin: 0.98, end: 1.0).animate(curved),
+                child: FadeTransition(opacity: curved, child: toContext.widget),
+              );
+            },
+            child: carousel,
+          );
+        }
+
+        return carousel;
       },
     );
   }
