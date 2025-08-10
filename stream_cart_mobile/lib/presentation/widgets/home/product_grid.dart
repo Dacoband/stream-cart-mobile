@@ -106,8 +106,16 @@ class _ProductGridState extends State<ProductGrid>
         builder: (context, constraints) {
           final screenWidth = constraints.maxWidth;
           final crossAxisCount = screenWidth > 600 ? 3 : 2; 
-          final itemWidth = (screenWidth - (12 * (crossAxisCount - 1))) / crossAxisCount;
-          final aspectRatio = itemWidth / (itemWidth * 1.35); 
+          double aspectRatio;
+          if (screenWidth < 340) {
+            aspectRatio = 0.56; // rất nhỏ → cao hơn
+          } else if (screenWidth < 380) {
+            aspectRatio = 0.6;
+          } else if (screenWidth < 420) {
+            aspectRatio = 0.63;
+          } else {
+            aspectRatio = 0.68; 
+          }
           
           return GridView.builder(
             shrinkWrap: true,
@@ -248,21 +256,7 @@ class _ProductGridState extends State<ProductGrid>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      height: 38,
-                      child: Text(
-                        product.productName,
-                        maxLines: 2,
-                        softWrap: true,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                          height: 1.2, 
-                        ),
-                      ),
-                    ),
+                      _buildAdaptiveName(product.productName),
                     const SizedBox(height: 4),
                     // Price
                     Flexible(
@@ -467,5 +461,28 @@ class _ProductGridState extends State<ProductGrid>
     String priceStr = price.toInt().toString();
     priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
     return '${priceStr}₫';
+  }
+
+  Widget _buildAdaptiveName(String name) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final baseFont = width < 140 ? 11.0 : 12.0;
+        return ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 40),
+          child: Text(
+            name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: baseFont,
+              fontWeight: FontWeight.w500,
+              height: 1.0,
+              color: Colors.black87,
+            ),
+          ),
+        );
+      },
+    );
   }
 }
