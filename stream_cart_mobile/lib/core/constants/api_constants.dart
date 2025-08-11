@@ -129,6 +129,17 @@ class ApiConstants {
   static const String unReadCountEndpoint = '/api/chatsignalr/unread-count'; // GET
   static const String chatShopRoomsEndpoint = '/api/chatsignalr/shop-rooms'; // GET những phòng chat của shop
 
+  // Livestream endpoints
+  static const String getLiveStreamEndpoint =  '/api/livestreams/{id}'; // GET, lấy thông tin livestream
+  static const String getJoinLiveStreamEndpoint =  '/api/livestreams/{id}/join'; // GET, tham gia livestream
+  static const String getLiveStreamByShopIdEndpoint =  '/api/livestreams/shop/{shopId}'; // GET, lấy livestream theo shopId
+
+  // Product Livestream endpoints
+  static const String getProductByLiveStreamIdEndpoint =  '/api/livestream-products/livestream/{livestreamId}'; // GET, lấy sản phẩm theo livestreamId
+
+  // Chat in LiveStream endpoints
+  static const String joinChatLiveStreamEndpoint =  '/chatsignalr/livestream//{Id}/join'; // POST, tham gia chat livestream
+
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;
