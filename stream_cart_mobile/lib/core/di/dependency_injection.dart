@@ -167,6 +167,7 @@ import '../../data/repositories/payment/payment_repository_impl.dart';
 import '../../domain/repositories/payment/payment_repository.dart';
 import '../../domain/usecases/payment/generate_payment_qr_usecase.dart';
 import '../../presentation/blocs/payment/payment_bloc.dart';
+import '../../core/services/livekit_service.dart';
 
 
 final getIt = GetIt.instance;
@@ -184,6 +185,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<StorageService>(() => StorageService(getIt()));
   HttpService.initialize(storageService: getIt<StorageService>());
   getIt.registerLazySingleton<Dio>(() => NetworkConfig.createDio(storageService: getIt()));
+  getIt.registerLazySingleton<LiveKitService>(() => LiveKitService());
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(getIt()));
@@ -271,6 +273,7 @@ Future<void> setupDependencies() async {
         getLiveStreamsByShopUseCase: getIt(),
         getProductsByLiveStreamUseCase: getIt(),
         joinChatLiveStreamUseCase: getIt(),
+    liveKitService: getIt(),
       ));
 
   // === ORDER ===

@@ -74,6 +74,8 @@ dependencies:
   
   # SignalR for real-time communication
   signalr_core: ^1.1.1
+  # Live streaming (LiveKit)
+  livekit_client: ^2.2.0
 
   
   # Firebase for push notifications
@@ -96,7 +98,7 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.12
   json_serializable: ^6.8.0
-  retrofit_generator: 9.2.0
+  retrofit_generator: ^9.1.9
   injectable_generator: ^2.6.1
   hive_generator: ^2.0.1
   
