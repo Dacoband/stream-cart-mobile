@@ -63,28 +63,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onBottomNavTap(int index) {
-    setState(() {
-      _currentBottomNavIndex = index;
-    });
-
-    switch (index) {
-      case 0: 
-        Navigator.pushNamed(context, AppRouter.livestreamList);
-        break;
-      case 1: 
-        if (_currentBottomNavIndex == 1) {
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              0,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-            );
-          }
-          context.read<HomeBloc>().add(RefreshHomeDataEvent());
+    if (index == _currentBottomNavIndex) {
+      if (index == 1) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
         }
+        context.read<HomeBloc>().add(RefreshHomeDataEvent());
+      }
+      return;
+    }
+    switch (index) {
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.livestreamList, (r) => false);
         break;
-      case 2: 
-        Navigator.pushNamed(context, '/profile');
+      case 1:
+        break;
+      case 2:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.profile, (r) => false);
         break;
     }
   }
@@ -144,11 +139,8 @@ class _HomePageState extends State<HomePage> {
     
     return GestureDetector(
       onTap: () {
-        // Navigate to category detail page
         if (category != null) {
-          String? categoryId;
-          
-          // Extract categoryId based on the category type
+          String? categoryId; 
           if (category is Map<String, dynamic>) {
             categoryId = category['categoryId'] ?? category['id'];
           } else {
