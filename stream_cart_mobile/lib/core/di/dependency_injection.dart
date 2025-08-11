@@ -145,7 +145,6 @@ import '../../domain/usecases/order/add_order_item_usecase.dart';
 import '../../domain/usecases/order/delete_order_item_usecase.dart';
 import '../../presentation/blocs/order/order_bloc.dart';
 import '../../presentation/blocs/order_item/order_item_bloc.dart';
-// Livestream
 import '../../data/datasources/livestream/livestream_remote_data_source.dart';
 import '../../data/datasources/livestream/livestream_product_remote_data_source.dart';
 import '../../data/datasources/livestream/livestream_message_remote_data_source.dart';
@@ -160,8 +159,8 @@ import '../../domain/usecases/livestream/join_livestream_usecase.dart';
 import '../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
 import '../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
 import '../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
+import '../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
 import '../../presentation/blocs/livestream/livestream_bloc.dart';
-// Payment
 import '../../data/datasources/payment/payment_remote_data_source.dart';
 import '../../data/repositories/payment/payment_repository_impl.dart';
 import '../../domain/repositories/payment/payment_repository.dart';
@@ -173,11 +172,8 @@ import '../../core/services/livekit_service.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
-  // FIX 1: Load dotenv và reset GetIt ở ĐẦU
   await dotenv.load(fileName: ".env");
   await getIt.reset();
-  
-  // Declare SignalR URLs after dotenv is loaded
   String signalRChatBaseUrl = dotenv.env['SIGNALR_CHAT_BASE_URL']!;
 
   // Core services
@@ -263,6 +259,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => JoinLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => GetLiveStreamsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetActiveLiveStreamsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => JoinChatLiveStreamUseCase(getIt()));
 
@@ -274,6 +271,7 @@ Future<void> setupDependencies() async {
         getProductsByLiveStreamUseCase: getIt(),
         joinChatLiveStreamUseCase: getIt(),
     liveKitService: getIt(),
+  getActiveLiveStreamsUseCase: getIt(),
       ));
 
   // === ORDER ===

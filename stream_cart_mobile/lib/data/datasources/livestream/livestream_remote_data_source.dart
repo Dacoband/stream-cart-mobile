@@ -7,6 +7,7 @@ abstract class LiveStreamRemoteDataSource {
 	Future<LiveStreamModel> getLiveStream(String id);
 	Future<LiveStreamModel> joinLiveStream(String id);
 	Future<List<LiveStreamModel>> getLiveStreamsByShop(String shopId);
+	Future<List<LiveStreamModel>> getActiveLiveStreams({bool? promotedOnly});
 }
 
 class LiveStreamRemoteDataSourceImpl implements LiveStreamRemoteDataSource {
@@ -20,7 +21,11 @@ class LiveStreamRemoteDataSourceImpl implements LiveStreamRemoteDataSource {
 			final resp = await _dio.get(
 				ApiConstants.getLiveStreamEndpoint.replaceAll('{id}', id),
 			);
-			return LiveStreamModel.fromJson(resp.data);
+			final raw = resp.data;
+			final data = raw is Map && raw['data'] is Map
+				? (raw['data'] as Map<String, dynamic>)
+				: (raw as Map<String, dynamic>);
+			return LiveStreamModel.fromJson(data);
 		} on DioException catch (e) {
 			throw _handleDioException(e, 'Failed to get livestream');
 		} catch (e) {
@@ -34,7 +39,11 @@ class LiveStreamRemoteDataSourceImpl implements LiveStreamRemoteDataSource {
 			final resp = await _dio.get(
 				ApiConstants.getJoinLiveStreamEndpoint.replaceAll('{id}', id),
 			);
-			return LiveStreamModel.fromJson(resp.data);
+			final raw = resp.data;
+			final data = raw is Map && raw['data'] is Map
+				? (raw['data'] as Map<String, dynamic>)
+				: (raw as Map<String, dynamic>);
+			return LiveStreamModel.fromJson(data);
 		} on DioException catch (e) {
 			throw _handleDioException(e, 'Failed to join livestream');
 		} catch (e) {
@@ -54,6 +63,25 @@ class LiveStreamRemoteDataSourceImpl implements LiveStreamRemoteDataSource {
 			throw _handleDioException(e, 'Failed to get shop livestreams');
 		} catch (e) {
 			throw Exception('Failed to get shop livestreams: $e');
+		}
+	}
+
+	@override
+	Future<List<LiveStreamModel>> getActiveLiveStreams({bool? promotedOnly}) async {
+		try {
+			final resp = await _dio.get(
+				ApiConstants.getLiveStreamActiveEndpoint,
+				queryParameters: promotedOnly == null ? null : {'promotedOnly': promotedOnly},
+			);
+			final raw = resp.data;
+			final listData = raw is List
+					? raw
+					: (raw is Map && raw['data'] is List ? raw['data'] as List : <dynamic>[]);
+			return listData.map((j) => LiveStreamModel.fromJson(j)).toList();
+		} on DioException catch (e) {
+			throw _handleDioException(e, 'Failed to get active livestreams');
+		} catch (e) {
+			throw Exception('Failed to get active livestreams: $e');
 		}
 	}
 
