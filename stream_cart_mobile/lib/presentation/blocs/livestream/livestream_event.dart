@@ -48,3 +48,22 @@ class RefreshLiveStreamEvent extends LiveStreamEvent {
 	@override
 	List<Object?> get props => [id];
 }
+
+class ConnectLiveKitEvent extends LiveStreamEvent {
+	final String url;
+	final String token;
+	const ConnectLiveKitEvent({required this.url, required this.token});
+	@override
+	List<Object?> get props => [url, token];
+}
+
+class DisconnectLiveKitEvent extends LiveStreamEvent {
+	const DisconnectLiveKitEvent();
+}
+
+class LiveKitRoomEventReceived extends LiveStreamEvent {
+	final Object roomEvent; // Will narrow in bloc using type checks
+	const LiveKitRoomEventReceived(this.roomEvent);
+	@override
+	List<Object?> get props => [roomEvent];
+}

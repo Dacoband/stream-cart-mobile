@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../../../domain/entities/livestream/livestream_entity.dart';
 import '../../../domain/entities/livestream/livestream_product_entity.dart';
 import '../../../domain/entities/livestream/livestream_message_entity.dart';
+import 'package:livekit_client/livekit_client.dart' show VideoTrack, RemoteParticipant;
 
 abstract class LiveStreamState extends Equatable {
 	const LiveStreamState();
@@ -28,6 +29,10 @@ class LiveStreamLoaded extends LiveStreamState {
 	final bool isJoining;
 	final bool isLoadingProducts;
 	final bool isRefreshing;
+	final bool isConnectingRoom;
+	final bool isConnectedRoom;
+	final VideoTrack? primaryVideoTrack;
+	final List<RemoteParticipant> participants;
 
 	const LiveStreamLoaded({
 		required this.liveStream,
@@ -36,6 +41,10 @@ class LiveStreamLoaded extends LiveStreamState {
 		this.isJoining = false,
 		this.isLoadingProducts = false,
 		this.isRefreshing = false,
+		this.isConnectingRoom = false,
+		this.isConnectedRoom = false,
+		this.primaryVideoTrack,
+		this.participants = const [],
 	});
 
 	LiveStreamLoaded copyWith({
@@ -45,6 +54,10 @@ class LiveStreamLoaded extends LiveStreamState {
 		bool? isJoining,
 		bool? isLoadingProducts,
 		bool? isRefreshing,
+		bool? isConnectingRoom,
+		bool? isConnectedRoom,
+		VideoTrack? primaryVideoTrack,
+		List<RemoteParticipant>? participants,
 	}) => LiveStreamLoaded(
 				liveStream: liveStream ?? this.liveStream,
 				products: products ?? this.products,
@@ -52,6 +65,10 @@ class LiveStreamLoaded extends LiveStreamState {
 				isJoining: isJoining ?? this.isJoining,
 				isLoadingProducts: isLoadingProducts ?? this.isLoadingProducts,
 				isRefreshing: isRefreshing ?? this.isRefreshing,
+				isConnectingRoom: isConnectingRoom ?? this.isConnectingRoom,
+				isConnectedRoom: isConnectedRoom ?? this.isConnectedRoom,
+				primaryVideoTrack: primaryVideoTrack ?? this.primaryVideoTrack,
+				participants: participants ?? this.participants,
 			);
 
 	@override
@@ -62,6 +79,10 @@ class LiveStreamLoaded extends LiveStreamState {
 				isJoining,
 				isLoadingProducts,
 				isRefreshing,
+				isConnectingRoom,
+				isConnectedRoom,
+				primaryVideoTrack,
+				participants,
 			];
 }
 
