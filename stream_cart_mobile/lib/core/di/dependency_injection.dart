@@ -145,12 +145,29 @@ import '../../domain/usecases/order/add_order_item_usecase.dart';
 import '../../domain/usecases/order/delete_order_item_usecase.dart';
 import '../../presentation/blocs/order/order_bloc.dart';
 import '../../presentation/blocs/order_item/order_item_bloc.dart';
+// Livestream
+import '../../data/datasources/livestream/livestream_remote_data_source.dart';
+import '../../data/datasources/livestream/livestream_product_remote_data_source.dart';
+import '../../data/datasources/livestream/livestream_message_remote_data_source.dart';
+import '../../data/repositories/livestream/livestream_repository_impl.dart';
+import '../../data/repositories/livestream/livestream_product_repository_impl.dart';
+import '../../data/repositories/livestream/livestream_message_repository_impl.dart';
+import '../../domain/repositories/livestream/livestream_repository.dart';
+import '../../domain/repositories/livestream/livestream_product_repository.dart';
+import '../../domain/repositories/livestream/livestream_message_repository.dart';
+import '../../domain/usecases/livestream/get_livestream_usecase.dart';
+import '../../domain/usecases/livestream/join_livestream_usecase.dart';
+import '../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
+import '../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
+import '../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
+import '../../presentation/blocs/livestream/livestream_bloc.dart';
 // Payment
 import '../../data/datasources/payment/payment_remote_data_source.dart';
 import '../../data/repositories/payment/payment_repository_impl.dart';
 import '../../domain/repositories/payment/payment_repository.dart';
 import '../../domain/usecases/payment/generate_payment_qr_usecase.dart';
 import '../../presentation/blocs/payment/payment_bloc.dart';
+import '../../core/services/livekit_service.dart';
 
 
 final getIt = GetIt.instance;
@@ -168,6 +185,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<StorageService>(() => StorageService(getIt()));
   HttpService.initialize(storageService: getIt<StorageService>());
   getIt.registerLazySingleton<Dio>(() => NetworkConfig.createDio(storageService: getIt()));
+  getIt.registerLazySingleton<LiveKitService>(() => LiveKitService());
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(getIt()));
@@ -229,6 +247,34 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetCartPreviewUseCase(getIt())); 
   getIt.registerLazySingleton(() => GetPreviewOrderUseCase(getIt())); 
   getIt.registerLazySingleton(() => GetCartSummaryUseCase(getIt()));
+
+  // === LIVESTREAM ===
+  // Data sources
+  getIt.registerLazySingleton<LiveStreamRemoteDataSource>(() => LiveStreamRemoteDataSourceImpl(dio: getIt()));
+  getIt.registerLazySingleton<LiveStreamProductRemoteDataSource>(() => LiveStreamProductRemoteDataSourceImpl(dio: getIt()));
+  getIt.registerLazySingleton<LiveStreamMessageRemoteDataSource>(() => LiveStreamMessageRemoteDataSourceImpl(dio: getIt()));
+
+  // Repositories
+  getIt.registerLazySingleton<LiveStreamRepository>(() => LiveStreamRepositoryImpl(getIt()));
+  getIt.registerLazySingleton<LiveStreamProductRepository>(() => LiveStreamProductRepositoryImpl(getIt()));
+  getIt.registerLazySingleton<LiveStreamMessageRepository>(() => LiveStreamMessageRepositoryImpl(getIt()));
+
+  // Use cases
+  getIt.registerLazySingleton(() => GetLiveStreamUseCase(getIt()));
+  getIt.registerLazySingleton(() => JoinLiveStreamUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetLiveStreamsByShopUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetProductsByLiveStreamUseCase(getIt()));
+  getIt.registerLazySingleton(() => JoinChatLiveStreamUseCase(getIt()));
+
+  // Bloc
+  getIt.registerFactory(() => LiveStreamBloc(
+        getLiveStreamUseCase: getIt(),
+        joinLiveStreamUseCase: getIt(),
+        getLiveStreamsByShopUseCase: getIt(),
+        getProductsByLiveStreamUseCase: getIt(),
+        joinChatLiveStreamUseCase: getIt(),
+    liveKitService: getIt(),
+      ));
 
   // === ORDER ===
   // Data sources
@@ -470,7 +516,6 @@ Future<void> setupDependencies() async {
       addOrderItemUseCase: getIt(),
       deleteOrderItemUseCase: getIt(),
     ));
-  // (Payment DI registrations defined earlier – removed duplicate block)
 
   // CartBloc as singleton (keep this at the end)
   getIt.registerLazySingleton(() {
