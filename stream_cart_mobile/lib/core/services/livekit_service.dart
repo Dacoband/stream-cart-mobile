@@ -12,13 +12,13 @@ class LiveKitService {
   Future<void> connect({required String url, required String token}) async {
     await disconnect();
     final roomOptions = const RoomOptions(
-      adaptiveStream: true,
-      dynacast: true,
+      adaptiveStream: false,
+      dynacast: false,
     );
-  final room = Room(roomOptions: roomOptions);
-  await room.connect(url, token);
-  _room = room;
+    final room = Room(roomOptions: roomOptions);
+    _room = room;
     _listenRoomEvents();
+    await room.connect(url, token, connectOptions: const ConnectOptions(autoSubscribe: true));
   }
 
   void _listenRoomEvents() {
@@ -28,6 +28,9 @@ class LiveKitService {
     _listener = room.createListener();
     _listener!.on<RoomEvent>((event) {
       if (!_events.isClosed) _events.add(event);
+      if (event is TrackPublishedEvent || event is ParticipantConnectedEvent) {
+        forceSubscribeAll();
+      }
     });
   }
 
@@ -46,5 +49,17 @@ class LiveKitService {
   void dispose() {
   _listener?.dispose();
     _events.close();
+  }
+
+  void forceSubscribeAll() {
+    final r = _room;
+    if (r == null) return;
+    for (final p in r.remoteParticipants.values) {
+      for (final pub in p.videoTrackPublications) {
+        if (!pub.subscribed) {
+          try { pub.subscribe(); } catch (_) {}
+        }
+      }
+    }
   }
 }
