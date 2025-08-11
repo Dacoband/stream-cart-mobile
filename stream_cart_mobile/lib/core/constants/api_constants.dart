@@ -138,7 +138,7 @@ class ApiConstants {
   static const String getProductByLiveStreamIdEndpoint =  '/api/livestream-products/livestream/{livestreamId}'; // GET, lấy sản phẩm theo livestreamId
 
   // Chat in LiveStream endpoints
-  static const String joinChatLiveStreamEndpoint =  '/chatsignalr/livestream//{Id}/join'; // POST, tham gia chat livestream
+  static const String joinChatLiveStreamEndpoint =  '/chatsignalr/livestream//{livestreamId}/join'; // POST, tham gia chat livestream
 
   // HTTP Status codes
   static const int successCode = 200;
