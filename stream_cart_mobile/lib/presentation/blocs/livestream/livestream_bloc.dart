@@ -6,10 +6,12 @@ import '../../../domain/usecases/livestream/get_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/join_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
 import '../../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
+import '../../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
 import '../../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
 import 'livestream_event.dart';
 import 'livestream_state.dart';
 import '../../../core/services/livekit_service.dart';
+import '../../../core/config/livekit_config.dart';
 
 class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetLiveStreamUseCase getLiveStreamUseCase;
@@ -18,8 +20,10 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetProductsByLiveStreamUseCase getProductsByLiveStreamUseCase;
 	final JoinChatLiveStreamUseCase joinChatLiveStreamUseCase;
   final LiveKitService liveKitService;
+	final GetActiveLiveStreamsUseCase? getActiveLiveStreamsUseCase;
 
 	StreamSubscription<RoomEvent>? _roomSub;
+	Timer? _primaryProbeTimer;
 
 	LiveStreamBloc({
 		required this.getLiveStreamUseCase,
@@ -28,10 +32,12 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		required this.getProductsByLiveStreamUseCase,
 		required this.joinChatLiveStreamUseCase,
     required this.liveKitService,
+	this.getActiveLiveStreamsUseCase,
 	}) : super(LiveStreamInitial()) {
 		on<LoadLiveStreamEvent>(_onLoadLiveStream);
 		on<JoinLiveStreamEvent>(_onJoinLiveStream);
 		on<LoadLiveStreamsByShopEvent>(_onLoadLiveStreamsByShop);
+	on<LoadActiveLiveStreamsEvent>(_onLoadActiveLiveStreams);
 		on<LoadProductsByLiveStreamEvent>(_onLoadProductsByLiveStream);
 		on<JoinChatLiveStreamEvent>(_onJoinChatLiveStream);
 		on<RefreshLiveStreamEvent>(_onRefreshLiveStream);
@@ -71,14 +77,11 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 				} else {
 					emit(LiveStreamLoaded(liveStream: liveStream));
 				}
-					// Auto connect to LiveKit if token available
-					if (liveStream.joinToken != null && liveStream.livekitRoomId != null) {
-						// In many setups URL is fixed; adjust as needed or expose via env/constants
-						final url = const String.fromEnvironment('LIVEKIT_URL', defaultValue: '');
-						if (url.isNotEmpty) {
-							add(ConnectLiveKitEvent(url: url, token: liveStream.joinToken!));
-						}
-					}
+				if (liveStream.joinToken != null && liveStream.livekitRoomId != null) {
+					final effectiveUrl = LiveKitConfig.serverUrl;
+					add(ConnectLiveKitEvent(url: effectiveUrl, token: liveStream.joinToken!));
+				} else {
+				}
 			},
 		);
 	}
@@ -86,6 +89,17 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	Future<void> _onLoadLiveStreamsByShop(LoadLiveStreamsByShopEvent event, Emitter<LiveStreamState> emit) async {
 		emit(LiveStreamListLoading());
 		final result = await getLiveStreamsByShopUseCase(event.shopId);
+		result.fold(
+			(failure) => emit(LiveStreamListError(failure.message)),
+			(liveStreams) => emit(LiveStreamListLoaded(liveStreams)),
+		);
+	}
+
+	Future<void> _onLoadActiveLiveStreams(LoadActiveLiveStreamsEvent event, Emitter<LiveStreamState> emit) async {
+		final usecase = getActiveLiveStreamsUseCase;
+		if (usecase == null) return;
+		emit(LiveStreamListLoading());
+		final result = await usecase.call(promotedOnly: event.promotedOnly);
 		result.fold(
 			(failure) => emit(LiveStreamListError(failure.message)),
 			(liveStreams) => emit(LiveStreamListLoaded(liveStreams)),
@@ -140,10 +154,42 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		try {
 			await liveKitService.connect(url: event.url, token: event.token);
 			_roomSub?.cancel();
-			_roomSub = liveKitService.events.listen((e) {
-				add(LiveKitRoomEventReceived(e));
-			});
-			emit(currentState.copyWith(isConnectingRoom: false, isConnectedRoom: true, participants: liveKitService.remoteParticipants));
+			_roomSub = liveKitService.events.listen((e) { add(LiveKitRoomEventReceived(e)); });
+			VideoTrack? primary;
+			for (final p in liveKitService.remoteParticipants) {
+				for (final pub in p.videoTrackPublications) {
+					if (pub.track is VideoTrack) {
+						primary = pub.track as VideoTrack;
+						break;
+					}
+				}
+				if (primary != null) break;
+			}
+			emit(currentState.copyWith(
+				isConnectingRoom: false,
+				isConnectedRoom: true,
+				participants: liveKitService.remoteParticipants,
+				primaryVideoTrack: primary ?? currentState.primaryVideoTrack,
+			));
+			// If still no primary track, probe after small delay (seller may publish slightly later)
+			if (primary == null) {
+				_primaryProbeTimer?.cancel();
+				_primaryProbeTimer = Timer(const Duration(seconds: 2), () {
+					final st = state;
+					if (st is LiveStreamLoaded && st.primaryVideoTrack == null) {
+						VideoTrack? latePrimary;
+						for (final p in liveKitService.remoteParticipants) {
+							for (final pub in p.videoTrackPublications) {
+								if (pub.track is VideoTrack) { latePrimary = pub.track as VideoTrack; break; }
+							}
+							if (latePrimary != null) break;
+						}
+						if (latePrimary != null) {
+							emit(st.copyWith(primaryVideoTrack: latePrimary, participants: liveKitService.remoteParticipants));
+						}
+					}
+				});
+			}
 		} catch (e) {
 			emit(currentState.copyWith(isConnectingRoom: false, isConnectedRoom: false));
 		}
@@ -169,12 +215,24 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 				primary = e.publication.track as VideoTrack;
 				changed = true;
 			}
-			} else if (e is TrackUnsubscribedEvent) {
+		} else if (e is TrackUnsubscribedEvent) {
 				if (primary != null && e.publication.sid == primary.sid) {
 				primary = null;
 				changed = true;
 			}
-		} else if (e is ParticipantDisconnectedEvent || e is ParticipantConnectedEvent) {
+		} else if (e is TrackPublishedEvent || e is ParticipantConnectedEvent) {
+			// Try selecting a published video if we don't have one yet
+			if (primary == null) {
+				for (final p in liveKitService.remoteParticipants) {
+					for (final pub in p.videoTrackPublications) {
+						if (pub.track is VideoTrack) { primary = pub.track as VideoTrack; break; }
+					}
+					if (primary != null) break;
+				}
+				if (primary != null) changed = true;
+			}
+			changed = true;
+		} else if (e is ParticipantDisconnectedEvent) {
 			changed = true;
 		} else if (e is RoomDisconnectedEvent) {
 			emit(currentState.copyWith(isConnectedRoom: false, primaryVideoTrack: null, participants: []));
@@ -192,6 +250,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	@override
 	Future<void> close() {
 		_roomSub?.cancel();
+		_primaryProbeTimer?.cancel();
 		liveKitService.dispose();
 		return super.close();
 	}

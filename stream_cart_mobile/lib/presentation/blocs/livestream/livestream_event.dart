@@ -61,8 +61,15 @@ class DisconnectLiveKitEvent extends LiveStreamEvent {
 	const DisconnectLiveKitEvent();
 }
 
+class LoadActiveLiveStreamsEvent extends LiveStreamEvent {
+	final bool? promotedOnly;
+	const LoadActiveLiveStreamsEvent({this.promotedOnly});
+	@override
+	List<Object?> get props => [promotedOnly];
+}
+
 class LiveKitRoomEventReceived extends LiveStreamEvent {
-	final Object roomEvent; // Will narrow in bloc using type checks
+	final Object roomEvent;
 	const LiveKitRoomEventReceived(this.roomEvent);
 	@override
 	List<Object?> get props => [roomEvent];
