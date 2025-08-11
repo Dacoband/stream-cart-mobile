@@ -133,6 +133,7 @@ class ApiConstants {
   static const String getLiveStreamEndpoint =  '/api/livestreams/{id}'; // GET, lấy thông tin livestream
   static const String getJoinLiveStreamEndpoint =  '/api/livestreams/{id}/join'; // GET, tham gia livestream
   static const String getLiveStreamByShopIdEndpoint =  '/api/livestreams/shop/{shopId}'; // GET, lấy livestream theo shopId
+  static const String getLiveStreamActiveEndpoint =  '/api/livestreams/active'; // GET, lấy livestream đang hoạt động
 
   // Product Livestream endpoints
   static const String getProductByLiveStreamIdEndpoint =  '/api/livestream-products/livestream/{livestreamId}'; // GET, lấy sản phẩm theo livestreamId
