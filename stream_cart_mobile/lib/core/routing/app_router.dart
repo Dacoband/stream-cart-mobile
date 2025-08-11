@@ -27,6 +27,8 @@ import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/pages/notification/notification_page.dart';
 import '../../presentation/pages/shop/shop_list_page.dart';
 import '../../presentation/pages/shop/shop_detail_page.dart';
+import '../../presentation/pages/livestream/livestream_page.dart';
+import '../../presentation/pages/livestream/livestream_list_page.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -205,12 +207,28 @@ class AppRouter {
           ),
         );
       case livestreamList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final shopId = args?['shopId'] as String?;
+  // liveKitUrl argument deprecated; use constant
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Livestream')),
-            body: const Center(
-              child: Text('Trang livestream đang phát triển'),
+          builder: (_) => LiveStreamListPage(
+            shopId: shopId,
+          ),
+        );
+      case livestreamDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final liveStreamId = args?['liveStreamId'] as String? ?? args?['id'] as String?;
+  // liveKitUrl argument deprecated; use constant
+        if (liveStreamId == null || liveStreamId.isEmpty) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('Thiếu liveStreamId')),
             ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => LiveStreamPage(
+            liveStreamId: liveStreamId,
           ),
         );
       case shopList:

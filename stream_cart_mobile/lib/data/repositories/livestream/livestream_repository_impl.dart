@@ -56,6 +56,20 @@ class LiveStreamRepositoryImpl implements LiveStreamRepository {
 		}
 	}
 
+	@override
+	Future<Either<Failure, List<LiveStreamEntity>>> getActiveLiveStreams({bool? promotedOnly}) async {
+		try {
+			final models = await remoteDataSource.getActiveLiveStreams(promotedOnly: promotedOnly);
+			return Right(models.map((m) => m.toEntity()).toList());
+		} on DioException catch (e) {
+			return Left(_mapDioToFailure(e, customNotFound: 'Không có livestream đang hoạt động'));
+		} on ServerException catch (e) {
+			return Left(ServerFailure(e.message));
+		} catch (e) {
+			return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+		}
+	}
+
 	Failure _mapDioToFailure(
 		DioException e, {
 		String? customBadRequest,

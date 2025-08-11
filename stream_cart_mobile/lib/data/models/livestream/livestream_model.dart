@@ -54,6 +54,9 @@ class LiveStreamModel {
   });
 
   factory LiveStreamModel.fromJson(Map<String, dynamic> json) {
+    final bool isLive = json.containsKey('isLive')
+        ? (json['isLive'] ?? false)
+        : (json['status'] ?? false);
     return LiveStreamModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -65,7 +68,7 @@ class LiveStreamModel {
       scheduledStartTime: json['scheduledStartTime'],
       actualStartTime: json['actualStartTime'],
       actualEndTime: json['actualEndTime'],
-      isLive: json['isLive'] ?? false,
+      isLive: isLive,
       playbackUrl: json['playbackUrl'] ?? '',
       livekitRoomId: json['livekitRoomId'],
       joinToken: json['joinToken'],

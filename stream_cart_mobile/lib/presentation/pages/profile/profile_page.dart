@@ -23,7 +23,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _currentBottomNavIndex = 2; // Profile is index 2
+  int _currentBottomNavIndex = 2;
 
   @override
   void initState() {
@@ -32,7 +32,6 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _checkAndLoadProfile() async {
-    // Chỉ load profile khi user đã đăng nhập
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess || authState is AuthAuthenticated) {
       final storageService = getIt<StorageService>();
@@ -42,18 +41,15 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _onBottomNavTap(int index) {
-    setState(() {
-      _currentBottomNavIndex = index;
-    });
-
+    if (index == _currentBottomNavIndex) return;
     switch (index) {
-      case 0: // Live
-        Navigator.pushNamed(context, AppRouter.livestreamList);
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.livestreamList, (r) => false);
         break;
-      case 1: // Home
-        Navigator.pushNamed(context, AppRouter.home);
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.home, (r) => false);
         break;
-      case 2: // Profile
+      case 2:
         break;
     }
   }
@@ -115,7 +111,6 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               Navigator.pop(context);
               context.read<AuthBloc>().add(LogoutEvent());
-              // Stay on current page, don't navigate away
             },
             child: const Text(
               'Đăng xuất',
