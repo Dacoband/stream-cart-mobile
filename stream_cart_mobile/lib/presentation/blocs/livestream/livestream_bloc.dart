@@ -170,6 +170,26 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	Future<void> _onSendLiveStreamMessage(SendLiveStreamMessageEvent event, Emitter<LiveStreamState> emit) async {
 		final currentState = state;
 		if (currentState is! LiveStreamLoaded) return;
+			final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
+			final placeholder = LiveStreamChatMessageEntity(
+				id: tempId,
+				livestreamId: currentState.liveStream.id,
+				senderId: 'me',
+				senderName: 'Bạn',
+				senderType: 'viewer',
+				message: event.message,
+				messageType: event.messageType,
+				isModerated: false,
+				sentAt: DateTime.now(),
+				createdAt: DateTime.now(),
+			);
+			var optimistic = [...currentState.joinedMessages, placeholder];
+			emit(currentState.copyWith(joinedMessages: optimistic));
+			try {
+				final s = getIt<SignalRService>();
+				await s.sendLivestreamMessage(livestreamId: event.liveStreamId, message: event.message);
+			} catch (_) {}
+
 			final result = await sendMessageLiveStreamUseCase(
 			livestreamId: event.liveStreamId,
 			message: event.message,
@@ -177,13 +197,28 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 			replyToMessageId: event.replyToMessageId,
 		);
 			result.fold(
-				(failure) {},
+				(failure) {
+					final latest = state;
+					if (latest is LiveStreamLoaded) {
+						final removed = latest.joinedMessages.where((m) => m.id != tempId).toList();
+						emit(latest.copyWith(joinedMessages: removed));
+					}
+				},
 				(sent) async {
-					var updated = [...currentState.joinedMessages];
+					final latest = state;
+					if (latest is! LiveStreamLoaded) return;
+					List<LiveStreamChatMessageEntity> updated = latest.joinedMessages
+						.map((m) => m.id == tempId ? sent : m)
+						.toList();
 					if (!updated.any((m) => m.id == sent.id)) {
 						updated.add(sent);
 					}
-					emit(currentState.copyWith(joinedMessages: updated));
+					final seen = <String>{};
+					updated = [
+						for (final m in updated)
+							if (seen.add(m.id)) m,
+					];
+					emit(latest.copyWith(joinedMessages: updated));
 				},
 			);
 	}
@@ -219,27 +254,34 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 							final total = (stats['totalViewers'] as num?)?.toInt();
 							if (total != null) add(ViewerStatsReceived(total));
 						};
-				signalR.onReceiveLivestreamMessage = (map) {
-					try {
-						final entity = LiveStreamChatMessageEntity(
-							id: (map['id'] ?? '').toString(),
-							livestreamId: (map['livestreamId'] ?? joinId).toString(),
-							senderId: (map['senderId'] ?? '').toString(),
-							senderName: (map['senderName'] ?? 'User').toString(),
-							senderType: (map['senderType'] ?? '').toString(),
-							message: (map['message'] ?? '').toString(),
-							messageType: (map['messageType'] is int) ? map['messageType'] as int : int.tryParse('${map['messageType']}') ?? 0,
-							replyToMessageId: (map['replyToMessageId'])?.toString(),
-							isModerated: (map['isModerated'] == true),
-							sentAt: DateTime.tryParse('${map['sentAt']}') ?? DateTime.now(),
-							createdAt: DateTime.tryParse('${map['createdAt']}') ?? DateTime.now(),
-							senderAvatarUrl: (map['senderAvatarUrl'])?.toString(),
-							replyToMessage: (map['replyToMessage'])?.toString(),
-							replyToSenderName: (map['replyToSenderName'])?.toString(),
-						);
-						add(LiveStreamMessageReceived(entity));
-					} catch (_) {}
-				};
+					signalR.onReceiveLivestreamMessage = (map) {
+						try {
+							final tsRaw = (map['timestamp'] ?? map['sentAt'] ?? map['createdAt'])?.toString();
+							final parsedTs = tsRaw != null ? DateTime.tryParse(tsRaw) : null;
+							final senderId = (map['senderId'] ?? '').toString();
+							final rawId = (map['id'])?.toString();
+							final genId = (rawId != null && rawId.isNotEmpty)
+								? rawId
+								: 'rt-${(parsedTs ?? DateTime.now()).microsecondsSinceEpoch}-$senderId';
+							final entity = LiveStreamChatMessageEntity(
+								id: genId,
+								livestreamId: (map['livestreamId'] ?? joinId).toString(),
+								senderId: senderId,
+								senderName: (map['senderName'] ?? 'User').toString(),
+								senderType: (map['senderType'] ?? '').toString(),
+								message: (map['message'] ?? '').toString(),
+								messageType: (map['messageType'] is int) ? map['messageType'] as int : int.tryParse('${map['messageType']}') ?? 0,
+								replyToMessageId: (map['replyToMessageId'])?.toString(),
+								isModerated: (map['isModerated'] == true),
+								sentAt: parsedTs ?? DateTime.now(),
+								createdAt: parsedTs ?? DateTime.now(),
+								senderAvatarUrl: (map['senderAvatarUrl'])?.toString(),
+								replyToMessage: (map['replyToMessage'])?.toString(),
+								replyToSenderName: (map['replyToSenderName'])?.toString(),
+							);
+							add(LiveStreamMessageReceived(entity));
+						} catch (_) {}
+					};
 					} catch (_) {}
 			_roomSub?.cancel();
 			_roomSub = liveKitService.events.listen((e) { add(LiveKitRoomEventReceived(e)); });
