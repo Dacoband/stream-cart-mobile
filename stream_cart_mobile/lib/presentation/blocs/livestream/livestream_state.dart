@@ -33,6 +33,8 @@ class LiveStreamLoaded extends LiveStreamState {
 	final bool isConnectedRoom;
 	final VideoTrack? primaryVideoTrack;
 	final List<RemoteParticipant> participants;
+	final int? viewerCount;
+	final bool chatInitialized;
 
 	const LiveStreamLoaded({
 		required this.liveStream,
@@ -45,6 +47,8 @@ class LiveStreamLoaded extends LiveStreamState {
 		this.isConnectedRoom = false,
 		this.primaryVideoTrack,
 		this.participants = const [],
+		this.viewerCount,
+		this.chatInitialized = false,
 	});
 
 	LiveStreamLoaded copyWith({
@@ -58,6 +62,8 @@ class LiveStreamLoaded extends LiveStreamState {
 		bool? isConnectedRoom,
 		VideoTrack? primaryVideoTrack,
 		List<RemoteParticipant>? participants,
+		int? viewerCount,
+		bool? chatInitialized,
 	}) => LiveStreamLoaded(
 				liveStream: liveStream ?? this.liveStream,
 				products: products ?? this.products,
@@ -69,6 +75,8 @@ class LiveStreamLoaded extends LiveStreamState {
 				isConnectedRoom: isConnectedRoom ?? this.isConnectedRoom,
 				primaryVideoTrack: primaryVideoTrack ?? this.primaryVideoTrack,
 				participants: participants ?? this.participants,
+				viewerCount: viewerCount ?? this.viewerCount,
+				chatInitialized: chatInitialized ?? this.chatInitialized,
 			);
 
 	@override
@@ -83,6 +91,8 @@ class LiveStreamLoaded extends LiveStreamState {
 				isConnectedRoom,
 				primaryVideoTrack,
 				participants,
+				viewerCount,
+				chatInitialized,
 			];
 }
 

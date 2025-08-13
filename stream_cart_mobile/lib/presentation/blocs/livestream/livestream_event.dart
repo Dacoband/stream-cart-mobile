@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/livestream/livestream_message_entity.dart';
 
 abstract class LiveStreamEvent extends Equatable {
 	const LiveStreamEvent();
@@ -73,4 +74,44 @@ class LiveKitRoomEventReceived extends LiveStreamEvent {
 	const LiveKitRoomEventReceived(this.roomEvent);
 	@override
 	List<Object?> get props => [roomEvent];
+}
+
+class ViewerStatsReceived extends LiveStreamEvent {
+	final int totalViewers;
+	const ViewerStatsReceived(this.totalViewers);
+	@override
+	List<Object?> get props => [totalViewers];
+}
+
+class LoadLiveStreamMessagesEvent extends LiveStreamEvent {
+	final String liveStreamId;
+	const LoadLiveStreamMessagesEvent(this.liveStreamId);
+	@override
+	List<Object?> get props => [liveStreamId];
+}
+
+class SendLiveStreamMessageEvent extends LiveStreamEvent {
+	final String liveStreamId;
+	final String message;
+	final int messageType;
+	final String? replyToMessageId;
+	const SendLiveStreamMessageEvent({
+		required this.liveStreamId,
+		required this.message,
+		this.messageType = 0,
+		this.replyToMessageId,
+	});
+	@override
+	List<Object?> get props => [liveStreamId, message, messageType, replyToMessageId];
+}
+
+class LiveStreamMessageReceived extends LiveStreamEvent {
+	final LiveStreamChatMessageEntity message;
+	const LiveStreamMessageReceived(this.message);
+	@override
+	List<Object?> get props => [message];
+}
+
+class LiveKitPrimaryProbeTick extends LiveStreamEvent {
+	LiveKitPrimaryProbeTick();
 }
