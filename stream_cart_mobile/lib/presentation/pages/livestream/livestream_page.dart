@@ -48,7 +48,13 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
           return Scaffold(
             backgroundColor: Colors.black,
             appBar: AppBar(
-              title: const Text('Livestream'),
+              title: const Text(
+                'Livestream',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               actions: [
                 IconButton(
                   tooltip: 'Sản phẩm',
@@ -56,6 +62,10 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                   onPressed: () => _showProductsBottomSheet(innerCtx),
                 ),
               ],
+              backgroundColor: Color(0xFF202328),
+              foregroundColor: Color(0xFFB0F847),
+              elevation: 0,
+              automaticallyImplyLeading: true,
             ),
             body: BlocConsumer<LiveStreamBloc, LiveStreamState>(
               listenWhen: (prev, curr) => curr is LiveStreamLoaded,
