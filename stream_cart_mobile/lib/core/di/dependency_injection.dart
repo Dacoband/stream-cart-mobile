@@ -160,6 +160,8 @@ import '../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
 import '../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
 import '../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
 import '../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
+import '../../domain/usecases/livestream/get_livestream_messages_usecase.dart';
+import '../../domain/usecases/livestream/send_message_livestream_usecase.dart';
 import '../../presentation/blocs/livestream/livestream_bloc.dart';
 import '../../data/datasources/payment/payment_remote_data_source.dart';
 import '../../data/repositories/payment/payment_repository_impl.dart';
@@ -262,6 +264,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetActiveLiveStreamsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => JoinChatLiveStreamUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetLiveStreamMessagesUseCase(getIt()));
+  getIt.registerLazySingleton(() => SendMessageLiveStreamUseCase(getIt()));
 
   // Bloc
   getIt.registerFactory(() => LiveStreamBloc(
@@ -270,8 +274,10 @@ Future<void> setupDependencies() async {
         getLiveStreamsByShopUseCase: getIt(),
         getProductsByLiveStreamUseCase: getIt(),
         joinChatLiveStreamUseCase: getIt(),
-    liveKitService: getIt(),
-  getActiveLiveStreamsUseCase: getIt(),
+        getLiveStreamMessagesUseCase: getIt(),
+        sendMessageLiveStreamUseCase: getIt(),
+        liveKitService: getIt(),
+        getActiveLiveStreamsUseCase: getIt(),
       ));
 
   // === ORDER ===
