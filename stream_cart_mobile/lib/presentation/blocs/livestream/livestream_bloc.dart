@@ -155,7 +155,15 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		final result = await getLiveStreamMessagesUseCase(event.liveStreamId);
 		result.fold(
 			(failure) {},
-			(messages) => emit(currentState.copyWith(joinedMessages: messages, chatInitialized: true)),
+			(messages) {
+				final sorted = [...messages]
+					..sort((a, b) {
+						final c = a.createdAt.compareTo(b.createdAt);
+						if (c != 0) return c;
+						return a.sentAt.compareTo(b.sentAt);
+					});
+				emit(currentState.copyWith(joinedMessages: sorted, chatInitialized: true));
+			},
 		);
 	}
 
