@@ -87,6 +87,13 @@ class LiveStreamMessageRemoteDataSourceImpl implements LiveStreamMessageRemoteDa
 				final data = body['data'];
 				if (data is List) {
 					list = data;
+				} else if (data is Map<String, dynamic>) {
+					final items = data['items'];
+					if (items is List) {
+						list = items;
+					} else {
+						list = const [];
+					}
 				} else {
 					list = const [];
 				}
