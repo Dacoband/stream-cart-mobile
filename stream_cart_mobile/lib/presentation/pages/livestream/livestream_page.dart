@@ -11,6 +11,7 @@ import '../../widgets/livestream/chat_section.dart';
 import '../../widgets/livestream/error_retry.dart';
 import '../../../core/config/livekit_config.dart';
 import '../../widgets/livestream/livestream_products_bottom_sheet.dart';
+import '../../widgets/livestream/chat_input.dart';
 
 class LiveStreamPage extends StatefulWidget {
   final String liveStreamId;
@@ -22,6 +23,7 @@ class LiveStreamPage extends StatefulWidget {
 }
 
 class _LiveStreamPageState extends State<LiveStreamPage> {
+  bool _chatInitRequested = false;
   @override
   void initState() {
     super.initState();
@@ -32,9 +34,9 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
     if (bloc.state is LiveStreamInitial) {
       bloc
         ..add(LoadLiveStreamEvent(widget.liveStreamId))
-        ..add(JoinLiveStreamEvent(widget.liveStreamId))
-        ..add(LoadProductsByLiveStreamEvent(widget.liveStreamId))
-        ..add(JoinChatLiveStreamEvent(widget.liveStreamId));
+  ..add(JoinLiveStreamEvent(widget.liveStreamId))
+  ..add(LoadProductsByLiveStreamEvent(widget.liveStreamId))
+  ;
     }
   }
 
@@ -76,6 +78,12 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                       ConnectLiveKitEvent(url: LiveKitConfig.serverUrl, token: state.liveStream.joinToken!),
                     );
                   }
+                  if (!_chatInitRequested && !state.chatInitialized) {
+                    _chatInitRequested = true;
+                    ctx.read<LiveStreamBloc>()
+                      ..add(JoinChatLiveStreamEvent(widget.liveStreamId))
+                      ..add(LoadLiveStreamMessagesEvent(widget.liveStreamId));
+                  }
                 }
               },
               builder: (ctx, state) {
@@ -108,6 +116,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                 return const SizedBox();
               },
             ),
+            bottomNavigationBar: LiveStreamChatInput(liveStreamId: widget.liveStreamId),
           );
         },
       ),

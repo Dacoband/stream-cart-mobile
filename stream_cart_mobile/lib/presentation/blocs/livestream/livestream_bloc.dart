@@ -8,10 +8,15 @@ import '../../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart
 import '../../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
 import '../../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
+import '../../../domain/usecases/livestream/get_livestream_messages_usecase.dart';
+import '../../../domain/usecases/livestream/send_message_livestream_usecase.dart';
 import 'livestream_event.dart';
 import 'livestream_state.dart';
 import '../../../core/services/livekit_service.dart';
 import '../../../core/config/livekit_config.dart';
+import '../../../core/di/dependency_injection.dart';
+import '../../../core/services/signalr_service.dart';
+import '../../../domain/entities/livestream/livestream_message_entity.dart';
 
 class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetLiveStreamUseCase getLiveStreamUseCase;
@@ -19,6 +24,8 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetLiveStreamsByShopUseCase getLiveStreamsByShopUseCase;
 	final GetProductsByLiveStreamUseCase getProductsByLiveStreamUseCase;
 	final JoinChatLiveStreamUseCase joinChatLiveStreamUseCase;
+	final GetLiveStreamMessagesUseCase getLiveStreamMessagesUseCase;
+	final SendMessageLiveStreamUseCase sendMessageLiveStreamUseCase;
   final LiveKitService liveKitService;
 	final GetActiveLiveStreamsUseCase? getActiveLiveStreamsUseCase;
 
@@ -31,19 +38,26 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		required this.getLiveStreamsByShopUseCase,
 		required this.getProductsByLiveStreamUseCase,
 		required this.joinChatLiveStreamUseCase,
+	required this.getLiveStreamMessagesUseCase,
+	required this.sendMessageLiveStreamUseCase,
     required this.liveKitService,
 	this.getActiveLiveStreamsUseCase,
 	}) : super(LiveStreamInitial()) {
 		on<LoadLiveStreamEvent>(_onLoadLiveStream);
 		on<JoinLiveStreamEvent>(_onJoinLiveStream);
 		on<LoadLiveStreamsByShopEvent>(_onLoadLiveStreamsByShop);
-	on<LoadActiveLiveStreamsEvent>(_onLoadActiveLiveStreams);
+	  on<LoadActiveLiveStreamsEvent>(_onLoadActiveLiveStreams);
 		on<LoadProductsByLiveStreamEvent>(_onLoadProductsByLiveStream);
 		on<JoinChatLiveStreamEvent>(_onJoinChatLiveStream);
+		on<LoadLiveStreamMessagesEvent>(_onLoadLiveStreamMessages);
+		on<SendLiveStreamMessageEvent>(_onSendLiveStreamMessage);
 		on<RefreshLiveStreamEvent>(_onRefreshLiveStream);
     on<ConnectLiveKitEvent>(_onConnectLiveKit);
     on<DisconnectLiveKitEvent>(_onDisconnectLiveKit);
     on<LiveKitRoomEventReceived>(_onLiveKitRoomEventReceived);
+	on<ViewerStatsReceived>(_onViewerStatsReceived);
+	on<LiveStreamMessageReceived>(_onLiveStreamMessageReceived);
+	on<LiveKitPrimaryProbeTick>(_onPrimaryProbeTick);
 	}
 
 	Future<void> _onLoadLiveStream(LoadLiveStreamEvent event, Emitter<LiveStreamState> emit) async {
@@ -125,11 +139,88 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 			result.fold(
 				(failure) {},
 				(messageEntity) {
-					final updatedMessages = [...currentState.joinedMessages, messageEntity];
-					emit(currentState.copyWith(joinedMessages: updatedMessages));
+					final updated = [...currentState.joinedMessages];
+					if (!updated.any((m) => m.id == messageEntity.id)) {
+						updated.add(messageEntity);
+					}
+					emit(currentState.copyWith(joinedMessages: updated));
 				},
 			);
 		}
+	}
+
+	Future<void> _onLoadLiveStreamMessages(LoadLiveStreamMessagesEvent event, Emitter<LiveStreamState> emit) async {
+		final currentState = state;
+		if (currentState is! LiveStreamLoaded) return;
+		final result = await getLiveStreamMessagesUseCase(event.liveStreamId);
+		result.fold(
+			(failure) {},
+			(messages) {
+				final sorted = [...messages]
+					..sort((a, b) {
+						final c = a.createdAt.compareTo(b.createdAt);
+						if (c != 0) return c;
+						return a.sentAt.compareTo(b.sentAt);
+					});
+				emit(currentState.copyWith(joinedMessages: sorted, chatInitialized: true));
+			},
+		);
+	}
+
+	Future<void> _onSendLiveStreamMessage(SendLiveStreamMessageEvent event, Emitter<LiveStreamState> emit) async {
+		final currentState = state;
+		if (currentState is! LiveStreamLoaded) return;
+			final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
+			final placeholder = LiveStreamChatMessageEntity(
+				id: tempId,
+				livestreamId: currentState.liveStream.id,
+				senderId: 'me',
+				senderName: 'Bạn',
+				senderType: 'viewer',
+				message: event.message,
+				messageType: event.messageType,
+				isModerated: false,
+				sentAt: DateTime.now(),
+				createdAt: DateTime.now(),
+			);
+			var optimistic = [...currentState.joinedMessages, placeholder];
+			emit(currentState.copyWith(joinedMessages: optimistic));
+			try {
+				final s = getIt<SignalRService>();
+				await s.sendLivestreamMessage(livestreamId: event.liveStreamId, message: event.message);
+			} catch (_) {}
+
+			final result = await sendMessageLiveStreamUseCase(
+			livestreamId: event.liveStreamId,
+			message: event.message,
+			messageType: event.messageType,
+			replyToMessageId: event.replyToMessageId,
+		);
+			result.fold(
+				(failure) {
+					final latest = state;
+					if (latest is LiveStreamLoaded) {
+						final removed = latest.joinedMessages.where((m) => m.id != tempId).toList();
+						emit(latest.copyWith(joinedMessages: removed));
+					}
+				},
+				(sent) async {
+					final latest = state;
+					if (latest is! LiveStreamLoaded) return;
+					List<LiveStreamChatMessageEntity> updated = latest.joinedMessages
+						.map((m) => m.id == tempId ? sent : m)
+						.toList();
+					if (!updated.any((m) => m.id == sent.id)) {
+						updated.add(sent);
+					}
+					final seen = <String>{};
+					updated = [
+						for (final m in updated)
+							if (seen.add(m.id)) m,
+					];
+					emit(latest.copyWith(joinedMessages: updated));
+				},
+			);
 	}
 
 	Future<void> _onRefreshLiveStream(RefreshLiveStreamEvent event, Emitter<LiveStreamState> emit) async {
@@ -152,7 +243,46 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		if (currentState.isConnectedRoom || currentState.isConnectingRoom) return;
 		emit(currentState.copyWith(isConnectingRoom: true));
 		try {
-			await liveKitService.connect(url: event.url, token: event.token);
+					await liveKitService.connect(url: event.url, token: event.token);
+					try {
+						final signalR = getIt<SignalRService>();
+						await signalR.connect();
+						final stJoin = state;
+						final joinId = stJoin is LiveStreamLoaded ? stJoin.liveStream.id : currentState.liveStream.id;
+						await signalR.joinLivestreamChat(joinId);
+						signalR.onReceiveViewerStats = (stats) {
+							final total = (stats['totalViewers'] as num?)?.toInt();
+							if (total != null) add(ViewerStatsReceived(total));
+						};
+					signalR.onReceiveLivestreamMessage = (map) {
+						try {
+							final tsRaw = (map['timestamp'] ?? map['sentAt'] ?? map['createdAt'])?.toString();
+							final parsedTs = tsRaw != null ? DateTime.tryParse(tsRaw) : null;
+							final senderId = (map['senderId'] ?? '').toString();
+							final rawId = (map['id'])?.toString();
+							final genId = (rawId != null && rawId.isNotEmpty)
+								? rawId
+								: 'rt-${(parsedTs ?? DateTime.now()).microsecondsSinceEpoch}-$senderId';
+							final entity = LiveStreamChatMessageEntity(
+								id: genId,
+								livestreamId: (map['livestreamId'] ?? joinId).toString(),
+								senderId: senderId,
+								senderName: (map['senderName'] ?? 'User').toString(),
+								senderType: (map['senderType'] ?? '').toString(),
+								message: (map['message'] ?? '').toString(),
+								messageType: (map['messageType'] is int) ? map['messageType'] as int : int.tryParse('${map['messageType']}') ?? 0,
+								replyToMessageId: (map['replyToMessageId'])?.toString(),
+								isModerated: (map['isModerated'] == true),
+								sentAt: parsedTs ?? DateTime.now(),
+								createdAt: parsedTs ?? DateTime.now(),
+								senderAvatarUrl: (map['senderAvatarUrl'])?.toString(),
+								replyToMessage: (map['replyToMessage'])?.toString(),
+								replyToSenderName: (map['replyToSenderName'])?.toString(),
+							);
+							add(LiveStreamMessageReceived(entity));
+						} catch (_) {}
+					};
+					} catch (_) {}
 			_roomSub?.cancel();
 			_roomSub = liveKitService.events.listen((e) { add(LiveKitRoomEventReceived(e)); });
 			VideoTrack? primary;
@@ -165,42 +295,54 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 				}
 				if (primary != null) break;
 			}
-			emit(currentState.copyWith(
+			final latest = state;
+			if (latest is! LiveStreamLoaded) return;
+			emit(latest.copyWith(
 				isConnectingRoom: false,
 				isConnectedRoom: true,
 				participants: liveKitService.remoteParticipants,
-				primaryVideoTrack: primary ?? currentState.primaryVideoTrack,
+				primaryVideoTrack: primary ?? latest.primaryVideoTrack,
 			));
-			// If still no primary track, probe after small delay (seller may publish slightly later)
 			if (primary == null) {
 				_primaryProbeTimer?.cancel();
-				_primaryProbeTimer = Timer(const Duration(seconds: 2), () {
-					final st = state;
-					if (st is LiveStreamLoaded && st.primaryVideoTrack == null) {
-						VideoTrack? latePrimary;
-						for (final p in liveKitService.remoteParticipants) {
-							for (final pub in p.videoTrackPublications) {
-								if (pub.track is VideoTrack) { latePrimary = pub.track as VideoTrack; break; }
-							}
-							if (latePrimary != null) break;
-						}
-						if (latePrimary != null) {
-							emit(st.copyWith(primaryVideoTrack: latePrimary, participants: liveKitService.remoteParticipants));
-						}
-					}
-				});
+				_primaryProbeTimer = Timer(const Duration(seconds: 2), () { add(LiveKitPrimaryProbeTick()); });
 			}
 		} catch (e) {
-			emit(currentState.copyWith(isConnectingRoom: false, isConnectedRoom: false));
+			final latest = state;
+			if (latest is LiveStreamLoaded) {
+				emit(latest.copyWith(isConnectingRoom: false, isConnectedRoom: false));
+			}
 		}
+	}
+
+	Future<void> _onViewerStatsReceived(ViewerStatsReceived event, Emitter<LiveStreamState> emit) async {
+		final currentState = state;
+		if (currentState is! LiveStreamLoaded) return;
+		emit(currentState.copyWith(viewerCount: event.totalViewers));
 	}
 
 	Future<void> _onDisconnectLiveKit(DisconnectLiveKitEvent event, Emitter<LiveStreamState> emit) async {
 		final currentState = state;
 		if (currentState is! LiveStreamLoaded) return;
+		try { 
+			final s = getIt<SignalRService>();
+			s.onReceiveViewerStats = null; 
+			s.onReceiveLivestreamMessage = null;
+			await s.leaveLivestreamChat(currentState.liveStream.id);
+		} catch (_) {}
 		await liveKitService.disconnect();
 		await _roomSub?.cancel();
 		emit(currentState.copyWith(isConnectedRoom: false, primaryVideoTrack: null, participants: []));
+	}
+
+	Future<void> _onLiveStreamMessageReceived(LiveStreamMessageReceived event, Emitter<LiveStreamState> emit) async {
+		final currentState = state;
+		if (currentState is! LiveStreamLoaded) return;
+		final updated = [...currentState.joinedMessages];
+		if (!updated.any((m) => m.id == event.message.id)) {
+			updated.add(event.message);
+		}
+		emit(currentState.copyWith(joinedMessages: updated));
 	}
 
 	Future<void> _onLiveKitRoomEventReceived(LiveKitRoomEventReceived event, Emitter<LiveStreamState> emit) async {
@@ -221,7 +363,6 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 				changed = true;
 			}
 		} else if (e is TrackPublishedEvent || e is ParticipantConnectedEvent) {
-			// Try selecting a published video if we don't have one yet
 			if (primary == null) {
 				for (final p in liveKitService.remoteParticipants) {
 					for (final pub in p.videoTrackPublications) {
@@ -244,6 +385,21 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 				participants: liveKitService.remoteParticipants,
 				primaryVideoTrack: primary,
 			));
+		}
+	}
+
+	Future<void> _onPrimaryProbeTick(LiveKitPrimaryProbeTick event, Emitter<LiveStreamState> emit) async {
+		final st = state;
+		if (st is! LiveStreamLoaded || st.primaryVideoTrack != null) return;
+		VideoTrack? latePrimary;
+		for (final p in liveKitService.remoteParticipants) {
+			for (final pub in p.videoTrackPublications) {
+				if (pub.track is VideoTrack) { latePrimary = pub.track as VideoTrack; break; }
+			}
+			if (latePrimary != null) break;
+		}
+		if (latePrimary != null) {
+			emit(st.copyWith(primaryVideoTrack: latePrimary, participants: liveKitService.remoteParticipants));
 		}
 	}
 

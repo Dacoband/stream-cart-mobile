@@ -28,6 +28,52 @@ class LiveStreamMessageRepositoryImpl implements LiveStreamMessageRepository {
 		}
 	}
 
+  @override
+	Future<Either<Failure, LiveStreamChatMessageEntity>> sendMessageToLiveStream({
+		required String livestreamId,
+		required String message,
+		int messageType = 0,
+		String? replyToMessageId,
+	}) async {
+		try {
+			final model = await remoteDataSource.sendMessage(
+				liveStreamId: livestreamId,
+				message: message,
+				messageType: messageType,
+				replyToMessageId: replyToMessageId,
+			);
+			return Right(model.toEntity());
+		} on DioException catch (e) {
+			return Left(_mapDioToFailure(
+				e,
+				customForbidden: 'Không thể gửi tin nhắn vào livestream này',
+				customNotFound: 'Livestream không tồn tại',
+			));
+		} on ServerException catch (e) {
+			return Left(ServerFailure(e.message));
+		} catch (e) {
+			return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+		}
+	}
+
+	@override
+	Future<Either<Failure, List<LiveStreamChatMessageEntity>>> getLiveStreamMessages(String livestreamId) async {
+		try {
+			final models = await remoteDataSource.getMessages(livestreamId);
+			final entities = models.map((m) => m.toEntity()).toList();
+			return Right(entities);
+		} on DioException catch (e) {
+			return Left(_mapDioToFailure(
+				e,
+				customNotFound: 'Không tìm thấy livestream',
+			));
+		} on ServerException catch (e) {
+			return Left(ServerFailure(e.message));
+		} catch (e) {
+			return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+		}
+	}
+
 	Failure _mapDioToFailure(
 		DioException e, {
 		String? customBadRequest,

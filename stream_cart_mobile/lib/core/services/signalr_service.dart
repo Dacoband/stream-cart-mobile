@@ -6,6 +6,7 @@ import 'package:stream_cart_mobile/core/services/storage_service.dart';
 typedef SignalRStatusCallback = void Function(String status);
 typedef OnReceiveChatMessage = void Function(Map<String, dynamic> message);
 typedef OnReceiveLivestreamMessage = void Function(Map<String, dynamic> message);
+typedef OnReceiveViewerStats = void Function(Map<String, dynamic> stats);
 typedef OnUserTyping = void Function(String userId, bool isTyping);
 typedef OnUserJoinedRoom = void Function(String userId, String? userName);
 typedef OnUserLeftRoom = void Function(String userId, String? userName);
@@ -17,10 +18,9 @@ class SignalRService {
   String baseUrl;
   StorageService storageService;
   SignalRStatusCallback? onStatusChanged;
-  
-  // ✅ Separate callbacks for chat and livestream
   OnReceiveChatMessage? onReceiveChatMessage;
   OnReceiveLivestreamMessage? onReceiveLivestreamMessage;
+  OnReceiveViewerStats? onReceiveViewerStats;
   OnUserTyping? onUserTyping;
   OnUserJoinedRoom? onUserJoinedRoom;
   OnUserLeftRoom? onUserLeftRoom;
@@ -71,15 +71,10 @@ class SignalRService {
     try {
       await _connection.start();
       _isConnected = true;
-  // ignore: avoid_print
-  print('[SignalR] Connected. id=${_connection.connectionId} url=${_connection.baseUrl}');
-  onStatusChanged?.call("✅ Đã kết nối SignalR (id=${_connection.connectionId})");
+      onStatusChanged?.call("✅ Đã kết nối SignalR (id=${_connection.connectionId})");
     } catch (e) {
       _isConnected = false;
       onStatusChanged?.call("❌ Lỗi kết nối SignalR: $e");
-      // ignore: avoid_print
-      print('[SignalR] First connect attempt failed: $e');
-
       final err = e.toString().toLowerCase();
       final needFallback = err.contains('handshake') || err.contains('websocket') || err.contains('connection failed');
       if (needFallback) {
@@ -101,14 +96,9 @@ class SignalRService {
           _setupListeners();
           await _connection.start();
           _isConnected = true;
-          // ignore: avoid_print
-          print('[SignalR] Connected via fallback negotiation. id=${_connection.connectionId}');
           onStatusChanged?.call('✅ Kết nối thành công (fallback negotiation)');
-          return; // success
+          return; 
         } catch (fallbackErr) {
-          // ignore: avoid_print
-          print('[SignalR] Fallback negotiation failed: $fallbackErr');
-          // Second fallback: force longPolling
           try {
             onStatusChanged?.call('🔁 Thử lần cuối với longPolling...');
             try { await _connection.stop(); } catch (_) {}
@@ -129,13 +119,9 @@ class SignalRService {
             _setupListeners();
             await _connection.start();
             _isConnected = true;
-            // ignore: avoid_print
-            print('[SignalR] Connected via longPolling fallback. id=${_connection.connectionId}');
             onStatusChanged?.call('✅ Kết nối thành công (longPolling)');
             return;
           } catch (lpErr) {
-            // ignore: avoid_print
-            print('[SignalR] LongPolling fallback failed: $lpErr');
             onStatusChanged?.call('❌ Kết nối thất bại sau mọi fallback: $lpErr');
           }
         }
@@ -151,43 +137,55 @@ class SignalRService {
       _isConnected = false;
       onStatusChanged?.call("🔌 Đã ngắt kết nối SignalR");
     } catch (e) {
-onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
-    }
+        onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
+      }
   }
 
   bool get isConnected => _isConnected;
 
-  // ✅ CORRECT: Gửi tin nhắn chat room
+  // Gửi tin nhắn chat room
   Future<void> sendChatMessage({
     required String chatRoomId,
     required String message,
   }) async {
     return _withRetry(() async {
-  // ignore: avoid_print
-  print('[SignalR] sendChatMessage chatRoomId=$chatRoomId message=$message');
       await _connection.invoke("SendMessageToChatRoom", args: [chatRoomId, message]);
       onStatusChanged?.call("✅ Đã gửi tin nhắn chat room");
     });
   }
 
-  // ✅ CORRECT: Gửi tin nhắn livestream  
+  // Gửi tin nhắn livestream  
   Future<void> sendLivestreamMessage({
     required String livestreamId,
     required String message,
   }) async {
     return _withRetry(() async {
-      await _connection.invoke("SendMessageToLivestream", args: [livestreamId, message]);
-      onStatusChanged?.call("✅ Đã gửi tin nhắn livestream");
+      await ensureConnected();
+      final methods = <String>[
+        'SendMessageToLivestream',
+        'SendMessageToLiveStream',
+        'SendMessageToLivestreamRoom',
+        'SendMessageToLiveStreamRoom',
+      ];
+      dynamic lastErr;
+      for (final m in methods) {
+        try {
+          await _connection.invoke(m, args: [livestreamId, message]);
+          onStatusChanged?.call("✅ Đã gửi tin nhắn livestream qua $m");
+          return;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      onStatusChanged?.call('❌ Gửi tin nhắn livestream thất bại: $lastErr');
+      throw lastErr ?? Exception('Unknown SignalR error');
     });
   }
 
-  // ✅ CORRECT: Join chat room
   Future<void> joinChatRoom(String chatRoomId) async {
     return _withRetry(() async {
       await ensureConnected();
       try {
-        // ignore: avoid_print
-        print('[SignalR] joinChatRoom invoke JoinDirectChatRoom($chatRoomId)');
         await _connection.invoke("JoinDirectChatRoom", args: [chatRoomId]);
         onStatusChanged?.call("✅ Đã join chat room $chatRoomId");
       } catch (e) {
@@ -197,7 +195,6 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
     });
   }
 
-  // ✅ CORRECT: Leave chat room
   Future<void> leaveChatRoom(String chatRoomId) async {
     return _withRetry(() async {
       await ensureConnected();
@@ -211,7 +208,6 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
     });
   }
 
-  // ✅ CORRECT: Join livestream chat
   Future<void> joinLivestreamChat(String livestreamId) async {
     return _withRetry(() async {
       await ensureConnected();
@@ -225,7 +221,6 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
     });
   }
 
-  // ✅ CORRECT: Leave livestream chat
   Future<void> leaveLivestreamChat(String livestreamId) async {
     return _withRetry(() async {
       await ensureConnected();
@@ -239,7 +234,6 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
     });
   }
 
-  // ✅ CORRECT: Gửi typing status
   Future<void> setTypingStatus(String chatRoomId, bool isTyping) async {
     if (!_isConnected) throw Exception("SignalR chưa kết nối!");
     try {
@@ -250,13 +244,15 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
       rethrow;
     }
   }
-/// ✅ CORRECT: Setup listeners theo tên events từ server
+
   void _setupListeners() {
-    // ✅ Listen cho chat messages
+    bool _hasLivestreamId(Map<String, dynamic> m) {
+      return m.containsKey('livestreamId') || m.containsKey('liveStreamId') ||
+            m.containsKey('LivestreamId') || m.containsKey('LiveStreamId');
+    }
+
     void handleIncoming(String eventName, List<Object?>? arguments) {
       try {
-        // ignore: avoid_print
-        print('[SignalR] Event $eventName raw args: $arguments');
         if (arguments != null && arguments.isNotEmpty) {
           final data = arguments[0];
           Map<String, dynamic> messageData;
@@ -268,16 +264,21 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
             onError?.call("Chat message data không đúng format: ${data.runtimeType}");
             return;
           }
-          // Unwrap nếu server bọc trong { message: {...} }
-          if (messageData.containsKey('message') && messageData['message'] is Map) {
-            // ignore: avoid_print
-            print('[SignalR] Unwrapping nested message object');
+          if (messageData.containsKey('data') && messageData['data'] is Map &&
+              (messageData['data'] as Map).containsKey('message') && (messageData['data']['message'] is Map)) {
+            messageData = (messageData['data']['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('message') && messageData['message'] is Map) {
             messageData = (messageData['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('data') && messageData['data'] is Map) {
+            final d = (messageData['data'] as Map).cast<String, dynamic>();
+            if (_hasLivestreamId(d) || d.containsKey('message')) {
+              messageData = d;
+            }
           }
-          // Log các key để debug mapping
-          // ignore: avoid_print
-          print('[SignalR] Parsed message keys: ${messageData.keys.toList()}');
           onReceiveChatMessage?.call(messageData);
+          if (_hasLivestreamId(messageData)) {
+            onReceiveLivestreamMessage?.call(messageData);
+          }
           onStatusChanged?.call("✅ Nhận chat message qua SignalR ($eventName)");
         }
       } catch (e) {
@@ -288,13 +289,10 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
     _connection.on("ReceiveChatMessage", (arguments) {
       handleIncoming('ReceiveChatMessage', arguments);
     });
-
-    // 👉 Backward compatibility: some hubs may emit 'ReceiveMessage'
     _connection.on("ReceiveMessage", (args) {
       handleIncoming('ReceiveMessage', args);
     });
 
-    // 🔁 Thêm nhiều tên event có thể server dùng
     const possibleEvents = [
       'ReceiveDirectChatMessage',
       'ReceiveDirectMessage',
@@ -307,31 +305,73 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
       _connection.on(eventName, (args) => handleIncoming(eventName, args));
     }
 
-    // ✅ Listen cho livestream messages
-    _connection.on("ReceiveLivestreamMessage", (arguments) {
+    // Listen cho livestream messages (support multiple possible event names)
+    void handleLivestreamIncoming(String eventName, List<Object?>? arguments) {
       try {
         if (arguments != null && arguments.isNotEmpty) {
           final data = arguments[0];
           Map<String, dynamic> messageData;
-          
           if (data is Map<String, dynamic>) {
-            messageData = data;
+            messageData = data.cast<String, dynamic>();
           } else if (data is String) {
-            messageData = jsonDecode(data);
+            messageData = jsonDecode(data) as Map<String, dynamic>;
           } else {
             onError?.call("Livestream message data không đúng format: ${data.runtimeType}");
             return;
           }
-          
+          if (messageData.containsKey('data') && messageData['data'] is Map &&
+              (messageData['data'] as Map).containsKey('message') && (messageData['data']['message'] is Map)) {
+            messageData = (messageData['data']['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('message') && messageData['message'] is Map) {
+            messageData = (messageData['message'] as Map).cast<String, dynamic>();
+          }
           onReceiveLivestreamMessage?.call(messageData);
-          onStatusChanged?.call("✅ Nhận livestream message qua SignalR");
+          onStatusChanged?.call("Nhận livestream message qua SignalR ($eventName)");
         }
       } catch (e) {
         onError?.call("Lỗi xử lý livestream message: $e");
       }
+    }
+
+    const possibleLivestreamEvents = [
+      'ReceiveLivestreamMessage',
+      'ReceiveMessageToLivestream',
+      'ReceiveLivestreamChatMessage',
+      'LivestreamMessageReceived',
+      'ReceiveMessageToLivestreamRoom',
+      'MessageToLivestream',
+      'ReceiveMessageToLiveStream',
+      'ReceiveLiveStreamMessage',
+      'LiveStreamMessageReceived',
+      'ReceiveMessageToLiveStreamRoom',
+    ];
+    for (final eventName in possibleLivestreamEvents) {
+      _connection.on(eventName, (args) => handleLivestreamIncoming(eventName, args));
+    }
+
+    // Listen cho viewer stats (thống kê người xem)
+    _connection.on("ReceiveViewerStats", (arguments) {
+      try {
+        if (arguments != null && arguments.isNotEmpty) {
+          final data = arguments[0];
+          Map<String, dynamic> stats;
+          if (data is Map<String, dynamic>) {
+            stats = data;
+          } else if (data is String) {
+            stats = jsonDecode(data) as Map<String, dynamic>;
+          } else {
+            onError?.call("Viewer stats payload không đúng format: ${data.runtimeType}");
+            return;
+          }
+          onReceiveViewerStats?.call(stats);
+          onStatusChanged?.call("📊 Nhận viewer stats qua SignalR");
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý viewer stats: $e");
+      }
     });
 
-    // ✅ Listen cho typing indicator
+    // Listen cho typing indicator
     _connection.on("UserTyping", (args) {
       try {
         if (args != null && args.isNotEmpty) {
@@ -351,7 +391,7 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
       }
     });
 
-    // ✅ Listen cho user joined
+    // Listen cho user joined
     _connection.on("UserJoined", (args) {
       try {
         if (args != null && args.isNotEmpty) {
@@ -367,11 +407,11 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
           }
         }
       } catch (e) {
-onError?.call("Lỗi xử lý user joined: $e");
-      }
+          onError?.call("Lỗi xử lý user joined: $e");
+        }
     });
 
-    // ✅ Listen cho user left
+    // Listen cho user left
     _connection.on("UserLeft", (args) {
       try {
         if (args != null && args.isNotEmpty) {
@@ -410,14 +450,12 @@ onError?.call("Lỗi xử lý user joined: $e");
     });
   }
 
-  // Thêm method để check và auto-reconnect
   Future<void> ensureConnected() async {
     if (!_isConnected || _connection.state != HubConnectionState.connected) {
       await connect();
     }
   }
 
-  // Thêm method để handle retry logic
   Future<T> _withRetry<T>(Future<T> Function() operation, {int maxRetries = 3}) async {
     for (int i = 0; i < maxRetries; i++) {
       try {
@@ -431,10 +469,10 @@ onError?.call("Lỗi xử lý user joined: $e");
     throw Exception("Operation failed after $maxRetries retries");
   }
 
-  /// Remove all listeners để tránh memory leaks
   void removeListeners() {
     onReceiveChatMessage = null;
     onReceiveLivestreamMessage = null;
+    onReceiveViewerStats = null;
     onUserTyping = null;
     onUserJoinedRoom = null;
     onUserLeftRoom = null;
@@ -443,12 +481,11 @@ onError?.call("Lỗi xử lý user joined: $e");
     onStatusChanged = null;
   }
 
-  /// Cleanup toàn bộ service
   Future<void> dispose() async {
     removeListeners();
     if (_isConnected) {
       await disconnect();
     }
-    onStatusChanged?.call("🧹 SignalR service đã được dispose");
+    onStatusChanged?.call("SignalR service đã được dispose");
   }
 }
