@@ -18,7 +18,23 @@ class LiveStreamListPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<LiveStreamBloc>()..add(_initialEvent()),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Livestream đang phát')),
+        appBar: AppBar(
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.live_tv, size: 20, color: Color(0xFFB0F847)),
+              SizedBox(width: 6),
+              Text(
+                'Livestream đang phát',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF202328),
+          foregroundColor: const Color(0xFFB0F847),
+          elevation: 0,
+          automaticallyImplyLeading: true,
+        ),
         body: BlocBuilder<LiveStreamBloc, LiveStreamState>(
           builder: (context, state) {
             if (state is LiveStreamListLoading) {
