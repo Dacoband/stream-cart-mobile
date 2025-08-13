@@ -29,7 +29,6 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
   void initState() {
     super.initState();
     _orders = List<OrderEntity>.from(widget.orders);
-    // start polling after first frame (QR generation starts immediately)
     WidgetsBinding.instance.addPostFrameCallback((_) => _startPolling());
   }
 
@@ -47,7 +46,7 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
       final res = await getOrderById(GetOrderByIdParams(id: o.id));
       res.fold((_) => updated.add(o), (newO) => updated.add(newO));
     }
-    if (!mounted) return; // safety
+    if (!mounted) return;
     setState(() => _orders = updated);
     _evaluateAndNavigate();
     _isRefreshing = false;
@@ -61,7 +60,6 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Thanh toán thất bại cho một hoặc nhiều đơn hàng'), backgroundColor: Colors.red),
       );
-      // stop polling but allow user manual retry
       _pollTimer?.cancel();
     } else if (allPaid) {
       _navigated = true;
@@ -140,10 +138,6 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildStatusLegend(),
-              const SizedBox(height: 8),
-              _buildOrdersStatusList(),
-              const SizedBox(height: 12),
               Expanded(
                 child: Center(
                   child: BlocBuilder<PaymentBloc, PaymentState>(
@@ -181,33 +175,10 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              _buildOrdersStatusList(),
               _buildPaymentStatusSummary(),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _refreshStatuses,
-                      child: const Text('Đã thanh toán xong'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF202328)),
-                      onPressed: () {
-                        _pollTimer?.cancel();
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          AppRouter.orders,
-                          (route) => route.settings.name == AppRouter.home,
-                        );
-                      },
-                      child: const Text('Về danh sách đơn'),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -341,17 +312,6 @@ class _PaymentQrPageState extends State<PaymentQrPage> {
           .toList(),
     );
   }
-
-  Widget _buildStatusLegend() => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          _LegendDot(color: Colors.orange, label: '0: Pending'),
-          SizedBox(width: 12),
-          _LegendDot(color: Colors.green, label: '1: Paid'),
-          SizedBox(width: 12),
-          _LegendDot(color: Colors.red, label: '2: Failed'),
-        ],
-      );
 }
 
 class _StatusChip extends StatelessWidget {
@@ -368,19 +328,3 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11)),
-      ],
-    );
-  }
-}
