@@ -28,14 +28,13 @@ class InfoBar extends StatelessWidget {
               ],
             ),
           ),
-          if (state.participants.isNotEmpty)
-            Row(
-              children: [
-                const Icon(Icons.remove_red_eye, size: 16),
-                const SizedBox(width: 4),
-                Text('${state.participants.length}'),
-              ],
-            ),
+          Row(
+            children: [
+              const Icon(Icons.remove_red_eye, size: 16),
+              const SizedBox(width: 4),
+              Text('${state.viewerCount ?? state.participants.length}'),
+            ],
+          ),
         ],
       ),
     );
