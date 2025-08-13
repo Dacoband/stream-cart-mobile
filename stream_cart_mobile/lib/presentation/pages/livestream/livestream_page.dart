@@ -7,10 +7,11 @@ import '../../blocs/livestream/livestream_event.dart';
 import '../../blocs/livestream/livestream_state.dart';
 import '../../widgets/livestream/video_section.dart';
 import '../../widgets/livestream/info_bar.dart';
-import '../../widgets/livestream/products_carousel.dart';
 import '../../widgets/livestream/chat_section.dart';
 import '../../widgets/livestream/error_retry.dart';
 import '../../../core/config/livekit_config.dart';
+import '../../widgets/livestream/livestream_products_bottom_sheet.dart';
+
 class LiveStreamPage extends StatefulWidget {
   final String liveStreamId;
 
@@ -46,7 +47,26 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
           _dispatchInitial(innerCtx);
           return Scaffold(
             backgroundColor: Colors.black,
-            appBar: AppBar(title: const Text('Livestream')),
+            appBar: AppBar(
+              title: const Text(
+                'Livestream',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'Sản phẩm',
+                  icon: const Icon(Icons.shopping_bag_outlined),
+                  onPressed: () => _showProductsBottomSheet(innerCtx),
+                ),
+              ],
+              backgroundColor: Color(0xFF202328),
+              foregroundColor: Color(0xFFB0F847),
+              elevation: 0,
+              automaticallyImplyLeading: true,
+            ),
             body: BlocConsumer<LiveStreamBloc, LiveStreamState>(
               listenWhen: (prev, curr) => curr is LiveStreamLoaded,
               listener: (ctx, state) {
@@ -77,7 +97,6 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                       slivers: [
                         SliverToBoxAdapter(child: VideoSection(state: state)),
                         SliverToBoxAdapter(child: InfoBar(state: state)),
-                        if (state.products.isNotEmpty) SliverToBoxAdapter(child: ProductsCarousel(products: state.products)),
                         SliverFillRemaining(hasScrollBody: true, child: ChatSection(messages: state.joinedMessages)),
                       ],
                     ),
@@ -91,6 +110,32 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+extension on _LiveStreamPageState {
+  void _showProductsBottomSheet(BuildContext context) {
+    final rootContext = context;
+    final bloc = context.read<LiveStreamBloc>();
+
+    void reopen() {
+      _showProductsBottomSheet(rootContext);
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => LiveStreamProductsBottomSheet(
+        bloc: bloc,
+        liveStreamId: widget.liveStreamId,
+        rootContext: rootContext,
+        reopenBottomSheet: reopen,
       ),
     );
   }
