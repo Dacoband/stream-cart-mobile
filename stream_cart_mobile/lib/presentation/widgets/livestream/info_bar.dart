@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../blocs/livestream/livestream_state.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../../domain/usecases/shop/get_shops_usecase.dart';
+import '../../../core/routing/app_router.dart';
 
 class InfoBar extends StatefulWidget {
   final LiveStreamLoaded state;
@@ -59,28 +60,43 @@ class _InfoBarState extends State<InfoBar> {
       ),
       child: Row(
         children: [
-          _ShopAvatar(url: _logoUrl),
-          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ls.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                final shopId = ls.shopId;
+                if (shopId.isNotEmpty) {
+                  Navigator.of(context).pushNamed(AppRouter.shopDetail, arguments: shopId);
+                }
+              },
+              child: Row(
+                children: [
+                  _ShopAvatar(url: _logoUrl),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ls.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          ls.description,
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  ls.description,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           Container(
