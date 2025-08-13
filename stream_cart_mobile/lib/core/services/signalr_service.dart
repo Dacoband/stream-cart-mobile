@@ -6,6 +6,7 @@ import 'package:stream_cart_mobile/core/services/storage_service.dart';
 typedef SignalRStatusCallback = void Function(String status);
 typedef OnReceiveChatMessage = void Function(Map<String, dynamic> message);
 typedef OnReceiveLivestreamMessage = void Function(Map<String, dynamic> message);
+typedef OnReceiveViewerStats = void Function(Map<String, dynamic> stats);
 typedef OnUserTyping = void Function(String userId, bool isTyping);
 typedef OnUserJoinedRoom = void Function(String userId, String? userName);
 typedef OnUserLeftRoom = void Function(String userId, String? userName);
@@ -21,6 +22,7 @@ class SignalRService {
   // ✅ Separate callbacks for chat and livestream
   OnReceiveChatMessage? onReceiveChatMessage;
   OnReceiveLivestreamMessage? onReceiveLivestreamMessage;
+  OnReceiveViewerStats? onReceiveViewerStats;
   OnUserTyping? onUserTyping;
   OnUserJoinedRoom? onUserJoinedRoom;
   OnUserLeftRoom? onUserLeftRoom;
@@ -253,6 +255,11 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
 /// ✅ CORRECT: Setup listeners theo tên events từ server
   void _setupListeners() {
     // ✅ Listen cho chat messages
+    bool _hasLivestreamId(Map<String, dynamic> m) {
+      return m.containsKey('livestreamId') || m.containsKey('liveStreamId') ||
+            m.containsKey('LivestreamId') || m.containsKey('LiveStreamId');
+    }
+
     void handleIncoming(String eventName, List<Object?>? arguments) {
       try {
         // ignore: avoid_print
@@ -268,16 +275,32 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
             onError?.call("Chat message data không đúng format: ${data.runtimeType}");
             return;
           }
-          // Unwrap nếu server bọc trong { message: {...} }
-          if (messageData.containsKey('message') && messageData['message'] is Map) {
+          // Unwrap nếu server bọc trong { message: {...} } hoặc { data: { message: {...} } } hoặc { data: {...entity...} }
+          if (messageData.containsKey('data') && messageData['data'] is Map &&
+              (messageData['data'] as Map).containsKey('message') && (messageData['data']['message'] is Map)) {
+            // ignore: avoid_print
+            print('[SignalR] Unwrapping nested data.message object');
+            messageData = (messageData['data']['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('message') && messageData['message'] is Map) {
             // ignore: avoid_print
             print('[SignalR] Unwrapping nested message object');
             messageData = (messageData['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('data') && messageData['data'] is Map) {
+            final d = (messageData['data'] as Map).cast<String, dynamic>();
+            if (_hasLivestreamId(d) || d.containsKey('message')) {
+              // ignore: avoid_print
+              print('[SignalR] Unwrapping nested data object');
+              messageData = d;
+            }
           }
           // Log các key để debug mapping
           // ignore: avoid_print
           print('[SignalR] Parsed message keys: ${messageData.keys.toList()}');
           onReceiveChatMessage?.call(messageData);
+          // If payload looks like a livestream message, also forward to livestream handler
+          if (_hasLivestreamId(messageData)) {
+            onReceiveLivestreamMessage?.call(messageData);
+          }
           onStatusChanged?.call("✅ Nhận chat message qua SignalR ($eventName)");
         }
       } catch (e) {
@@ -307,27 +330,72 @@ onStatusChanged?.call("❌ Lỗi ngắt kết nối SignalR: $e");
       _connection.on(eventName, (args) => handleIncoming(eventName, args));
     }
 
-    // ✅ Listen cho livestream messages
-    _connection.on("ReceiveLivestreamMessage", (arguments) {
+    // ✅ Listen cho livestream messages (support multiple possible event names)
+    void handleLivestreamIncoming(String eventName, List<Object?>? arguments) {
       try {
+        // ignore: avoid_print
+        print('[SignalR] Livestream Event $eventName raw args: $arguments');
         if (arguments != null && arguments.isNotEmpty) {
           final data = arguments[0];
           Map<String, dynamic> messageData;
-          
           if (data is Map<String, dynamic>) {
-            messageData = data;
+            messageData = data.cast<String, dynamic>();
           } else if (data is String) {
-            messageData = jsonDecode(data);
+            messageData = jsonDecode(data) as Map<String, dynamic>;
           } else {
             onError?.call("Livestream message data không đúng format: ${data.runtimeType}");
             return;
           }
-          
+          // Unwrap nested structures
+          if (messageData.containsKey('data') && messageData['data'] is Map &&
+              (messageData['data'] as Map).containsKey('message') && (messageData['data']['message'] is Map)) {
+            messageData = (messageData['data']['message'] as Map).cast<String, dynamic>();
+          } else if (messageData.containsKey('message') && messageData['message'] is Map) {
+            messageData = (messageData['message'] as Map).cast<String, dynamic>();
+          }
           onReceiveLivestreamMessage?.call(messageData);
-          onStatusChanged?.call("✅ Nhận livestream message qua SignalR");
+          onStatusChanged?.call("✅ Nhận livestream message qua SignalR ($eventName)");
         }
       } catch (e) {
         onError?.call("Lỗi xử lý livestream message: $e");
+      }
+    }
+
+    const possibleLivestreamEvents = [
+      'ReceiveLivestreamMessage',
+      'ReceiveMessageToLivestream',
+      'ReceiveLivestreamChatMessage',
+      'LivestreamMessageReceived',
+      'ReceiveMessageToLivestreamRoom',
+      'MessageToLivestream',
+      'ReceiveMessageToLiveStream',
+      'ReceiveLiveStreamMessage',
+      'LiveStreamMessageReceived',
+      'ReceiveMessageToLiveStreamRoom',
+    ];
+    for (final eventName in possibleLivestreamEvents) {
+      _connection.on(eventName, (args) => handleLivestreamIncoming(eventName, args));
+    }
+
+    // ✅ Listen cho viewer stats (thống kê người xem)
+    _connection.on("ReceiveViewerStats", (arguments) {
+      try {
+        if (arguments != null && arguments.isNotEmpty) {
+          final data = arguments[0];
+          Map<String, dynamic> stats;
+          if (data is Map<String, dynamic>) {
+            stats = data;
+          } else if (data is String) {
+            stats = jsonDecode(data) as Map<String, dynamic>;
+          } else {
+            onError?.call("Viewer stats payload không đúng format: ${data.runtimeType}");
+            return;
+          }
+          onReceiveViewerStats?.call(stats);
+          onStatusChanged?.call("📊 Nhận viewer stats qua SignalR");
+        }
+      } catch (e) {
+        onError?.call("Lỗi xử lý viewer stats: $e");
       }
     });
 
@@ -435,6 +503,7 @@ onError?.call("Lỗi xử lý user joined: $e");
   void removeListeners() {
     onReceiveChatMessage = null;
     onReceiveLivestreamMessage = null;
+    onReceiveViewerStats = null;
     onUserTyping = null;
     onUserJoinedRoom = null;
     onUserLeftRoom = null;
