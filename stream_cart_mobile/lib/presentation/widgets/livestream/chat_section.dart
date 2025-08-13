@@ -27,9 +27,9 @@ class ChatSection extends StatelessWidget {
 
   String _formatMsg(dynamic m) {
     try {
-      final user = m.senderName ?? 'User';
-      final content = m.content ?? '';
-      return '$user: $content';
+  final user = (m.senderName ?? 'User').toString();
+  final content = (m.message ?? '').toString();
+  return '$user: $content';
     } catch (_) {
       return m.toString();
     }
