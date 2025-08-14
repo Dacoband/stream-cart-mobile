@@ -25,6 +25,7 @@ import '../../presentation/pages/cart/cart_page.dart';
 import '../../presentation/pages/checkout/check_out_page.dart';
 import '../../presentation/pages/category/category_detail_page.dart';
 import '../../presentation/pages/notification/notification_page.dart';
+import '../../presentation/pages/chatbot/chat_bot_page.dart';
 import '../../presentation/pages/shop/shop_list_page.dart';
 import '../../presentation/pages/shop/shop_detail_page.dart';
 import '../../presentation/pages/livestream/livestream_page.dart';
@@ -59,6 +60,7 @@ class AppRouter {
   static const String shopDetail = '/shop-detail';
   static const String chatList = '/chat-list';
   static const String chatDetail = '/chat-detail';
+  static const String chatBot = '/chat-bot';
   static const String addressList = '/address-list';
   static const String addAddress = '/add-address';
   static const String editAddress = '/edit-address';
@@ -260,6 +262,10 @@ class AppRouter {
             shopId: args['shopId']!,
             shopName: args['shopName'] ?? '',
           ),
+        );
+      case chatBot:
+        return MaterialPageRoute(
+          builder: (_) => const ChatBotPage(),
         );
       case addressList:
         final args = settings.arguments as Map<String, dynamic>?;
