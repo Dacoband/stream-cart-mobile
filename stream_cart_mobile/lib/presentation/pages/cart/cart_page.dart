@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_event.dart';
 import '../../blocs/cart/cart_state.dart';
@@ -245,25 +246,49 @@ class CartView extends StatelessWidget {
                           ),
                           // Shop Products
                           ...shop.products.map((item) {
-                            return CartItemWidget(
-                              item: item,
-                              isSelected: state.selectedCartItemIds.contains(item.cartItemId),
-                              onSelectionChanged: (selected) {
-                                context.read<CartBloc>().add(
-                                  ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
-                                );
-                              },
-                              onQuantityChanged: (newQuantity) {
-                                context.read<CartBloc>().add(
-                                  UpdateCartItemEvent(
-                                    cartItemId: item.cartItemId,
-                                    quantity: newQuantity,
+                            return Slidable(
+                              key: ValueKey('cart_${item.cartItemId}'),
+                              endActionPane: ActionPane(
+                                motion: const DrawerMotion(),
+                                dismissible: DismissiblePane(
+                                  onDismissed: () {
+                                    context.read<CartBloc>().add(
+                                      RemoveCartItemEvent(cartItemId: item.cartItemId),
+                                    );
+                                  },
+                                ),
+                                children: [
+                                  SlidableAction(
+                                    onPressed: (_) {
+                                      context.read<CartBloc>().add(
+                                        RemoveCartItemEvent(cartItemId: item.cartItemId),
+                                      );
+                                    },
+                                    backgroundColor: Colors.red.shade600,
+                                    foregroundColor: Colors.white,
+                                    icon: Icons.delete_outline,
+                                    label: 'Xóa',
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                );
-                              },
-                              onRemove: () {
-                                _showRemoveItemDialog(context, item);
-                              },
+                                ],
+                              ),
+                              child: CartItemWidget(
+                                item: item,
+                                isSelected: state.selectedCartItemIds.contains(item.cartItemId),
+                                onSelectionChanged: (selected) {
+                                  context.read<CartBloc>().add(
+                                    ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
+                                  );
+                                },
+                                onQuantityChanged: (newQuantity) {
+                                  context.read<CartBloc>().add(
+                                    UpdateCartItemEvent(
+                                      cartItemId: item.cartItemId,
+                                      quantity: newQuantity,
+                                    ),
+                                  );
+                                },
+                              ),
                             );
                           }).toList(),
                           const SizedBox(height: 8),
@@ -393,37 +418,7 @@ class CartView extends StatelessWidget {
     );
   }
 
-  void _showRemoveItemDialog(BuildContext context, item) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Xóa sản phẩm'),
-          content: const Text('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Hủy'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<CartBloc>().add(
-                  RemoveCartItemEvent(
-                    cartItemId: item.cartItemId,
-                  ),
-                );
-              },
-              child: const Text(
-                'Xóa',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // Item removal is handled via swipe actions in the list
 
   void _showClearCartDialog(BuildContext context) {
     showDialog(
