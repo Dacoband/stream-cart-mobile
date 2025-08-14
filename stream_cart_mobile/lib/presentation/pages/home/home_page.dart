@@ -20,7 +20,6 @@ import '../../widgets/home/flash_sale_section.dart';
 import '../../widgets/home/shops_section.dart';
 import '../../widgets/common/bottom_nav_bar.dart';
 import '../../widgets/common/auth_guard.dart';
-// import '../../widgets/firebase_token_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   int _currentBottomNavIndex = 1; 
   bool _isScrolled = false;
+  bool _showAiPopup = true;
 
   @override
   void initState() {
@@ -100,6 +100,73 @@ class _HomePageState extends State<HomePage> {
     } else {
       showLoginRequiredDialog(context, message: 'Bạn cần đăng nhập để sử dụng chat');
     }
+  }
+
+  void _onChatAIPressed() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess || authState is AuthAuthenticated) {
+      Navigator.pushNamed(context, AppRouter.chatBot);
+    } else {
+      showLoginRequiredDialog(context, message: 'Bạn cần đăng nhập để sử dụng Chat AI');
+    }
+  }
+
+  Widget _buildAiPopup() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _onChatAIPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: const Color(0xFFB0F847), width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF202328),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.smart_toy_outlined, color: Color(0xFFB0F847), size: 20),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Chat AI',
+                style: TextStyle(
+                  color: Color(0xFF202328),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () {
+                  setState(() => _showAiPopup = false);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.all(4.0),
+                  child: Icon(Icons.close, size: 16, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _onNotificationPressed() {
@@ -708,16 +775,14 @@ class _HomePageState extends State<HomePage> {
       create: (context) => getIt<HomeBloc>()..add(LoadHomeDataEvent()),
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5), 
-        body: SafeArea(
+        body: Stack(
+          children: [
+            SafeArea(
           child: BlocBuilder<HomeBloc, HomeState>(
             builder: (context, state) {
               return CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Firebase Debug Widget (chỉ hiển thị khi debug và không phải web)
-                  // const SliverToBoxAdapter(
-                  //   child: FirebaseTokenWidget(),
-                  // ),
                   SliverAppBar(
                     floating: true,
                     pinned: _isScrolled,
@@ -936,6 +1001,14 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
+        ),
+            if (_showAiPopup)
+              Positioned(
+                right: 16,
+                bottom: 24,
+                child: _buildAiPopup(),
+              ),
+          ],
         ),
         bottomNavigationBar: BottomNavBar(
           currentIndex: _currentBottomNavIndex,

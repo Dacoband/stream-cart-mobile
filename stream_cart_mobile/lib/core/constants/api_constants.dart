@@ -143,6 +143,10 @@ class ApiConstants {
   static const String sendMessageChatLiveStreamEndpoint =  '/api/chatsignalr/livestream/{livestreamId}/messages'; // POST, gửi tin nhắn trong chat livestream
   static const String getMessageChatLiveStreamEndpoint =  '/api/chatsignalr/livestream/{livestreamId}/messages'; // GET, lấy tin nhắn trong chat livestream
 
+  // ChatBot AI endpoints
+  static const String getChatBotHistoryEndpoint = '/api/chatbot/chat/history'; // GET
+  static const String sendChatBotMessageEndpoint = '/api/chatbot/chatAI'; // POST
+
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;

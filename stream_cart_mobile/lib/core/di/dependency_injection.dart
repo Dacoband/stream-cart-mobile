@@ -169,6 +169,13 @@ import '../../domain/repositories/payment/payment_repository.dart';
 import '../../domain/usecases/payment/generate_payment_qr_usecase.dart';
 import '../../presentation/blocs/payment/payment_bloc.dart';
 import '../../core/services/livekit_service.dart';
+// === CHATBOT ===
+import '../../data/datasources/chatbot/chat_bot_remote_data_source.dart';
+import '../../data/repositories/chatbot/chat_bot_repository_impl.dart';
+import '../../domain/repositories/chatbot/chat_bot_repository.dart';
+import '../../domain/usecases/chatbot/get_chatbot_history_usecase.dart';
+import '../../domain/usecases/chatbot/send_chatbot_message_usecase.dart';
+import '../../presentation/blocs/chatbot/chat_bot_bloc.dart';
 
 
 final getIt = GetIt.instance;
@@ -520,6 +527,20 @@ Future<void> setupDependencies() async {
       addOrderItemUseCase: getIt(),
       deleteOrderItemUseCase: getIt(),
     ));
+
+    // === CHATBOT ===
+    // Data source
+    getIt.registerLazySingleton<ChatBotRemoteDataSource>(() => ChatBotRemoteDataSourceImpl(getIt<Dio>()));
+    // Repository
+    getIt.registerLazySingleton<ChatBotRepository>(() => ChatBotRepositoryImpl(getIt<ChatBotRemoteDataSource>()));
+    // Use cases
+    getIt.registerLazySingleton(() => GetChatBotHistoryUseCase(getIt<ChatBotRepository>()));
+    getIt.registerLazySingleton(() => SendChatBotMessageUseCase(getIt<ChatBotRepository>()));
+    // Bloc
+    getIt.registerFactory(() => ChatBotBloc(
+          getHistoryUseCase: getIt(),
+          sendMessageUseCase: getIt(),
+        ));
 
   // CartBloc as singleton (keep this at the end)
   getIt.registerLazySingleton(() {
