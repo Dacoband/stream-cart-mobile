@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/storage_service.dart';
-import '../../../core/di/dependency_injection.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -34,8 +32,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _checkAndLoadProfile() async {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess || authState is AuthAuthenticated) {
-      final storageService = getIt<StorageService>();
-      final token = await storageService.getAccessToken(); 
       context.read<ProfileBloc>().add(LoadUserProfileEvent());
     }
   }
@@ -299,11 +295,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   _buildMenuItem(
                     icon: Icons.favorite_outline,
-                    title: 'Sản phẩm yêu thích',
+                    title: 'Nhắn cùng Stream Cart',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
-                        // TODO: Navigate to favorites
-                      }, 'Bạn cần đăng nhập để xem sản phẩm yêu thích');
+                        Navigator.pushNamed(context, AppRouter.chatBot);
+                      }, 'Bạn cần đăng nhập để nhắn cùng Stream Cart');
                     },
                   ),
                   _buildMenuItem(
