@@ -198,17 +198,17 @@ class CartItemWidget extends StatelessWidget {
               ),
             ),
             
-            // Remove Button
-            IconButton(
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline, size: 20),
-              color: Colors.red,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
+            if (onRemove != null)
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: Colors.red,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
               ),
-            ),
           ],
         ),
       ),

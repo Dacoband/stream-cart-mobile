@@ -12,6 +12,7 @@ import '../../widgets/livestream/error_retry.dart';
 import '../../../core/config/livekit_config.dart';
 import '../../widgets/livestream/livestream_products_bottom_sheet.dart';
 import '../../widgets/livestream/chat_input.dart';
+import '../../widgets/livestream/pinned_product_floating.dart';
 
 class LiveStreamPage extends StatefulWidget {
   final String liveStreamId;
@@ -36,6 +37,7 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
         ..add(LoadLiveStreamEvent(widget.liveStreamId))
   ..add(JoinLiveStreamEvent(widget.liveStreamId))
   ..add(LoadProductsByLiveStreamEvent(widget.liveStreamId))
+  ..add(LoadPinnedProductsByLiveStreamEvent(widget.liveStreamId, limit: 5))
   ;
     }
   }
@@ -97,17 +99,29 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                   );
                 }
                 if (state is LiveStreamLoaded) {
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      ctx.read<LiveStreamBloc>().add(RefreshLiveStreamEvent(widget.liveStreamId));
-                    },
-                    child: CustomScrollView(
-                      slivers: [
-                        SliverToBoxAdapter(child: VideoSection(state: state)),
-                        SliverToBoxAdapter(child: InfoBar(state: state)),
-                        SliverFillRemaining(hasScrollBody: true, child: ChatSection(messages: state.joinedMessages)),
-                      ],
-                    ),
+                  return Stack(
+                    children: [
+                      RefreshIndicator(
+                        onRefresh: () async {
+                          ctx.read<LiveStreamBloc>().add(RefreshLiveStreamEvent(widget.liveStreamId));
+                        },
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverToBoxAdapter(child: VideoSection(state: state)),
+                            SliverToBoxAdapter(child: InfoBar(state: state)),
+                            // Removed pinned bar to avoid duplication with floating overlay
+                            SliverFillRemaining(hasScrollBody: true, child: ChatSection(messages: state.joinedMessages)),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 12,
+                        bottom: (MediaQuery.of(context).viewPadding.bottom + 72),
+                        child: PinnedProductFloating(
+                          onOpenSheet: () => _showProductsBottomSheet(innerCtx),
+                        ),
+                      ),
+                    ],
                   );
                 }
                 if (state is LiveStreamListLoading || state is LiveStreamListLoaded || state is LiveStreamListError) {

@@ -26,6 +26,20 @@ class LiveStreamProductRepositoryImpl implements LiveStreamProductRepository {
 		}
 	}
 
+	@override
+	Future<Either<Failure, List<LiveStreamProductEntity>>> getPinnedProductsByLiveStream(String liveStreamId, {int? limit}) async {
+		try {
+			final models = await remoteDataSource.getPinnedProductsByLiveStream(liveStreamId, limit: limit);
+			return Right(models.map((m) => m.toEntity()).toList());
+		} on DioException catch (e) {
+			return Left(_mapDioToFailure(e, customNotFound: 'Không tìm thấy sản phẩm được ghim'));
+		} on ServerException catch (e) {
+			return Left(ServerFailure(e.message));
+		} catch (e) {
+			return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+		}
+	}
+
 	Failure _mapDioToFailure(
 		DioException e, {
 		String? customBadRequest,

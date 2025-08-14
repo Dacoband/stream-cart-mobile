@@ -290,7 +290,6 @@ class ProfileDetailPage extends StatelessWidget {
       title: 'Thông tin tài khoản',
       icon: Icons.account_circle_outlined,
       children: [
-        _buildInfoRow('ID tài khoản', user.id),
         _buildInfoRow('Tên đăng nhập', user.username),
         _buildInfoRow('Họ và tên', user.fullname.isNotEmpty ? user.fullname : 'Chưa cập nhật'),
         if (user.shopId != null)
@@ -331,13 +330,8 @@ class ProfileDetailPage extends StatelessWidget {
         _buildInfoRow('Ngày đăng ký', _formatDateTime(user.registrationDate)),
         if (user.lastLoginDate != null)
           _buildInfoRow('Đăng nhập gần nhất', _formatDateTime(user.lastLoginDate!)),
-        _buildInfoRow('Ngày tạo', _formatDateTime(user.createdAt)),
-        if (user.createdBy != null)
-          _buildInfoRow('Được tạo bởi', user.createdBy!),
         if (user.lastModifiedAt != null)
           _buildInfoRow('Cập nhật gần nhất', _formatDateTime(user.lastModifiedAt!)),
-        if (user.lastModifiedBy != null)
-          _buildInfoRow('Được cập nhật bởi', user.lastModifiedBy!),
       ],
     );
   }
