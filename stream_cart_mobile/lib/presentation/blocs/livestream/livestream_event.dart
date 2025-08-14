@@ -36,6 +36,14 @@ class LoadProductsByLiveStreamEvent extends LiveStreamEvent {
 	List<Object?> get props => [liveStreamId];
 }
 
+class LoadPinnedProductsByLiveStreamEvent extends LiveStreamEvent {
+	final String liveStreamId;
+	final int? limit;
+	const LoadPinnedProductsByLiveStreamEvent(this.liveStreamId, {this.limit});
+	@override
+	List<Object?> get props => [liveStreamId, limit];
+}
+
 class JoinChatLiveStreamEvent extends LiveStreamEvent {
 	final String liveStreamId;
 	const JoinChatLiveStreamEvent(this.liveStreamId);

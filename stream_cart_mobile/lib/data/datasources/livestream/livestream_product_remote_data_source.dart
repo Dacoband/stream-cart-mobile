@@ -5,6 +5,7 @@ import '../../models/livestream/livestream_product_model.dart';
 
 abstract class LiveStreamProductRemoteDataSource {
 	Future<List<LiveStreamProductModel>> getProductsByLiveStream(String liveStreamId);
+	Future<List<LiveStreamProductModel>> getPinnedProductsByLiveStream(String liveStreamId, {int? limit});
 }
 
 class LiveStreamProductRemoteDataSourceImpl implements LiveStreamProductRemoteDataSource {
@@ -37,6 +38,38 @@ class LiveStreamProductRemoteDataSourceImpl implements LiveStreamProductRemoteDa
 			throw _handleDioException(e, 'Failed to get livestream products');
 		} catch (e) {
 			throw Exception('Failed to get livestream products: $e');
+		}
+	}
+
+	@override
+	Future<List<LiveStreamProductModel>> getPinnedProductsByLiveStream(String liveStreamId, {int? limit}) async {
+		try {
+			final path = ApiConstants.getProductPinnedByLiveStreamIdEndpoint.replaceAll('{livestreamId}', liveStreamId);
+			final resp = await _dio.get(
+				path,
+				queryParameters: {
+					if (limit != null) 'limit': limit,
+				},
+			);
+			final body = resp.data;
+			List<dynamic> list;
+			if (body is List) {
+				list = body;
+			} else if (body is Map<String, dynamic>) {
+				final d = body['data'];
+				if (d is List) {
+					list = d;
+				} else {
+					list = const [];
+				}
+			} else {
+				list = const [];
+			}
+			return list.map((j) => LiveStreamProductModel.fromJson(Map<String, dynamic>.from(j as Map))).toList();
+		} on DioException catch (e) {
+			throw _handleDioException(e, 'Failed to get pinned livestream products');
+		} catch (e) {
+			throw Exception('Failed to get pinned livestream products: $e');
 		}
 	}
 

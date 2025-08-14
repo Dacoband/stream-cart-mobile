@@ -158,6 +158,7 @@ import '../../domain/usecases/livestream/get_livestream_usecase.dart';
 import '../../domain/usecases/livestream/join_livestream_usecase.dart';
 import '../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
 import '../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
+import '../../domain/usecases/livestream/get_pinned_products_by_livestream_usecase.dart';
 import '../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
 import '../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
 import '../../domain/usecases/livestream/get_livestream_messages_usecase.dart';
@@ -270,6 +271,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetLiveStreamsByShopUseCase(getIt()));
   getIt.registerLazySingleton(() => GetActiveLiveStreamsUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByLiveStreamUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetPinnedProductsByLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => JoinChatLiveStreamUseCase(getIt()));
   getIt.registerLazySingleton(() => GetLiveStreamMessagesUseCase(getIt()));
   getIt.registerLazySingleton(() => SendMessageLiveStreamUseCase(getIt()));
@@ -280,6 +282,7 @@ Future<void> setupDependencies() async {
         joinLiveStreamUseCase: getIt(),
         getLiveStreamsByShopUseCase: getIt(),
         getProductsByLiveStreamUseCase: getIt(),
+        getPinnedProductsByLiveStreamUseCase: getIt(),
         joinChatLiveStreamUseCase: getIt(),
         getLiveStreamMessagesUseCase: getIt(),
         sendMessageLiveStreamUseCase: getIt(),

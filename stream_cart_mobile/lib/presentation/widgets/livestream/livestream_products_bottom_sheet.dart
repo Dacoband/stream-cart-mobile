@@ -28,8 +28,12 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
       if (!st.isLoadingProducts && st.products.isEmpty) {
         bloc.add(LoadProductsByLiveStreamEvent(liveStreamId));
       }
+      if (!st.isLoadingPinned && st.pinnedProducts.isEmpty) {
+        bloc.add(LoadPinnedProductsByLiveStreamEvent(liveStreamId, limit: 5));
+      }
     } else {
       bloc.add(LoadProductsByLiveStreamEvent(liveStreamId));
+      bloc.add(LoadPinnedProductsByLiveStreamEvent(liveStreamId, limit: 5));
     }
 
     return BlocProvider.value(
@@ -124,37 +128,103 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
                               final imageHeight = (itemWidth - innerHPadding).clamp(0, itemWidth);
                               final mainExtent = verticalPadding + imageHeight + belowImage + titleHeight + gapToPrice + priceRow + fudge;
 
-                return GridView.builder(
+                return CustomScrollView(
                                 controller: controller,
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  crossAxisSpacing: spacing,
-                                  mainAxisSpacing: spacing,
-                  mainAxisExtent: mainExtent,
-                                ),
-                                itemCount: state.products.length,
-                                itemBuilder: (_, i) {
-                                  final p = state.products[i];
-                                  return _ProductCard(
-                                    product: p,
-                                    priceColor: colorScheme.primary,
-                                    onTap: () async {
-                                      Navigator.of(context).pop();
-                                      await Navigator.pushNamed(
-                                        rootContext,
-                                        AppRouter.productDetails,
-                                        arguments: {
-                                          'productId': p.productId,
-                                          'imageUrl': p.productImageUrl.isNotEmpty ? p.productImageUrl : null,
-                                          'name': p.productName,
-                                          'price': p.price,
+                                slivers: [
+                                  if (state.pinnedProducts.isNotEmpty) ...[
+                                    SliverToBoxAdapter(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 6),
+                                        child: Row(
+                                          children: const [
+                                            Icon(Icons.push_pin, size: 16, color: Color(0xFFB0F847)),
+                                            SizedBox(width: 6),
+                                            Text('Sản phẩm được ghim', style: TextStyle(fontWeight: FontWeight.w600)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    SliverGrid(
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: spacing,
+                                        mainAxisSpacing: spacing,
+                                        mainAxisExtent: mainExtent,
+                                      ),
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, i) {
+                                          final p = state.pinnedProducts[i];
+                                          return _ProductCard(
+                                            product: p,
+                                            priceColor: colorScheme.primary,
+                                            onTap: () async {
+                                              Navigator.of(context).pop();
+                                              await Navigator.pushNamed(
+                                                rootContext,
+                                                AppRouter.productDetails,
+                                                arguments: {
+                                                  'productId': p.productId,
+                                                  'imageUrl': p.productImageUrl.isNotEmpty ? p.productImageUrl : null,
+                                                  'name': p.productName,
+                                                  'price': p.price,
+                                                },
+                                              );
+                                              if (!rootContext.mounted) return;
+                                              reopenBottomSheet();
+                                            },
+                                          );
                                         },
-                                      );
-                                      if (!rootContext.mounted) return;
-                                      reopenBottomSheet();
-                                    },
-                                  );
-                                },
+                                        childCount: state.pinnedProducts.length,
+                                      ),
+                                    ),
+                                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                                  ],
+                                  SliverToBoxAdapter(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 6),
+                                      child: Row(
+                                        children: const [
+                                          Icon(Icons.list_alt, size: 16, color: Color(0xFFB0F847)),
+                                          SizedBox(width: 6),
+                                          Text('Tất cả sản phẩm', style: TextStyle(fontWeight: FontWeight.w600)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  SliverGrid(
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      crossAxisSpacing: spacing,
+                                      mainAxisSpacing: spacing,
+                                      mainAxisExtent: mainExtent,
+                                    ),
+                                    delegate: SliverChildBuilderDelegate(
+                                      (context, i) {
+                                        final p = state.products[i];
+                                        return _ProductCard(
+                                          product: p,
+                                          priceColor: colorScheme.primary,
+                                          onTap: () async {
+                                            Navigator.of(context).pop();
+                                            await Navigator.pushNamed(
+                                              rootContext,
+                                              AppRouter.productDetails,
+                                              arguments: {
+                                                'productId': p.productId,
+                                                'imageUrl': p.productImageUrl.isNotEmpty ? p.productImageUrl : null,
+                                                'name': p.productName,
+                                                'price': p.price,
+                                              },
+                                            );
+                                            if (!rootContext.mounted) return;
+                                            reopenBottomSheet();
+                                          },
+                                        );
+                                      },
+                                      childCount: state.products.length,
+                                    ),
+                                  ),
+                                ],
                               );
                             },
                           );

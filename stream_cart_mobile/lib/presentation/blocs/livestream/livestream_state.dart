@@ -25,9 +25,11 @@ class LiveStreamError extends LiveStreamState {
 class LiveStreamLoaded extends LiveStreamState {
 	final LiveStreamEntity liveStream;
 	final List<LiveStreamProductEntity> products;
+	final List<LiveStreamProductEntity> pinnedProducts;
 	final List<LiveStreamChatMessageEntity> joinedMessages;
 	final bool isJoining;
 	final bool isLoadingProducts;
+	final bool isLoadingPinned;
 	final bool isRefreshing;
 	final bool isConnectingRoom;
 	final bool isConnectedRoom;
@@ -39,9 +41,11 @@ class LiveStreamLoaded extends LiveStreamState {
 	const LiveStreamLoaded({
 		required this.liveStream,
 		this.products = const [],
+		this.pinnedProducts = const [],
 		this.joinedMessages = const [],
 		this.isJoining = false,
 		this.isLoadingProducts = false,
+		this.isLoadingPinned = false,
 		this.isRefreshing = false,
 		this.isConnectingRoom = false,
 		this.isConnectedRoom = false,
@@ -54,9 +58,11 @@ class LiveStreamLoaded extends LiveStreamState {
 	LiveStreamLoaded copyWith({
 		LiveStreamEntity? liveStream,
 		List<LiveStreamProductEntity>? products,
+		List<LiveStreamProductEntity>? pinnedProducts,
 		List<LiveStreamChatMessageEntity>? joinedMessages,
 		bool? isJoining,
 		bool? isLoadingProducts,
+		bool? isLoadingPinned,
 		bool? isRefreshing,
 		bool? isConnectingRoom,
 		bool? isConnectedRoom,
@@ -67,9 +73,11 @@ class LiveStreamLoaded extends LiveStreamState {
 	}) => LiveStreamLoaded(
 				liveStream: liveStream ?? this.liveStream,
 				products: products ?? this.products,
+	pinnedProducts: pinnedProducts ?? this.pinnedProducts,
 				joinedMessages: joinedMessages ?? this.joinedMessages,
 				isJoining: isJoining ?? this.isJoining,
 				isLoadingProducts: isLoadingProducts ?? this.isLoadingProducts,
+	isLoadingPinned: isLoadingPinned ?? this.isLoadingPinned,
 				isRefreshing: isRefreshing ?? this.isRefreshing,
 				isConnectingRoom: isConnectingRoom ?? this.isConnectingRoom,
 				isConnectedRoom: isConnectedRoom ?? this.isConnectedRoom,
@@ -83,9 +91,11 @@ class LiveStreamLoaded extends LiveStreamState {
 	List<Object?> get props => [
 				liveStream,
 				products,
+		pinnedProducts,
 				joinedMessages,
 				isJoining,
 				isLoadingProducts,
+		isLoadingPinned,
 				isRefreshing,
 				isConnectingRoom,
 				isConnectedRoom,

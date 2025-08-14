@@ -6,6 +6,7 @@ import '../../../domain/usecases/livestream/get_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/join_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/get_livestreams_by_shop_usecase.dart';
 import '../../../domain/usecases/livestream/get_products_by_livestream_usecase.dart';
+import '../../../domain/usecases/livestream/get_pinned_products_by_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
 import '../../../domain/usecases/livestream/join_chat_livestream_usecase.dart';
 import '../../../domain/usecases/livestream/get_livestream_messages_usecase.dart';
@@ -23,6 +24,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final JoinLiveStreamUseCase joinLiveStreamUseCase;
 	final GetLiveStreamsByShopUseCase getLiveStreamsByShopUseCase;
 	final GetProductsByLiveStreamUseCase getProductsByLiveStreamUseCase;
+		final GetPinnedProductsByLiveStreamUseCase getPinnedProductsByLiveStreamUseCase;
 	final JoinChatLiveStreamUseCase joinChatLiveStreamUseCase;
 	final GetLiveStreamMessagesUseCase getLiveStreamMessagesUseCase;
 	final SendMessageLiveStreamUseCase sendMessageLiveStreamUseCase;
@@ -37,6 +39,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		required this.joinLiveStreamUseCase,
 		required this.getLiveStreamsByShopUseCase,
 		required this.getProductsByLiveStreamUseCase,
+		required this.getPinnedProductsByLiveStreamUseCase,
 		required this.joinChatLiveStreamUseCase,
 	required this.getLiveStreamMessagesUseCase,
 	required this.sendMessageLiveStreamUseCase,
@@ -48,6 +51,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		on<LoadLiveStreamsByShopEvent>(_onLoadLiveStreamsByShop);
 	  on<LoadActiveLiveStreamsEvent>(_onLoadActiveLiveStreams);
 		on<LoadProductsByLiveStreamEvent>(_onLoadProductsByLiveStream);
+		on<LoadPinnedProductsByLiveStreamEvent>(_onLoadPinnedProductsByLiveStream);
 		on<JoinChatLiveStreamEvent>(_onJoinChatLiveStream);
 		on<LoadLiveStreamMessagesEvent>(_onLoadLiveStreamMessages);
 		on<SendLiveStreamMessageEvent>(_onSendLiveStreamMessage);
@@ -131,6 +135,18 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 			);
 		}
 	}
+
+		Future<void> _onLoadPinnedProductsByLiveStream(LoadPinnedProductsByLiveStreamEvent event, Emitter<LiveStreamState> emit) async {
+			final currentState = state;
+			if (currentState is LiveStreamLoaded) {
+				emit(currentState.copyWith(isLoadingPinned: true));
+				final result = await getPinnedProductsByLiveStreamUseCase(event.liveStreamId, limit: event.limit);
+				result.fold(
+					(failure) => emit(currentState.copyWith(isLoadingPinned: false)),
+					(products) => emit(currentState.copyWith(pinnedProducts: products, isLoadingPinned: false)),
+				);
+			}
+		}
 
 	Future<void> _onJoinChatLiveStream(JoinChatLiveStreamEvent event, Emitter<LiveStreamState> emit) async {
 		final currentState = state;

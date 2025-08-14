@@ -5,4 +5,5 @@ import '../../../core/error/failures.dart';
 
 abstract class LiveStreamProductRepository {
   Future<Either<Failure, List<LiveStreamProductEntity>>> getProductsByLiveStream(String liveStreamId);
+  Future<Either<Failure, List<LiveStreamProductEntity>>> getPinnedProductsByLiveStream(String liveStreamId, {int? limit});
 }
