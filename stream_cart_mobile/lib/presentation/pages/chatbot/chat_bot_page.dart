@@ -8,6 +8,7 @@ import '../../blocs/chatbot/chat_bot_state.dart';
 import '../../widgets/chatbot/chat_bot_message_list.dart';
 import '../../widgets/chatbot/chat_bot_input.dart';
 import '../../widgets/chatbot/chat_bot_history_list.dart';
+import '../../theme/app_colors.dart';
 
 class ChatBotPage extends StatefulWidget {
   const ChatBotPage({super.key});
@@ -59,7 +60,10 @@ class _ChatBotPageState extends State<ChatBotPage> {
       child: Builder(
         builder: (innerCtx) => Scaffold(
         appBar: AppBar(
-          title: const Text('Chat AI'),
+          backgroundColor: AppColors.brandDark,
+          title: const Text('Stream Cart AI', style: TextStyle(color: AppColors.brandAccent, fontSize: 16, fontWeight: FontWeight.w700)),
+          iconTheme: const IconThemeData(color: AppColors.brandAccent),
+          actionsIconTheme: const IconThemeData(color: AppColors.brandAccent),
           actions: [
             IconButton(
               icon: const Icon(Icons.add_comment_outlined),
@@ -83,7 +87,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
                   builder: (context, state) {
                     if (state is ChatBotInitial || state is ChatBotCleared) {
                       return const Center(
-                        child: Text('Hãy bắt đầu trò chuyện với AI...'),
+                        child: Text('Hãy bắt đầu trò chuyện với AI...', style: TextStyle(color: AppColors.brandDark, fontSize: 14, fontWeight: FontWeight.w500)),
                       );
                     }
                     if (state is ChatBotLoading) {

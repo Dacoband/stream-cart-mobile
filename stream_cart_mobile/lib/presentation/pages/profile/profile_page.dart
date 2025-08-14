@@ -294,7 +294,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                   _buildMenuItem(
-                    icon: Icons.favorite_outline,
+                    icon: Icons.smart_toy_outlined,
                     title: 'Nhắn cùng Stream Cart',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
