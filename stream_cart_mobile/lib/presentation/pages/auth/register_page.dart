@@ -7,6 +7,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
+import '../../theme/app_colors.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -24,7 +25,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _fullnameController = TextEditingController();
   
-  UserRole _selectedRole = UserRole.customer;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
@@ -49,9 +49,19 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passwordController.text,
         phoneNumber: _phoneController.text.trim(),
         fullname: _fullnameController.text.trim(),
-        role: _selectedRole.value,
+        role: UserRole.customer.value,
       ));
     }
+  }
+
+  bool _isValidEmail(String value) {
+    final emailRegex = RegExp(r'^\S+@\S+\.\S+$');
+    return emailRegex.hasMatch(value);
+  }
+
+  bool _isValidPhone(String value) {
+    final phoneRegex = RegExp(r'^(\+?\d{9,15})$');
+    return phoneRegex.hasMatch(value);
   }
 
   @override
@@ -59,14 +69,14 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Create Account',
+          'Tạo tài khoản',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: AppColors.brandPrimary,
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -74,8 +84,8 @@ class _RegisterPageState extends State<RegisterPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFF4CAF50),
-                Color(0xFF66BB6A),
+                AppColors.brandPrimary,
+                AppColors.brandDark,
               ],
             ),
           ),
@@ -97,8 +107,8 @@ class _RegisterPageState extends State<RegisterPage> {
           if (state is RegisterSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.registerResponse.message),
-                backgroundColor: Colors.green,
+                content: const Text('Đăng ký thành công'),
+                backgroundColor: AppColors.brandPrimary,
               ),
             );            
             // Navigate to OTP verification page
@@ -135,37 +145,66 @@ class _RegisterPageState extends State<RegisterPage> {
                     // Logo or Title
                     Center(
                       child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF4CAF50),
-                              Color(0xFF66BB6A),
+                        width: 88,
+                        height: 88,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: Container(
+                          margin: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [AppColors.brandPrimary, AppColors.brandAccent],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.brandPrimary.withValues(alpha: 0.25),
+                                blurRadius: 14,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(40),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.person_add,
-                          color: Colors.white,
-                          size: 40,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // subtle highlight
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.all(10),
+                                  width: 26,
+                                  height: 26,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                  ),
+                                ),
+                              ),
+                              const Center(
+                                child: Icon(
+                                  Icons.person_add_rounded,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     
                     Text(
-                      'Join ${AppConstants.appJoinName}',
+                      'Tham gia ${AppConstants.appJoinName}',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -174,60 +213,19 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 8),
                     
                     Text(
-                      'Create your account to get started',
+                      'Tạo tài khoản để bắt đầu mua sắm',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 40),
-
-                    // Role Selection
-                    Text(
-                      'Account Type',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RadioListTile<UserRole>(
-                            title: const Text('Customer'),
-                            subtitle: const Text('Buy products'),
-                            value: UserRole.customer,
-                            groupValue: _selectedRole,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value!;
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<UserRole>(
-                            title: const Text('Seller'),
-                            subtitle: const Text('Sell products'),
-                            value: UserRole.seller,
-                            groupValue: _selectedRole,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedRole = value!;
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
                     
                     // Full Name
                     TextFormField(
                       controller: _fullnameController,
                       decoration: InputDecoration(
-                        labelText: 'Full Name *',
+                        labelText: 'Họ và tên *',
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -238,7 +236,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                          borderSide: const BorderSide(color: AppColors.brandPrimary),
                         ),
                         errorBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -250,7 +248,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       validator: (value) {
-                        return ValidationUtils.getNameErrorMessage(value ?? '', fieldName: 'Full name');
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Vui lòng nhập họ và tên';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Họ và tên quá ngắn';
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 16),
@@ -259,7 +263,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     TextFormField(
                       controller: _usernameController,
                       decoration: InputDecoration(
-                        labelText: 'Username *',
+                        labelText: 'Tên đăng nhập *',
                         prefixIcon: const Icon(Icons.alternate_email),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -270,15 +274,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                          borderSide: const BorderSide(color: AppColors.brandPrimary),
                         ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Username is required';
+                          return 'Vui lòng nhập tên đăng nhập';
                         }
                         if (!ValidationUtils.isValidUsername(value)) {
-                          return 'Username must be 3-20 characters (letters, numbers, _, -)';
+                          return 'Tên đăng nhập phải từ 3-20 ký tự (chữ, số, _, -)';
                         }
                         return null;
                       },
@@ -301,11 +305,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                          borderSide: const BorderSide(color: AppColors.brandPrimary),
                         ),
                       ),
                       validator: (value) {
-                        return ValidationUtils.getEmailErrorMessage(value ?? '');
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) return 'Vui lòng nhập email';
+                        if (!_isValidEmail(v)) return 'Email không hợp lệ';
+                        return null;
                       },
                     ),
                     const SizedBox(height: 16),
@@ -315,7 +322,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: InputDecoration(
-                        labelText: 'Phone Number *',
+                        labelText: 'Số điện thoại *',
                         prefixIcon: const Icon(Icons.phone),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -326,12 +333,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                          borderSide: const BorderSide(color: AppColors.brandPrimary),
                         ),
-                        helperText: 'Format: 0948780759 or +84948780759',
+                        helperText: 'Định dạng: 0948780759 hoặc +8498780759',
                       ),
                       validator: (value) {
-                        return ValidationUtils.getPhoneErrorMessage(value ?? '');
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) return 'Vui lòng nhập số điện thoại';
+                        if (!_isValidPhone(v)) return 'Số điện thoại không hợp lệ';
+                        return null;
                       },
                     ),
                     const SizedBox(height: 16),
@@ -341,7 +351,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
-                        labelText: 'Password *',
+                        labelText: 'Mật khẩu *',
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -364,15 +374,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: Color(0xFF4CAF50)),
                         ),
-                        helperText: 'At least 8 characters with uppercase, lowercase, number and special character',
+                        helperText: 'Ít nhất 8 ký tự gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
                         helperMaxLines: 2,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Password is required';
+                          return 'Vui lòng nhập mật khẩu';
                         }
                         if (!ValidationUtils.isStrongPassword(value)) {
-                          return 'Password must meet requirements above';
+                          return 'Mật khẩu phải đáp ứng yêu cầu ở trên';
                         }
                         return null;
                       },
@@ -384,7 +394,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: _confirmPasswordController,
                       obscureText: !_isConfirmPasswordVisible,
                       decoration: InputDecoration(
-                        labelText: 'Confirm Password *',
+                        labelText: 'Xác nhận mật khẩu *',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -410,10 +420,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please confirm your password';
+                          return 'Vui lòng xác nhận mật khẩu';
                         }
                         if (value != _passwordController.text) {
-                          return 'Passwords do not match';
+                          return 'Mật khẩu không khớp';
                         }
                         return null;
                       },
@@ -424,7 +434,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _register,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
+                        backgroundColor: AppColors.brandPrimary,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, AppConstants.buttonHeight),
                         shape: RoundedRectangleBorder(
@@ -442,7 +452,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             )
                           : const Text(
-                              'Create Account',
+                              'Tạo tài khoản',
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                     ),
@@ -452,7 +462,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Already have an account? '),
+                        const Text('Đã có tài khoản? '),
                         TextButton(
                           onPressed: () {
                             Navigator.pushReplacementNamed(
@@ -461,10 +471,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             );
                           },
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF4CAF50),
+                            foregroundColor: AppColors.brandPrimary,
                           ),
                           child: const Text(
-                            'Sign In',
+                            'Đăng nhập',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
