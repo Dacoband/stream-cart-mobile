@@ -150,8 +150,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     signalRService.onConnectionStateChanged = (state) {
       if (state == HubConnectionState.connected) {
-        // ignore: avoid_print
-        print('[ChatBloc] onConnectionStateChanged connected. currentChatRoomId=$_currentChatRoomId pending=$_pendingJoinChatRoomId');
         final target = _currentChatRoomId ?? _pendingJoinChatRoomId;
         if (target != null) {
           add(JoinChatRoomEvent(chatRoomId: target));
@@ -302,26 +300,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       },
       (message) async {
         emit(MessageSent(message: message));
-        
-        // Send via SignalR for real-time if connected
         if (_isSignalRConnected) {
           try {
-            // Ensure đã join đúng room trước khi gửi
             if (_currentChatRoomId != event.chatRoomId) {
-              // ignore: avoid_print
-              print('[ChatBloc] Not in room ${event.chatRoomId} yet. Joining before send.');
               final joinResult = await joinChatRoomUseCase(JoinChatRoomParams(chatRoomId: event.chatRoomId));
               joinResult.fold(
-                (l) => print('[ChatBloc] Join before send failed: ${l.message}'),
+                (l) => null,
                 (r) {
                   _currentChatRoomId = event.chatRoomId;
-                  // ignore: avoid_print
-                  print('[ChatBloc] Joined room ${event.chatRoomId} prior to send');
                 },
               );
             }
-            // ignore: avoid_print
-            print('[ChatBloc] Sending realtime message to ${event.chatRoomId}: ${event.content}');
             await signalRService.sendChatMessage(
               chatRoomId: event.chatRoomId,
               message: event.content,
@@ -331,8 +320,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             print('[ChatBloc] Realtime send failed: $e');
           }
         } else {
-          // ignore: avoid_print
-          print('[ChatBloc] SignalR not connected, skip realtime send (current state=$_isSignalRConnected, room=$_currentChatRoomId, pending=$_pendingJoinChatRoomId)');
+          add(JoinChatRoomEvent(chatRoomId: event.chatRoomId));
+          add(const ConnectSignalREvent());
         }
       },
     );
@@ -351,6 +340,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   Future<void> _onReceiveMessage(ReceiveMessageEvent event, Emitter<ChatState> emit) async {
+    final prevState = state;
     final result = await receiveMessageUseCase(ReceiveMessageParams(
       messageData: event.messageData,
     ));
@@ -359,16 +349,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       (failure) {
         emit(ChatError(message: failure.message));
       },
-      (message) {
+      (parsedMessage) {
+        var message = parsedMessage;
+        if ((message.chatRoomId).isEmpty && _currentChatRoomId != null) {
+          message = message.copyWith(chatRoomId: _currentChatRoomId);
+        }
         emit(MessageReceived(message: message));
-        
-        // Update current messages if we're in the same room
-        if (state is ChatMessagesLoaded) {
-          final currentState = state as ChatMessagesLoaded;
-          if (currentState.chatRoomId == message.chatRoomId) {
-            final updatedMessages = [...currentState.messages, message];
-            emit(currentState.copyWith(messages: updatedMessages));
-          }
+        if (prevState is ChatMessagesLoaded && prevState.chatRoomId == message.chatRoomId) {
+          final exists = prevState.messages.any((m) => m.id.isNotEmpty && m.id == message.id);
+          final updatedMessages = exists ? prevState.messages : [...prevState.messages, message];
+          emit(prevState.copyWith(messages: updatedMessages));
         }
       },
     );
@@ -450,8 +440,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         emit(const SignalRConnected());
         // Auto join room nếu có pending
         if (_pendingJoinChatRoomId != null) {
-          // ignore: avoid_print
-          print('[ChatBloc] Auto joining pending room after connect: $_pendingJoinChatRoomId');
           add(JoinChatRoomEvent(chatRoomId: _pendingJoinChatRoomId!));
         }
       },
@@ -488,10 +476,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   // Room Join/Leave
   Future<void> _onJoinChatRoom(JoinChatRoomEvent event, Emitter<ChatState> emit) async {
     if (!_isSignalRConnected) {
-      // Chưa kết nối: lưu pending và trigger connect
       _pendingJoinChatRoomId = event.chatRoomId;
-      // ignore: avoid_print
-      print('[ChatBloc] Join requested but SignalR not connected. Set pending: ${event.chatRoomId}');
       add(const ConnectSignalREvent());
       return;
     }
@@ -505,7 +490,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       (failure) => emit(ChatError(message: failure.message)),
       (_) {
         _currentChatRoomId = event.chatRoomId;
-        _pendingJoinChatRoomId = null; // clear
+        _pendingJoinChatRoomId = null;
         emit(ChatRoomJoined(chatRoomId: event.chatRoomId));
       },
     );
@@ -635,7 +620,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   // Get current user role as UserRole enum
   UserRole? _getUserRole() {
     final currentUser = _getCurrentUser();
-    final dynamic roleValue = currentUser?.role; // dynamic
+    final dynamic roleValue = currentUser?.role;
     if (roleValue == null) return null;
     if (roleValue is int) {
       return UserRole.fromValue(roleValue);
@@ -715,8 +700,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         isTyping: event.isTyping,
         timestamp: event.timestamp ?? DateTime.now(),
       ));
-
-      // Auto-clear typing indicator after timeout if user is typing
       if (event.isTyping) {
         Timer(const Duration(seconds: 5), () {
           // Check if still in the same state and emit stop typing
