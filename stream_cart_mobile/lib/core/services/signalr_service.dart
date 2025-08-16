@@ -64,6 +64,7 @@ class SignalRService {
     if (_connection.state == HubConnectionState.connected) {
       onStatusChanged?.call("Đã kết nối SignalR");
       _isConnected = true;
+  onConnectionStateChanged?.call(HubConnectionState.connected);
       return;
     }
     
@@ -72,6 +73,7 @@ class SignalRService {
       await _connection.start();
       _isConnected = true;
       onStatusChanged?.call("✅ Đã kết nối SignalR (id=${_connection.connectionId})");
+  onConnectionStateChanged?.call(HubConnectionState.connected);
     } catch (e) {
       _isConnected = false;
       onStatusChanged?.call("❌ Lỗi kết nối SignalR: $e");
@@ -97,6 +99,7 @@ class SignalRService {
           await _connection.start();
           _isConnected = true;
           onStatusChanged?.call('✅ Kết nối thành công (fallback negotiation)');
+          onConnectionStateChanged?.call(HubConnectionState.connected);
           return; 
         } catch (fallbackErr) {
           try {
@@ -120,6 +123,7 @@ class SignalRService {
             await _connection.start();
             _isConnected = true;
             onStatusChanged?.call('✅ Kết nối thành công (longPolling)');
+            onConnectionStateChanged?.call(HubConnectionState.connected);
             return;
           } catch (lpErr) {
             onStatusChanged?.call('❌ Kết nối thất bại sau mọi fallback: $lpErr');
@@ -299,7 +303,16 @@ class SignalRService {
       'ReceiveMessageToChatRoom',
       'ReceiveMessageToDirectChatRoom',
       'ChatMessageReceived',
-      'DirectChatMessageReceived'
+      'DirectChatMessageReceived',
+      'DirectChatMessageReceived',
+      'MessageReceived',
+      'NewMessage',
+      'NewChatMessage',
+      'ReceiveRoomMessage',
+      'RoomMessageReceived',
+      'ReceiveDirectRoomMessage',
+      'ReceiveMessageFromChatRoom',
+      'ReceiveChatMessage',
     ];
     for (final eventName in possibleEvents) {
       _connection.on(eventName, (args) => handleIncoming(eventName, args));
@@ -348,8 +361,6 @@ class SignalRService {
     for (final eventName in possibleLivestreamEvents) {
       _connection.on(eventName, (args) => handleLivestreamIncoming(eventName, args));
     }
-
-    // Listen cho viewer stats (thống kê người xem)
     _connection.on("ReceiveViewerStats", (arguments) {
       try {
         if (arguments != null && arguments.isNotEmpty) {
@@ -370,15 +381,13 @@ class SignalRService {
         onError?.call("Lỗi xử lý viewer stats: $e");
       }
     });
-
-    // Listen cho typing indicator
     _connection.on("UserTyping", (args) {
       try {
         if (args != null && args.isNotEmpty) {
           final data = args[0];
           if (data is Map<String, dynamic>) {
-            final userId = data['UserId'] as String?;
-            final isTyping = data['IsTyping'] as bool?;
+            final userId = (data['UserId'] ?? data['userId']) as String?;
+            final isTyping = (data['IsTyping'] ?? data['isTyping']) as bool?;
             
             if (userId != null && isTyping != null) {
               onUserTyping?.call(userId, isTyping);
@@ -390,15 +399,13 @@ class SignalRService {
         onError?.call("Lỗi xử lý typing indicator: $e");
       }
     });
-
-    // Listen cho user joined
     _connection.on("UserJoined", (args) {
       try {
         if (args != null && args.isNotEmpty) {
           final data = args[0];
           if (data is Map<String, dynamic>) {
-            final userId = data['UserId'] as String?;
-            final userName = data['UserName'] as String?;
+            final userId = (data['UserId'] ?? data['userId']) as String?;
+            final userName = (data['UserName'] ?? data['userName']) as String?;
             
             if (userId != null) {
               onUserJoinedRoom?.call(userId, userName);
@@ -417,8 +424,8 @@ class SignalRService {
         if (args != null && args.isNotEmpty) {
           final data = args[0];
           if (data is Map<String, dynamic>) {
-            final userId = data['UserId'] as String?;
-            final userName = data['UserName'] as String?;
+            final userId = (data['UserId'] ?? data['userId']) as String?;
+            final userName = (data['UserName'] ?? data['userName']) as String?;
             
             if (userId != null) {
               onUserLeftRoom?.call(userId, userName);

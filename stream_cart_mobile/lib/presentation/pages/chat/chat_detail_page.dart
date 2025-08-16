@@ -28,7 +28,7 @@ class ChatDetailPage extends StatefulWidget {
 
 class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObserver {
   bool _hasInitialized = false;
-  List<ChatMessage> _cachedMessages = []; // Cache messages to persist across state changes
+  List<ChatMessage> _cachedMessages = [];
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -44,37 +44,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
         _hasInitialized = true;
       }
     });
-    
-    // Force re-setup SignalR listeners for this page
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        print('🔄 Re-setting up SignalR listeners for this chat room');
-        context.read<ChatBloc>().add(const ConnectSignalREvent());
-      }
-    });
   }
 
   void _initializeChatRoom() {
-    print('🚀 Initializing chat room: ${widget.chatRoomId}');
-    
-    // 1. Connect SignalR first
-    print('🔌 Connecting to SignalR...');
+  // 1. Connect SignalR first
     context.read<ChatBloc>().add(const ConnectSignalREvent());
     
     // 2. Join room
-    print('🏠 Joining chat room...');
     context.read<ChatBloc>().add(JoinChatRoomEvent(
       chatRoomId: widget.chatRoomId,
     ));
     
     // 3. Load chat room detail
-    print('📋 Loading chat room detail...');
     context.read<ChatBloc>().add(LoadChatRoomDetailEvent(
       chatRoomId: widget.chatRoomId,
     ));
     
     // 4. Load messages - MAIN CALL
-    print('📨 Loading messages for room: ${widget.chatRoomId}');
     context.read<ChatBloc>().add(LoadChatRoomMessagesEvent(
       chatRoomId: widget.chatRoomId,
       pageNumber: 1,
@@ -83,7 +69,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     ));
     
     // 5. Mark as read
-    print('👁️ Marking room as read...');
     context.read<ChatBloc>().add(MarkChatRoomAsReadEvent(
       chatRoomId: widget.chatRoomId,
     ));
@@ -120,11 +105,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
 
   bool _isMyMessage(ChatMessage message) {
     final currentUserId = _getCurrentUserId();
-    if (currentUserId == null) return message.isMine; // Fallback to API value
-    
-    // Override isMine based on current user ID
+    if (currentUserId == null) return message.isMine;
     final isActuallyMine = message.senderUserId == currentUserId;
-    print('🔍 Message "${message.content}": senderUserId=${message.senderUserId}, currentUserId=$currentUserId, isActuallyMine=$isActuallyMine, API_isMine=${message.isMine}');
     return isActuallyMine;
   }  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -205,20 +187,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
       ),
       body: BlocListener<ChatBloc, ChatState>(
         listener: (context, state) {
-          print('🎯 ChatDetailPage listener - State: ${state.runtimeType}');
-          
           // Connection status updates
           if (state is SignalRConnected) {
-            print('✅ SignalR connected in ChatDetailPage');
           } else if (state is SignalRConnectionError) {
-            print('❌ SignalR connection error in ChatDetailPage');
           } else if (state is ChatRoomJoined) {
-            print('✅ Chat room joined: ${state.chatRoomId}');
           }
           
           // Cache messages when loaded
           if (state is ChatMessagesLoaded) {
-            print('✅ Messages loaded, caching ${state.messages.length} messages');
             _cachedMessages = List.from(state.messages);
             
             // Schedule mark as read with delay
@@ -233,42 +209,23 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
           
           // Add new sent message to cache
           if (state is MessageSent) {
-            print('✅ Message sent, adding to cache: ${state.message.content}');
-            print('👤 Sent message senderUserId: ${state.message.senderUserId}');
-            print('🔍 Sent message isMine: ${state.message.isMine}');
-            print('📝 Message ID: ${state.message.id}');
-            
-            // Check for duplicates before adding
-            final isDuplicate = _cachedMessages.any((msg) => msg.id == state.message.id);
-            if (!isDuplicate) {
-              setState(() {
-                _cachedMessages = [..._cachedMessages, state.message];
-              });
-              print('📱 Updated cached messages count: ${_cachedMessages.length}');
-              _scrollToBottom(); // Auto scroll when new message sent
-            } else {
-              print('⚠️ Duplicate sent message detected, skipping');
+            final isDuplicate = state.message.id.isNotEmpty &&
+              _cachedMessages.any((msg) => msg.id == state.message.id);
+                  if (!isDuplicate) {
+                    setState(() {
+                      _cachedMessages = [..._cachedMessages, state.message];
+                    });
+                    _scrollToBottom();
+                  }
             }
-          }
-          
-          // Add new received message to cache
           if (state is MessageReceived) {
-            print('✅ Message received, adding to cache: ${state.message.content}');
-            print('👤 Received message senderUserId: ${state.message.senderUserId}');
-            print('🔍 Received message isMine: ${state.message.isMine}');
-            print('🏠 Message chatRoomId: ${state.message.chatRoomId}');
-            print('🏠 Current chatRoomId: ${widget.chatRoomId}');
-            print('📝 Message ID: ${state.message.id}');
-            
-            // Only add message if it belongs to current chat room
             if (state.message.chatRoomId == widget.chatRoomId) {
-              // Check for duplicates before adding
-              final isDuplicate = _cachedMessages.any((msg) => msg.id == state.message.id);
+        final isDuplicate = state.message.id.isNotEmpty &&
+          _cachedMessages.any((msg) => msg.id == state.message.id);
               if (!isDuplicate) {
                 setState(() {
                   _cachedMessages = [..._cachedMessages, state.message];
                 });
-                print('📱 Updated cached messages count: ${_cachedMessages.length}');
                 
                 // Force immediate UI rebuild
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -278,11 +235,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                 });
                 
                 _scrollToBottom(); // Auto scroll when new message received
-              } else {
-                print('⚠️ Duplicate message detected, skipping');
               }
-            } else {
-              print('⚠️ Message belongs to different room, ignoring');
             }
           }
         },
@@ -298,7 +251,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      print('🧪 Test button - Forcing SignalR reconnect');
                       context.read<ChatBloc>().add(const ConnectSignalREvent());
                     },
                     child: const Text('Test SignalR'),
@@ -306,7 +258,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
-                      print('🧪 Test button - Joining room again');
                       context.read<ChatBloc>().add(JoinChatRoomEvent(
                         chatRoomId: widget.chatRoomId,
                       ));
@@ -316,7 +267,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () async {
-                      print('🧪 Direct SignalR send (skip REST)');
                       final bloc = context.read<ChatBloc>();
                       try {
                         await bloc.signalRService.sendChatMessage(
@@ -324,7 +274,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                           message: 'direct-${DateTime.now().millisecondsSinceEpoch}',
                         );
                       } catch (e) {
-                        print('❌ Direct send error: $e');
                       }
                     },
                     child: const Text('Direct Send'),
@@ -337,18 +286,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
             Expanded(
               child: BlocBuilder<ChatBloc, ChatState>(
                 builder: (context, state) {
-                  print('🔍 ChatDetailPage BlocBuilder - State: ${state.runtimeType}');
-                  print('💾 Cached messages count: ${_cachedMessages.length}');
                   
                   // Update cache if new messages loaded
                   if (state is ChatMessagesLoaded) {
-                    print('✅ Updating cached messages: ${state.messages.length}');
                     _cachedMessages = List.from(state.messages);
                   }
                   
                   // Always show cached messages if available
                   if (_cachedMessages.isNotEmpty) {
-                    print('📱 Displaying ${_cachedMessages.length} cached messages');
                     
                     // Sort messages by sentAt time
                     final sortedMessages = List<ChatMessage>.from(_cachedMessages)
