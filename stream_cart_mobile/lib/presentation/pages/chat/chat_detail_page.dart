@@ -381,8 +381,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
               child: ChatInputWidget(
                 chatRoomId: widget.chatRoomId,
                 onSend: (content) {
-                  print('💬 ChatDetailPage - Sending message: "$content"');
-                  print('🏠 To room: ${widget.chatRoomId}');
                   
                   context.read<ChatBloc>().add(SendMessageEvent(
                     chatRoomId: widget.chatRoomId,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:stream_cart_mobile/presentation/theme/app_colors.dart';
 
 import '../../../domain/entities/address/address_entity.dart';
 import '../../blocs/address/address_bloc.dart';
@@ -36,17 +37,18 @@ class _AddressListPageState extends State<AddressListPage> {
         title: Text(
           widget.isSelectionMode ? 'Chọn địa chỉ giao hàng' : 'Địa chỉ giao hàng',
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF202328),
+            color: AppColors.brandAccent,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.brandDark,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
-            color: Color(0xFF202328),
+            color: AppColors.brandAccent,
+            size: 19,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -54,7 +56,7 @@ class _AddressListPageState extends State<AddressListPage> {
           IconButton(
             icon: const Icon(
               Icons.add,
-              color: Color(0xFF4CAF50),
+              color: AppColors.brandAccent,
             ),
             onPressed: () => _navigateToAddAddress(),
           ),

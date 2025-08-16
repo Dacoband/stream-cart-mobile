@@ -124,9 +124,11 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
                               const titleHeight = 22.0;
                               const gapToPrice = 6.0;
                               const priceRow = 28.0;
-                              const fudge = 6.0;
+                              const origPriceRow = 18.0;
+                              const metaRow = 18.0;
+                              const fudge = 10.0;
                               final imageHeight = (itemWidth - innerHPadding).clamp(0, itemWidth);
-                              final mainExtent = verticalPadding + imageHeight + belowImage + titleHeight + gapToPrice + priceRow + fudge;
+                              final mainExtent = verticalPadding + imageHeight + belowImage + titleHeight + gapToPrice + priceRow + origPriceRow + metaRow + fudge;
 
                 return CustomScrollView(
                                 controller: controller,
@@ -306,7 +308,19 @@ class _ProductCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 );
               }),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
+              if (product.originalPrice > 0 && product.originalPrice > product.price)
+                Text(
+                  '${product.originalPrice.toStringAsFixed(0)} đ',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                ),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   Text(
@@ -329,6 +343,19 @@ class _ProductCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 4),
+              Builder(builder: (_) {
+                final meta = <String>[];
+                if (product.sku.trim().isNotEmpty) meta.add('SKU: ${product.sku}');
+                final stock = product.productStock;
+                meta.add(stock > 0 ? 'Còn: $stock' : 'Hết hàng');
+                return Text(
+                  meta.join(' • '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                );
+              }),
             ],
           ),
         ),

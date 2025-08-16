@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../domain/entities/address/address_entity.dart';
 import '../../../core/enums/address_type.dart';
+import '../../theme/app_colors.dart';
 
 class AddressCard extends StatelessWidget {
   final AddressEntity address;
@@ -24,9 +26,89 @@ class AddressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+  final actionsCount = isDefault ? 2 : 3;
+  // Give each action a bit more space so labels can wrap to two lines nicely
+  final extentRatio = actionsCount == 3 ? 0.78 : 0.54;
+
+    return Slidable(
+      key: ValueKey('address-card-${hashCode}'),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: extentRatio,
+        dismissible: DismissiblePane(onDismissed: () => onDelete?.call()),
+        children: [
+          CustomSlidableAction(
+            onPressed: (_) => onEdit?.call(),
+            backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.08),
+            foregroundColor: AppColors.brandPrimary,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.edit_outlined, size: 20, color: AppColors.brandPrimary),
+                SizedBox(height: 6),
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    'Chỉnh sửa',
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    softWrap: true,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.brandDark),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!isDefault)
+            CustomSlidableAction(
+              onPressed: (_) => onSetDefault?.call(),
+              backgroundColor: AppColors.brandAccent.withValues(alpha: 0.12),
+              foregroundColor: AppColors.brandDark,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.star_outline, size: 20, color: AppColors.brandDark),
+                  SizedBox(height: 6),
+                  SizedBox(
+                    width: 92,
+                    child: Text(
+                      'Đặt làm mặc định',
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      softWrap: true,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.brandDark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          CustomSlidableAction(
+            onPressed: (_) => onDelete?.call(),
+            backgroundColor: const Color(0xFFFFEBEE),
+            foregroundColor: Colors.red,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                SizedBox(height: 6),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'Xóa',
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    softWrap: true,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+  child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -90,71 +172,18 @@ class AddressCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFB0F847),
+                      color: AppColors.brandAccent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
                       'Mặc định',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF202328),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.brandDark,
                       ),
                     ),
                   ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'edit':
-                        onEdit?.call();
-                        break;
-                      case 'delete':
-                        onDelete?.call();
-                        break;
-                      case 'setDefault':
-                        onSetDefault?.call();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit_outlined, size: 20),
-                          SizedBox(width: 8),
-                          Text('Chỉnh sửa'),
-                        ],
-                      ),
-                    ),
-                    if (!isDefault)
-                      const PopupMenuItem(
-                        value: 'setDefault',
-                        child: Row(
-                          children: [
-                            Icon(Icons.star_outline, size: 20),
-                            SizedBox(width: 8),
-                            Text('Đặt làm mặc định'),
-                          ],
-                        ),
-                      ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Xóa', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  child: const Icon(
-                    Icons.more_vert,
-                    color: Color(0xFF666666),
-                  ),
-                ),
               ],
             ),
             
@@ -192,6 +221,7 @@ class AddressCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
