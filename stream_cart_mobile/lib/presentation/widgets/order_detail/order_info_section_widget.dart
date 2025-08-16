@@ -77,9 +77,17 @@ class OrderInfoSectionWidget extends StatelessWidget {
           const SizedBox(height: 12),
 
           _buildInfoRow(
-            'Trạng thái:',
+            'Trạng thái đơn hàng:',
             _getStatusText(order.orderStatus),
             valueWidget: _buildStatusChip(order.orderStatus),
+          ),
+
+          const SizedBox(height: 12),
+
+          _buildInfoRow(
+            'Trạng thái thanh toán:',
+            _getPaymentStatusText(order.paymentStatus),
+            valueWidget: _buildPaymentStatusChip(order.paymentStatus),
           ),
 
           const SizedBox(height: 12),
@@ -196,6 +204,45 @@ class OrderInfoSectionWidget extends StatelessWidget {
 
   String _getStatusText(int status) {
     return _getStatusInfo(status)['text'];
+  }
+
+  // Payment status helpers
+  Widget _buildPaymentStatusChip(int paymentStatus) {
+    final info = _getPaymentStatusInfo(paymentStatus);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: info['color'].withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: info['color'].withOpacity(0.35),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        info['text'],
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: info['color'],
+        ),
+      ),
+    );
+  }
+
+  Map<String, dynamic> _getPaymentStatusInfo(int status) {
+    switch (status) {
+      case 1:
+        return {'text': 'Đã thanh toán', 'color': Colors.green};
+      case 2:
+        return {'text': 'Thanh toán thất bại', 'color': Colors.red};
+      default:
+        return {'text': 'Đang chờ thanh toán', 'color': Colors.orange};
+    }
+  }
+
+  String _getPaymentStatusText(int status) {
+    return _getPaymentStatusInfo(status)['text'];
   }
 
   String _formatDateTime(DateTime dateTime) {
