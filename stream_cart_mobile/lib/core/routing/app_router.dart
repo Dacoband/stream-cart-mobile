@@ -37,6 +37,15 @@ import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/notification/notification_bloc.dart';
 import '../../domain/entities/account/user_profile_entity.dart';
 import '../../domain/entities/order/order_entity.dart';
+import '../../presentation/blocs/review/review_bloc.dart';
+import '../../presentation/pages/review/product_reviews_page.dart';
+import '../../presentation/pages/review/write_review_page.dart';
+import '../../presentation/pages/review/edit_review_page.dart';
+import '../../presentation/pages/review/order_reviews_page.dart';
+import '../../presentation/pages/review/user_reviews_page.dart';
+import '../../presentation/pages/review/livestream_reviews_page.dart';
+import '../../presentation/pages/review/review_detail_page.dart';
+import '../../domain/entities/review/review_entity.dart';
 
 class AppRouter {
   static const String login = '/login';
@@ -67,6 +76,14 @@ class AppRouter {
   static const String orderSuccess = '/order-success';
   static const String orderDetail = '/order-detail';
   static const String paymentQr = '/payment-qr';
+  // Review
+  static const String productReviews = '/product-reviews';
+  static const String writeReview = '/write-review';
+  static const String editReview = '/edit-review';
+  static const String orderReviews = '/order-reviews';
+  static const String userReviews = '/user-reviews';
+  static const String livestreamReviews = '/livestream-reviews';
+  static const String reviewDetail = '/review-detail';
 
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -309,6 +326,85 @@ class AppRouter {
           builder: (_) => PaymentQrPage(
             orders: orders ?? const [],
             initialQrUrl: qrUrl,
+          ),
+        );
+      case productReviews:
+        final productId = settings.arguments as String?;
+        if (productId == null || productId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu productId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: ProductReviewsPage(productId: productId),
+          ),
+        );
+      case writeReview:
+        final productId = settings.arguments as String?;
+        if (productId == null || productId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu productId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: WriteReviewPage(productId: productId),
+          ),
+        );
+      case editReview:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final reviewId = args?['reviewId'] as String?;
+        final ReviewEntity? initialReview = args?['initialReview'] as ReviewEntity?;
+        if (reviewId == null || reviewId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu reviewId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: EditReviewPage(reviewId: reviewId, initialReview: initialReview),
+          ),
+        );
+      case orderReviews:
+        final orderId = settings.arguments as String?;
+        if (orderId == null || orderId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu orderId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: OrderReviewsPage(orderId: orderId),
+          ),
+        );
+      case userReviews:
+        final userId = settings.arguments as String?;
+        if (userId == null || userId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu userId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: UserReviewsPage(userId: userId),
+          ),
+        );
+      case livestreamReviews:
+        final livestreamId = settings.arguments as String?;
+        if (livestreamId == null || livestreamId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu livestreamId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: LivestreamReviewsPage(livestreamId: livestreamId),
+          ),
+        );
+      case reviewDetail:
+        final reviewId = settings.arguments as String?;
+        if (reviewId == null || reviewId.isEmpty) {
+          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu reviewId'))));
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ReviewBloc>(),
+            child: ReviewDetailPage(reviewId: reviewId),
           ),
         );
       default:

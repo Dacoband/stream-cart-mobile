@@ -9,11 +9,13 @@ import '../../../domain/entities/order/order_item_entity.dart';
 class OrderItemsSectionWidget extends StatelessWidget {
   final OrderEntity order;
   final Function(OrderItemEntity)? onItemTap;
+  final Function(OrderItemEntity)? onWriteReviewTap;
 
   const OrderItemsSectionWidget({
     Key? key,
     required this.order,
     this.onItemTap,
+    this.onWriteReviewTap,
   }) : super(key: key);
 
   @override
@@ -198,6 +200,19 @@ class OrderItemsSectionWidget extends StatelessWidget {
                     size: 16,
                     color: Colors.grey[400],
                   ),
+                if (onWriteReviewTap != null) ...[
+                  const SizedBox(height: 6),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: const Size(0, 0),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => onWriteReviewTap?.call(item),
+                    icon: const Icon(Icons.rate_review_outlined, size: 14),
+                    label: const Text('Đánh giá', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
               ],
             ),
           ],

@@ -15,9 +15,12 @@ import '../../widgets/product_detail/image_carousel.dart';
 import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
 import '../../widgets/product_detail/add_to_cart_button.dart';
+import '../../widgets/product_detail/product_reviews_preview.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_state.dart';
+import '../../blocs/review/review_bloc.dart';
+import '../../blocs/review/review_event.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -53,6 +56,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         BlocProvider(
           create: (context) => getIt<ProductVariantsBloc>()
             ..add(GetProductVariantsByProductIdEvent(widget.productId)),
+        ),
+        BlocProvider(
+          create: (context) => getIt<ReviewBloc>()
+            ..add(LoadProductReviewsEvent(productId: widget.productId, pageSize: 3)),
         ),
         BlocProvider.value(
           value: getIt<CartBloc>(),
@@ -481,6 +488,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 
                 // Shop Info
                 _buildShopInfo(product),
+                const SizedBox(height: 16),
+
+                // Product Reviews Preview
+                ProductReviewsPreview(productId: widget.productId),
                 const SizedBox(height: 16),
                 
                 // Product Details
@@ -1008,6 +1019,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
     );
   }
+
 
   Widget _buildShopStatCard({
     required IconData icon,
