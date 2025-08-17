@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
-import '../../domain/entities/shop.dart';
-import '../../domain/entities/product_entity.dart';
+import '../../domain/entities/shop/shop.dart';
+import '../../domain/entities/products/product_entity.dart';
 import '../../domain/repositories/shop_repository.dart';
-import '../datasources/shop_remote_data_source.dart';
-import '../models/shop_model.dart';
+import '../datasources/shop/shop_remote_data_source.dart';
+import '../models/shop/shop_model.dart';
 
 class ShopRepositoryImpl implements ShopRepository {
   final ShopRemoteDataSource remoteDataSource;
@@ -22,7 +22,6 @@ class ShopRepositoryImpl implements ShopRepository {
     bool ascending = true,
   }) async {
     try {
-      print('🏪 Repository: Getting shops with params');
 
       final shopResponse = await remoteDataSource.getShops(
         pageNumber: pageNumber,
@@ -33,11 +32,8 @@ class ShopRepositoryImpl implements ShopRepository {
         sortBy: sortBy,
         ascending: ascending,
       );
-
-      print('✅ Repository: Successfully fetched ${shopResponse.items.length} shops');
       return Right(shopResponse);
     } catch (e) {
-      print('❌ Repository: Error fetching shops: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -45,15 +41,10 @@ class ShopRepositoryImpl implements ShopRepository {
   @override
   Future<Either<Failure, Shop>> getShopById(String shopId) async {
     try {
-      print('🏪 Repository: Getting shop details for ID: $shopId');
-
       final shopModel = await remoteDataSource.getShopById(shopId);
       final shop = shopModel.toEntity();
-
-      print('✅ Repository: Successfully fetched shop: ${shop.shopName}');
       return Right(shop);
     } catch (e) {
-      print('❌ Repository: Error fetching shop details: $e');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -61,11 +52,7 @@ class ShopRepositoryImpl implements ShopRepository {
   @override
   Future<Either<Failure, List<ProductEntity>>> getProductsByShop(String shopId) async {
     try {
-      print('🛍️ Repository: Getting products for shop ID: $shopId');
-
-      final productResponse = await remoteDataSource.getProductsByShop(shopId);
-      print('🛍️ [DEBUG] ShopRepositoryImpl - productResponse.data: ${productResponse.data}');
-      
+      final productResponse = await remoteDataSource.getProductsByShop(shopId);   
       // Convert ProductModel list to ProductEntity list
       final products = productResponse.data.map((productModel) => 
         ProductEntity(
@@ -96,12 +83,18 @@ class ShopRepositoryImpl implements ShopRepository {
           primaryImageUrl: productModel.primaryImageUrl,
         )
       ).toList();
-
-      print('✅ [DEBUG] Repository: Successfully fetched ${products.length} products for shop');
-      print('🛍️ [DEBUG] ShopRepositoryImpl - products: $products');
       return Right(products);
     } catch (e) {
-      print('❌ Repository: Error fetching shop products: $e');
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, int>> getProductCountByShop(String shopId) async {
+    try {
+      final count = await remoteDataSource.getProductCountByShop(shopId);
+      return Right(count);
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import '../entities/chat_entity.dart';
+import '../entities/chat/chat_message_entity.dart';
+import '../entities/chat/chat_room_entity.dart';
+import '../entities/chat/unread_count_entity.dart';
 import '../../core/error/failures.dart';
 
 abstract class ChatRepository {
@@ -9,23 +10,43 @@ abstract class ChatRepository {
   /// [pageNumber]: The page number to retrieve (default: 1).
   /// [pageSize]: The number of items per page (default: 20).
   /// [isActive]: Optional filter to get only active rooms (default: null).
-  /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
-  Future<Either<Failure, List<ChatEntity>>> getChatRooms({
+  /// Returns [Either<Failure, ChatRoomsPaginatedResponse>] containing the result or failure.
+  Future<Either<Failure, ChatRoomsPaginatedResponse>> getChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
     bool? isActive,
   });
+
+  /// Retrieves details of a specific chat room by its ID.
+  /// 
+  /// [chatRoomId]: The ID of the chat room to get details for.
+  /// Returns [Either<Failure, ChatRoomEntity>] containing the chat room details or failure.
+  Future<Either<Failure, ChatRoomEntity>> getChatRoomDetail(String chatRoomId);
 
   /// Retrieves a list of messages for a specific chat room based on pagination.
   /// 
   /// [chatRoomId]: The ID of the chat room.
   /// [pageNumber]: The page number to retrieve (default: 1).
   /// [pageSize]: The number of items per page (default: 50).
-  /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
+  /// Returns [Either<Failure, List<ChatMessage>>] containing the result or failure.
   Future<Either<Failure, List<ChatMessage>>> getChatRoomMessages(
     String chatRoomId, {
     int pageNumber = 1,
     int pageSize = 50,
+  });
+
+  /// Search messages in a specific chat room.
+  /// 
+  /// [chatRoomId]: The ID of the chat room.
+  /// [searchTerm]: The term to search for.
+  /// [pageNumber]: The page number to retrieve (default: 1).
+  /// [pageSize]: The number of items per page (default: 20).
+  /// Returns [Either<Failure, List<ChatMessage>>] containing the result or failure.
+  Future<Either<Failure, List<ChatMessage>>> searchChatRoomMessages(
+    String chatRoomId, {
+    required String searchTerm,
+    int pageNumber = 1,
+    int pageSize = 20,
   });
 
   /// Marks a chat room as read.
@@ -34,24 +55,20 @@ abstract class ChatRepository {
   /// Returns [Either<Failure, void>] indicating success or failure.
   Future<Either<Failure, void>> markChatRoomAsRead(String chatRoomId);
 
-  /// Retrieves a list of chat rooms associated with a specific shop based on pagination.
+  /// Send typing indicator to a chat room.
   /// 
-  /// [shopId]: The ID of the shop.
-  /// [pageNumber]: The page number to retrieve (default: 1).
-  /// [pageSize]: The number of items per page (default: 20).
-  /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
-  Future<Either<Failure, List<ChatEntity>>> getChatRoomsByShop(String shopId, {
-    int pageNumber = 1,
-    int pageSize = 20,
-  });
+  /// [chatRoomId]: The ID of the chat room.
+  /// [isTyping]: Whether user is typing or not.
+  /// Returns [Either<Failure, void>] indicating success or failure.
+  Future<Either<Failure, void>> sendTypingIndicator(String chatRoomId, bool isTyping);
 
   /// Creates a new chat room with the given parameters.
   /// 
   /// [shopId]: The ID of the shop to create the chat room for.
   /// [relatedOrderId]: Optional ID of the related order (default: null).
   /// [initialMessage]: The initial message for the chat room.
-  /// Returns [Either<Failure, ChatEntity>] containing the created chat room or failure.
-  Future<Either<Failure, ChatEntity>> createChatRoom({
+  /// Returns [Either<Failure, ChatRoomEntity>] containing the created chat room or failure.
+  Future<Either<Failure, ChatRoomEntity>> createChatRoom({
     required String shopId,
     String? relatedOrderId,
     required String initialMessage,
@@ -63,7 +80,7 @@ abstract class ChatRepository {
   /// [content]: The content of the message.
   /// [messageType]: The type of message (default: 'Text').
   /// [attachmentUrl]: Optional URL of an attachment (default: null).
-  /// Returns [Either<Failure, ChatEntity>] containing the sent message or failure.
+  /// Returns [Either<Failure, ChatMessage>] containing the sent message or failure.
   Future<Either<Failure, ChatMessage>> sendMessage({
     required String chatRoomId,
     required String content,
@@ -71,25 +88,28 @@ abstract class ChatRepository {
     String? attachmentUrl,
   });
 
-  /// Retrieves the shop token for a specific chat room to use with LiveKit.
+  /// Updates an existing message.
   /// 
-  /// [chatRoomId]: The ID of the chat room.
-  /// [userId]: The ID of the user requesting the token (optional).
-  /// [timestamp]: Timestamp to ensure unique identity (optional).
-  /// Returns [Either<Failure, String>] containing the token or failure.
-  Future<Either<Failure, String>> getShopToken(
-    String chatRoomId, {
-    String? userId,
-    int? timestamp,
+  /// [messageId]: The ID of the message to update.
+  /// [content]: The new content of the message.
+  /// Returns [Either<Failure, ChatMessage>] containing the updated message or failure.
+  Future<Either<Failure, ChatMessage>> updateMessage({
+    required String messageId,
+    required String content,
   });
 
-  /// Retrieves a list of chat rooms associated with a specific shop based on pagination.
+  /// Get unread count for all chat rooms.
+  /// 
+  /// Returns [Either<Failure, UnreadCountEntity>] containing unread counts or failure.
+  Future<Either<Failure, UnreadCountEntity>> getUnreadCount();
+
+  /// Retrieves a list of chat rooms for shop (shop view).
   /// 
   /// [pageNumber]: The page number to retrieve (default: 1).
   /// [pageSize]: The number of items per page (default: 20).
   /// [isActive]: Optional filter to get only active rooms (default: null).
-  /// Returns [Either<Failure, List<ChatEntity>>] containing the result or failure.
-  Future<Either<Failure, List<ChatEntity>>> getShopChatRooms({
+  /// Returns [Either<Failure, ChatRoomsPaginatedResponse>] containing the result or failure.
+  Future<Either<Failure, ChatRoomsPaginatedResponse>> getShopChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
     bool? isActive,

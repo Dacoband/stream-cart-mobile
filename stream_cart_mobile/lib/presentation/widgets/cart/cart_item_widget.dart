@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../../../domain/entities/cart_entity.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 
 class CartItemWidget extends StatelessWidget {
   final CartItemEntity item;
@@ -19,20 +18,18 @@ class CartItemWidget extends StatelessWidget {
   });
 
   String _formatPrice(double price) {
-    final formatter = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-    return formatter.format(price);
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String priceStr = price.toInt().toString();
+    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+    return '${priceStr}₫';
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -42,14 +39,15 @@ class CartItemWidget extends StatelessWidget {
               onChanged: (value) {
                 onSelectionChanged?.call(value ?? false);
               },
-              activeColor: Theme.of(context).primaryColor,
+              activeColor: Color(0xFF4CAF50),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             const SizedBox(width: 8),
             
-            // Product Image Placeholder
+            // Product Image
             Container(
-              width: 80,
-              height: 80,
+              width: 70,
+              height: 70,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
@@ -63,7 +61,7 @@ class CartItemWidget extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(
                             Icons.image,
-                            size: 40,
+                            size: 30,
                             color: Colors.grey,
                           );
                         },
@@ -71,44 +69,42 @@ class CartItemWidget extends StatelessWidget {
                     )
                   : const Icon(
                       Icons.image,
-                      size: 40,
+                      size: 30,
                       color: Colors.grey,
                     ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             
             // Product Details
             Expanded(
-              flex: 3, 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.productName.isNotEmpty ? item.productName : 'Tên sản phẩm',
+                    item.productName,
                     style: const TextStyle(
-                      fontSize: 14, 
-                      fontWeight: FontWeight.bold,
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   
-                  // Price display
-                  Wrap( 
+                  Row(
                     children: [
                       Text(
-                        _formatPrice(item.currentPrice),
+                        _formatPrice(item.priceData.currentPrice),
                         style: const TextStyle(
-                          fontSize: 14, 
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF4CAF50),
+                          fontSize: 12, 
+                          fontWeight: FontWeight.w600,
+                          color: Color.fromARGB(255, 66, 153, 69),
                         ),
                       ),
-                      if (item.originalPrice > item.currentPrice) ...[
+                      if (item.priceData.originalPrice > item.priceData.currentPrice) ...[
                         const SizedBox(width: 8),
                         Text(
-                          _formatPrice(item.originalPrice),
+                          _formatPrice(item.priceData.originalPrice),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -118,45 +114,51 @@ class CartItemWidget extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  
+                  // Show discount if any
+                  if (item.priceData.discount > 0)
+                    Text(
+                      'Giảm ${item.priceData.discount}%',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  
+                  const SizedBox(height: 4),
                   
                   // Stock status
                   if (item.stockQuantity > 0)
                     Text(
                       'Còn lại: ${item.stockQuantity}',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: item.stockQuantity > 10 ? Colors.green : Colors.orange,
                       ),
                     )
                   else
-                    Text(
+                    const Text(
                       'Hết hàng',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Colors.red,
                       ),
                     ),
-                ],
-              ),
-            ),
-            
-            // Quantity Controls - Compact version
-            Flexible(
-              flex: 2,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Quantity Controls
                   Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       InkWell(
                         onTap: item.quantity > 1 
                           ? () => onQuantityChanged?.call(item.quantity - 1)
                           : null,
                         child: Container(
-                          width: 24,
-                          height: 24,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey[300]!),
                             borderRadius: BorderRadius.circular(4),
@@ -165,8 +167,8 @@ class CartItemWidget extends StatelessWidget {
                         ),
                       ),
                       Container(
-                        width: 40,
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        width: 50,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                         child: Text(
                           '${item.quantity}',
                           textAlign: TextAlign.center,
@@ -177,10 +179,12 @@ class CartItemWidget extends StatelessWidget {
                         ),
                       ),
                       InkWell(
-                        onTap: () => onQuantityChanged?.call(item.quantity + 1),
+                        onTap: item.stockQuantity > item.quantity
+                          ? () => onQuantityChanged?.call(item.quantity + 1)
+                          : null,
                         child: Container(
-                          width: 24,
-                          height: 24,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey[300]!),
                             borderRadius: BorderRadius.circular(4),
@@ -194,17 +198,17 @@ class CartItemWidget extends StatelessWidget {
               ),
             ),
             
-            // Remove Button
-            IconButton(
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline, size: 20),
-              color: Colors.red,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 32,
-                minHeight: 32,
+            if (onRemove != null)
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: Colors.red,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
               ),
-            ),
           ],
         ),
       ),

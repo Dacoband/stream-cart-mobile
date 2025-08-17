@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/search_filters.dart';
+import '../../../domain/entities/search/search_filters.dart';
 
 abstract class AdvancedSearchEvent extends Equatable {
   const AdvancedSearchEvent();

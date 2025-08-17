@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../../domain/entities/cart_entity.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 
 abstract class CartState extends Equatable {
   const CartState();
@@ -13,45 +13,62 @@ class CartInitial extends CartState {}
 class CartLoading extends CartState {}
 
 class CartLoaded extends CartState {
-  final List<CartItemEntity> items;
-  final double totalAmount;
-  final Set<String> selectedCartItemIds; // Track selected items
+  final CartDataEntity cartData;
+  final Set<String> selectedCartItemIds;
 
   const CartLoaded({
-    required this.items,
-    required this.totalAmount,
+    required this.cartData,
     this.selectedCartItemIds = const {},
   });
 
   @override
-  List<Object?> get props => [items, totalAmount, selectedCartItemIds];
+  List<Object?> get props => [cartData, selectedCartItemIds];
 
   CartLoaded copyWith({
-    List<CartItemEntity>? items,
-    double? totalAmount,
+    CartDataEntity? cartData,
     Set<String>? selectedCartItemIds,
   }) {
     return CartLoaded(
-      items: items ?? this.items,
-      totalAmount: totalAmount ?? this.totalAmount,
+      cartData: cartData ?? this.cartData,
       selectedCartItemIds: selectedCartItemIds ?? this.selectedCartItemIds,
     );
   }
 
-  // Helper methods
+  //  Helper methods với CartDataEntity
   bool get hasSelectedItems => selectedCartItemIds.isNotEmpty;
-  bool get isAllSelected => items.isNotEmpty && selectedCartItemIds.length == items.length;
+  
+  List<CartItemEntity> get allItems {
+    List<CartItemEntity> items = [];
+    for (var shop in cartData.cartItemByShop) {
+      items.addAll(shop.products);
+    }
+    return items;
+  }
+  
+  bool get isAllSelected => allItems.isNotEmpty && selectedCartItemIds.length == allItems.length;
   
   List<CartItemEntity> get selectedItems => 
-      items.where((item) => selectedCartItemIds.contains(item.cartItemId)).toList();
+      allItems.where((item) => selectedCartItemIds.contains(item.cartItemId)).toList();
+  
+  double get totalAmount {
+    double total = 0;
+    for (var shop in cartData.cartItemByShop) {
+      total += shop.totalPriceInShop;
+    }
+    return total;
+  }
   
   double get selectedTotalAmount {
     double total = 0;
     for (var item in selectedItems) {
-      total += (item.currentPrice * item.quantity);
+      total += (item.priceData.currentPrice * item.quantity);
     }
     return total;
   }
+
+  int get totalItemCount => cartData.totalProduct;
+  
+  int get selectedItemCount => selectedItems.length;
 }
 
 class CartError extends CartState {
@@ -99,6 +116,16 @@ class CartCleared extends CartState {
   List<Object?> get props => [message];
 }
 
+class CartPreviewOrderLoaded extends CartState {
+  final PreviewOrderDataEntity previewData;
+
+  const CartPreviewOrderLoaded(this.previewData);
+
+  @override
+  List<Object?> get props => [previewData];
+}
+
+@Deprecated('Use CartPreviewOrderLoaded instead')
 class CartPreviewLoaded extends CartState {
   final CartEntity cart;
 

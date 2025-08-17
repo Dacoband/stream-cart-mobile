@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/routing/app_router.dart';
-import '../../../core/services/storage_service.dart';
-import '../../../core/di/dependency_injection.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -24,7 +21,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _currentBottomNavIndex = 2; // Profile is index 2
+  int _currentBottomNavIndex = 2;
 
   @override
   void initState() {
@@ -33,28 +30,22 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _checkAndLoadProfile() async {
-    // Chỉ load profile khi user đã đăng nhập
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess || authState is AuthAuthenticated) {
-      final storageService = getIt<StorageService>();
-      final token = await storageService.getAccessToken(); 
       context.read<ProfileBloc>().add(LoadUserProfileEvent());
     }
   }
 
   void _onBottomNavTap(int index) {
-    setState(() {
-      _currentBottomNavIndex = index;
-    });
-
+    if (index == _currentBottomNavIndex) return;
     switch (index) {
-      case 0: // Live
-        Navigator.pushNamed(context, AppRouter.livestreamList);
+      case 0:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.livestreamList, (r) => false);
         break;
-      case 1: // Home
-        Navigator.pushNamed(context, AppRouter.home);
+      case 1:
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.home, (r) => false);
         break;
-      case 2: // Profile
+      case 2:
         break;
     }
   }
@@ -116,7 +107,6 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () {
               Navigator.pop(context);
               context.read<AuthBloc>().add(LogoutEvent());
-              // Stay on current page, don't navigate away
             },
             child: const Text(
               'Đăng xuất',
@@ -206,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage> {
               builder: (context, cartState) {
                 int itemCount = 0;
                 if (cartState is CartLoaded) {
-                  itemCount = cartState.items.fold<int>(0, (sum, item) => sum + item.quantity);
+                  itemCount = cartState.allItems.fold<int>(0, (sum, item) => sum + item.quantity);
                 }
 
                 return Stack(
@@ -304,12 +294,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                   _buildMenuItem(
-                    icon: Icons.favorite_outline,
-                    title: 'Sản phẩm yêu thích',
+                    icon: Icons.smart_toy_outlined,
+                    title: 'Nhắn cùng Stream Cart',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
-                        // TODO: Navigate to favorites
-                      }, 'Bạn cần đăng nhập để xem sản phẩm yêu thích');
+                        Navigator.pushNamed(context, AppRouter.chatBot);
+                      }, 'Bạn cần đăng nhập để nhắn cùng Stream Cart');
                     },
                   ),
                   _buildMenuItem(

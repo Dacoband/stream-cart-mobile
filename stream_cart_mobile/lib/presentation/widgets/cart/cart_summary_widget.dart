@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../domain/entities/cart_entity.dart';
+import '../../../domain/entities/cart/cart_entity.dart';
 
 class CartSummaryWidget extends StatelessWidget {
   final List<CartItemEntity> items;
@@ -9,7 +9,6 @@ class CartSummaryWidget extends StatelessWidget {
   final double selectedTotalAmount;
   final bool hasSelectedItems;
   final VoidCallback? onCheckout;
-  final VoidCallback? onPreviewOrder;
 
   const CartSummaryWidget({
     super.key,
@@ -19,7 +18,6 @@ class CartSummaryWidget extends StatelessWidget {
     this.selectedTotalAmount = 0,
     this.hasSelectedItems = false,
     this.onCheckout,
-    this.onPreviewOrder,
   });
 
   String _formatPrice(double price) {
@@ -127,31 +125,6 @@ class CartSummaryWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            if (hasSelectedItems && displayItems.isNotEmpty)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: onPreviewOrder,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Theme.of(context).primaryColor),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    'Xem trước đơn hàng (${selectedItems.length})',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF4CAF50),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            if (hasSelectedItems && displayItems.isNotEmpty)
-              const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

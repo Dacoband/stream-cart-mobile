@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/search_filters.dart';
-import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/search/search_filters.dart';
+import '../../../domain/entities/category/category_entity.dart';
 
 class SearchFiltersWidget extends StatefulWidget {
   final SearchFilters initialFilters;

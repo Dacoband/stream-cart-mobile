@@ -45,7 +45,7 @@ class CartIconBadgeView extends StatelessWidget {
         int itemCount = 0;
         
         if (state is CartLoaded) {
-          itemCount = state.items.fold<int>(0, (sum, item) => sum + item.quantity);
+          itemCount = state.allItems.fold<int>(0, (sum, item) => sum + item.quantity);
         }
 
         return IconButton(

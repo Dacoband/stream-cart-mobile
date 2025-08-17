@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/flash_sale_entity.dart';
-import '../../../domain/entities/product_entity.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/routing/app_router.dart';
+import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
 
 class FlashSaleItemCard extends StatelessWidget {
   final FlashSaleEntity flashSale;
@@ -18,26 +20,21 @@ class FlashSaleItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive width and height calculation based on screen size
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
-        
-        // Improved responsive calculations
-        final cardWidth = screenWidth * 0.42; // Increased to 42% for better content space
-        final minWidth = 140.0; // Increased minimum width
-        final maxWidth = 180.0; // Increased maximum width
+        final cardWidth = screenWidth * 0.42; 
+        final minWidth = 140.0; 
+        final maxWidth = 180.0;
         final finalWidth = cardWidth.clamp(minWidth, maxWidth);
-        
-        // Dynamic height based on screen size
         double cardHeight;
         if (screenHeight > 800) {
-          cardHeight = 200.0; // Large screens
+          cardHeight = 200.0;
         } else if (screenHeight > 700) {
-          cardHeight = 180.0; // Medium screens
+          cardHeight = 180.0;
         } else if (screenHeight > 600) {
-          cardHeight = 160.0; // Smaller screens
+          cardHeight = 160.0;
         } else {
-          cardHeight = 140.0; // Very small screens
+          cardHeight = 140.0;
         }
         
         return SizedBox(
@@ -53,10 +50,10 @@ class FlashSaleItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProductImage(cardHeight),
+                  _buildProductImage(context, cardHeight),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(8), // Increased padding for better spacing
+                      padding: const EdgeInsets.all(8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,79 +80,91 @@ class FlashSaleItemCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProductImage(double cardHeight) {
-    // Calculate image height as 45% of card height
+  Widget _buildProductImage(BuildContext context, double cardHeight) {
     final imageHeight = (cardHeight * 0.45).clamp(60.0, 100.0);
+    final heroTag = 'flash_sale_${product.id}';
     
-    return Container(
-      height: imageHeight,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-        color: Colors.grey[200],
-      ),
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: imageUrl != null && imageUrl!.isNotEmpty
-                  ? Image.network(
-                      imageUrl!,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
+    return GestureDetector(
+      onTap: () {
+        if (imageUrl != null && imageUrl!.isNotEmpty) {
+          precacheImage(CachedNetworkImageProvider(imageUrl!), context);
+        }
+        Navigator.pushNamed(
+          context,
+          AppRouter.productDetails,
+          arguments: {
+            'productId': product.id,
+            'heroTag': heroTag,
+            'imageUrl': imageUrl,
+            'name': product.productName,
+            'price': flashSale.flashSalePrice,
+          },
+        );
+      },
+      child: Container(
+        height: imageHeight,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          color: Colors.grey[200],
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Hero(
+                tag: heroTag,
+                child: imageUrl != null && imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
                           color: Colors.grey[200],
                           child: const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
+                        ),
+                        errorWidget: (context, url, error) => Container(
                           color: Colors.grey[200],
                           child: const Icon(
                             Icons.image,
                             size: 24,
                             color: Colors.grey,
                           ),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.image,
-                        size: 24,
-                        color: Colors.grey,
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image,
+                          size: 24,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-            ),
-          ),
-          // Discount badge
-          Positioned(
-            top: 4,
-            left: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(
-                '-${flashSale.getDiscountPercentage(product.basePrice).toInt()}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            ),
+            // Discount badge
+            Positioned(
+              top: 4,
+              left: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '-${flashSale.getDiscountPercentage(product.basePrice).toInt()}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -165,7 +174,7 @@ class FlashSaleItemCard extends StatelessWidget {
       child: Text(
         product.productName,
         style: const TextStyle(
-          fontSize: 12, // Increased from 9 to 12 for better readability
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           height: 1.2,
           color: Colors.black87,
@@ -184,7 +193,7 @@ class FlashSaleItemCard extends StatelessWidget {
         Text(
           '${flashSale.flashSalePrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ',
           style: TextStyle(
-            fontSize: 13, // Increased from 9 to 13
+            fontSize: 13,
             fontWeight: FontWeight.bold,
             color: Colors.red[600],
           ),
@@ -196,7 +205,7 @@ class FlashSaleItemCard extends StatelessWidget {
           Text(
             '${product.basePrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ',
             style: const TextStyle(
-              fontSize: 10, // Increased from 7 to 10
+              fontSize: 10,
               color: Colors.grey,
               decoration: TextDecoration.lineThrough,
             ),
@@ -212,7 +221,7 @@ class FlashSaleItemCard extends StatelessWidget {
     final soldPercentage = flashSale.soldPercentage / 100;
     
     return Container(
-      height: 4, // Increased from 3 to 4
+      height: 4,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(2),
         color: Colors.grey[300],
@@ -241,7 +250,7 @@ class FlashSaleItemCard extends StatelessWidget {
     return Text(
       'Còn $remaining sản phẩm',
       style: const TextStyle(
-        fontSize: 10, // Increased from 7 to 10
+        fontSize: 10,
         color: Colors.grey,
         fontWeight: FontWeight.w500,
       ),

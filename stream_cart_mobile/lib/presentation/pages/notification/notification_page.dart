@@ -5,8 +5,8 @@ import '../../blocs/notification/notification_event.dart';
 import '../../blocs/notification/notification_state.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../../../domain/entities/notification_entity.dart';
-import '../../widgets/notification_item_widget.dart';
+import '../../../domain/entities/notification/notification_entity.dart';
+import '../../widgets/notification/notification_item_widget.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});

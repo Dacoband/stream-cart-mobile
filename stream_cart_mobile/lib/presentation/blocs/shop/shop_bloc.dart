@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/error/failures.dart';
-import '../../../domain/usecases/get_shops_usecase.dart';
-import '../../../domain/entities/shop.dart';
-import '../../../data/models/shop_model.dart';
+import '../../../domain/usecases/shop/get_shops_usecase.dart';
+import '../../../domain/entities/shop/shop.dart';
+import '../../../data/models/shop/shop_model.dart';
 import 'shop_event.dart';
 import 'shop_state.dart';
 
@@ -103,17 +103,13 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
     if (state is ShopDetailLoaded) {
       final currentState = state as ShopDetailLoaded;
       emit(currentState.copyWith(isLoadingProducts: true));
-
-      print('🛍️ [DEBUG] ShopBloc - LoadShopProducts for shopId: ${event.shopId}');
       final result = await getProductsByShopUseCase(event.shopId);
 
       result.fold(
         (failure) {
-          print('🛍️ [DEBUG] ShopBloc - LoadShopProducts FAILURE: $failure');
           emit(ShopError(_mapFailureToMessage(failure)));
         },
         (products) {
-          print('🛍️ [DEBUG] ShopBloc - LoadShopProducts SUCCESS: $products');
           emit(currentState.copyWith(
             products: products,
             isLoadingProducts: false,

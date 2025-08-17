@@ -2,10 +2,10 @@ import 'package:dartz/dartz.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
-import '../../domain/entities/flash_sale_entity.dart';
-import '../../domain/entities/product_entity.dart';
+import '../../domain/entities/flash-sale/flash_sale_entity.dart';
+import '../../domain/entities/products/product_entity.dart';
 import '../../domain/repositories/flash_sale_repository.dart';
-import '../datasources/flash_sale_remote_data_source.dart';
+import '../datasources/flash-sale/flash_sale_remote_data_source.dart';
 
 class FlashSaleRepositoryImpl implements FlashSaleRepository {
   final FlashSaleRemoteDataSource remoteDataSource;

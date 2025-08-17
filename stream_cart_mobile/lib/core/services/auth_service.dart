@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../../domain/entities/login_request_entity.dart';
-import '../../domain/entities/login_response_entity.dart';
+import '../../domain/entities/auth/login_request_entity.dart';
+import '../../domain/entities/auth/login_response_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../core/error/failures.dart';
 import '../utils/token_utils.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/flash_sale_entity.dart';
-import '../../../domain/entities/product_entity.dart';
+import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
+import '../../../domain/entities/products/product_entity.dart';
 import '../../blocs/home/home_bloc.dart';
 import '../../blocs/home/home_state.dart';
 import '../../blocs/home/home_event.dart';

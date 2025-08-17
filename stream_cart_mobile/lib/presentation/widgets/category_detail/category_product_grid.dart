@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../domain/entities/product_entity.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../domain/entities/products/product_entity.dart';
 import '../../../core/routing/app_router.dart';
 
 class CategoryProductGrid extends StatelessWidget {
@@ -26,7 +27,10 @@ class CategoryProductGrid extends StatelessWidget {
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final product = products[index];
-            return _buildProductCard(context, product);
+            return _StaggerFadeIn(
+              index: index,
+              child: _buildProductCard(context, product, index),
+            );
           },
           childCount: products.length,
         ),
@@ -34,18 +38,29 @@ class CategoryProductGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(BuildContext context, ProductEntity product) {
+  Widget _buildProductCard(BuildContext context, ProductEntity product, int index) {
     final hasDiscount = product.discountPrice > 0 && product.discountPrice < product.basePrice;
     final finalPrice = hasDiscount ? product.discountPrice : product.basePrice;
     final discountPercentage = hasDiscount 
         ? ((product.basePrice - product.discountPrice) / product.basePrice * 100).round()
         : 0;
+    final heroTag = 'category_product_${product.id}';
 
     return GestureDetector(
       onTap: () {
+        final imageUrl = productImages[product.id];
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          precacheImage(CachedNetworkImageProvider(imageUrl), context);
+        }
         Navigator.of(context).pushNamed(
           AppRouter.productDetails,
-          arguments: product.id,
+          arguments: {
+            'productId': product.id,
+            'heroTag': heroTag,
+            'imageUrl': imageUrl,
+            'name': product.productName,
+            'price': finalPrice,
+          },
         );
       },
       child: Card(
@@ -61,14 +76,13 @@ class CategoryProductGrid extends StatelessWidget {
               flex: 3,
               child: Stack(
                 children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: _buildProductImage(product),
+                  Positioned.fill(
+                    child: Hero(
+                      tag: heroTag,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: _buildProductImage(product),
+                      ),
                     ),
                   ),
                   // Discount Badge
@@ -205,22 +219,20 @@ class CategoryProductGrid extends StatelessWidget {
     final imageUrl = productImages[product.id];
     
     if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Image.network(
-        imageUrl,
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return _buildPlaceholderImage();
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                  : null,
+        placeholder: (context, url) => Container(
+          color: Colors.grey[200],
+          child: const Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
             ),
-          );
-        },
+          ),
+        ),
+        errorWidget: (context, url, error) => _buildPlaceholderImage(),
       );
     } else {
       return _buildPlaceholderImage();
@@ -235,6 +247,60 @@ class CategoryProductGrid extends StatelessWidget {
         size: 40,
         color: Colors.grey,
       ),
+    );
+  }
+}
+class _StaggerFadeIn extends StatefulWidget {
+  final Widget child;
+  final int index;
+  const _StaggerFadeIn({required this.child, required this.index});
+
+  @override
+  State<_StaggerFadeIn> createState() => _StaggerFadeInState();
+}
+
+class _StaggerFadeInState extends State<_StaggerFadeIn>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    final delay = (widget.index * 60).clamp(0, 600);
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value;
+        final scale = 0.96 + (0.04 * value);
+        return Opacity(
+          opacity: value,
+          child: Transform.scale(
+            scale: scale,
+            alignment: Alignment.center,
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }

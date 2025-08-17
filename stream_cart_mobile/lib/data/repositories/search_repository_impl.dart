@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../domain/repositories/search_repository.dart';
-import '../../domain/entities/search_response_entity.dart';
+import '../../domain/entities/search/search_response_entity.dart';
 import '../../core/error/failures.dart';
-import '../datasources/search_remote_data_source.dart';
+import '../datasources/search/search_remote_data_source.dart';
 
 class SearchRepositoryImpl implements SearchRepository {
   final SearchRemoteDataSource remoteDataSource;

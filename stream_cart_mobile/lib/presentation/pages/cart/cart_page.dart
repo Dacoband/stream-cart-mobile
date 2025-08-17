@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_event.dart';
 import '../../blocs/cart/cart_state.dart';
-import '../../widgets/cart/cart_item_widget_new.dart' as cart_widget;
+import '../../widgets/cart/cart_item_widget.dart';
 import '../../widgets/cart/cart_summary_widget.dart';
 import '../../widgets/cart/empty_cart_widget.dart';
 
@@ -37,13 +38,19 @@ class CartView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Giỏ hàng'),
-        backgroundColor: Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
+        title: const Text(
+            'Giỏ hàng',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        backgroundColor: Color(0xFF202328),
+        foregroundColor: Color(0xFFB0F847),
         actions: [
           BlocBuilder<CartBloc, CartState>(
             builder: (context, state) {
-              if (state is CartLoaded && state.items.isNotEmpty) {
+              if (state is CartLoaded && state.allItems.isNotEmpty) { 
                 return PopupMenuButton<String>(
                   onSelected: (value) {
                     if (value == 'clear') {
@@ -106,6 +113,12 @@ class CartView extends StatelessWidget {
                 backgroundColor: Colors.blue,
               ),
             );
+          } else if (state is CartPreviewOrderLoaded) { 
+            Navigator.pushNamed(
+              context, 
+              '/checkout',
+              arguments: state.previewData,
+            );
           }
         },
         builder: (context, state) {
@@ -116,7 +129,7 @@ class CartView extends StatelessWidget {
           }
 
           if (state is CartLoaded) {
-            if (state.items.isEmpty) {
+            if (state.allItems.isEmpty) { 
               return EmptyCartWidget(
                 onContinueShopping: () {
                   Navigator.pushReplacementNamed(context, '/home');
@@ -140,12 +153,12 @@ class CartView extends StatelessWidget {
                             context.read<CartBloc>().add(UnselectAllCartItemsEvent());
                           }
                         },
-                        activeColor: Color(0xFF4CAF50),
+                        activeColor: Color.fromARGB(255, 137, 192, 54),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       Expanded(
                         child: Text(
-                          'Chọn tất cả (${state.items.length} sản phẩm)',
+                          'Chọn tất cả (${state.allItems.length} sản phẩm)',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -169,6 +182,7 @@ class CartView extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -185,7 +199,8 @@ class CartView extends StatelessWidget {
                             'Bỏ chọn',
                             style: TextStyle(
                               color: Colors.blueAccent,
-                              fontSize: 12
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -194,51 +209,102 @@ class CartView extends StatelessWidget {
                   ),
                 ),
                 const Divider(height: 1),
-                
                 Expanded(
                   child: ListView.builder(
-                    itemCount: state.items.length,
-                    itemBuilder: (context, index) {
-                      final item = state.items[index];
-                      return cart_widget.CartItemWidget(
-                        item: item,
-                        isSelected: state.selectedCartItemIds.contains(item.cartItemId),
-                        onSelectionChanged: (selected) {
-                          final cartBloc = context.read<CartBloc>();
-                          print('CartBloc instance in selection: ${cartBloc.hashCode}'); // Debug log
-                          print('Triggering selection for: ${item.cartItemId}, selected: $selected'); // Debug log
-                          cartBloc.add(
-                            ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
-                          );
-                        },
-                        onQuantityChanged: (newQuantity) {
-                          context.read<CartBloc>().add(
-                            UpdateCartItemEvent(
-                              cartItemId: item.cartItemId,
-                              productId: item.productId,
-                              variantId: item.variantId,
-                              quantity: newQuantity,
+                    itemCount: state.cartData.cartItemByShop.length,
+                    itemBuilder: (context, shopIndex) {
+                      final shop = state.cartData.cartItemByShop[shopIndex];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Shop Header
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            color: Colors.grey[100],
+                            child: Row(
+                              children: [
+                                Icon(Icons.store, size: 20, color: Colors.black87),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    shop.shopName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${shop.numberOfProduct} sản phẩm',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        onRemove: () {
-                          _showRemoveItemDialog(context, item);
-                        },
+                          ),
+                          // Shop Products
+                          ...shop.products.map((item) {
+                            return Slidable(
+                              key: ValueKey('cart_${item.cartItemId}'),
+                              endActionPane: ActionPane(
+                                motion: const DrawerMotion(),
+                                dismissible: DismissiblePane(
+                                  onDismissed: () {
+                                    context.read<CartBloc>().add(
+                                      RemoveCartItemEvent(cartItemId: item.cartItemId),
+                                    );
+                                  },
+                                ),
+                                children: [
+                                  SlidableAction(
+                                    onPressed: (_) {
+                                      context.read<CartBloc>().add(
+                                        RemoveCartItemEvent(cartItemId: item.cartItemId),
+                                      );
+                                    },
+                                    backgroundColor: Colors.red.shade600,
+                                    foregroundColor: Colors.white,
+                                    icon: Icons.delete_outline,
+                                    label: 'Xóa',
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ],
+                              ),
+                              child: CartItemWidget(
+                                item: item,
+                                isSelected: state.selectedCartItemIds.contains(item.cartItemId),
+                                onSelectionChanged: (selected) {
+                                  context.read<CartBloc>().add(
+                                    ToggleCartItemSelectionEvent(cartItemId: item.cartItemId),
+                                  );
+                                },
+                                onQuantityChanged: (newQuantity) {
+                                  context.read<CartBloc>().add(
+                                    UpdateCartItemEvent(
+                                      cartItemId: item.cartItemId,
+                                      quantity: newQuantity,
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          }).toList(),
+                          const SizedBox(height: 8),
+                        ],
                       );
                     },
                   ),
                 ),
                 CartSummaryWidget(
-                  items: state.items,
+                  items: state.allItems, 
                   totalAmount: state.totalAmount,
                   selectedItems: state.selectedItems,
                   selectedTotalAmount: state.selectedTotalAmount,
                   hasSelectedItems: state.hasSelectedItems,
                   onCheckout: () {
                     _handleCheckout(context, state);
-                  },
-                  onPreviewOrder: () {
-                    _handlePreviewOrder(context, state);
                   },
                 ),
               ],
@@ -315,15 +381,21 @@ class CartView extends StatelessWidget {
         return AlertDialog(
           title: const Text(
             'Xóa sản phẩm đã chọn',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
-          content: Text('Bạn có muốn xóa ${selectedCartItemIds.length} sản phẩm đã chọn khỏi giỏ hàng?'),
+          content: Text(
+            'Bạn có muốn xóa ${selectedCartItemIds.length} sản phẩm đã chọn khỏi giỏ hàng?',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'Hủy',
-                style: TextStyle(color: Color.fromARGB(255, 110, 110, 110)),
+                style: TextStyle(color: Color.fromARGB(255, 94, 94, 94)),
               ),
             ),
             TextButton(
@@ -346,37 +418,7 @@ class CartView extends StatelessWidget {
     );
   }
 
-  void _showRemoveItemDialog(BuildContext context, item) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Xóa sản phẩm'),
-          content: const Text('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Hủy'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<CartBloc>().add(
-                  RemoveCartItemEvent(
-                    cartItemId: item.cartItemId,
-                  ),
-                );
-              },
-              child: const Text(
-                'Xóa',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // Item removal is handled via swipe actions in the list
 
   void _showClearCartDialog(BuildContext context) {
     showDialog(
@@ -417,46 +459,17 @@ class CartView extends StatelessWidget {
       return;
     }
 
-    // Call PreviewOrder API with selected items
+    // Get preview order data first, then navigate to checkout
     final selectedCartItemIds = state.selectedCartItemIds.toList();
     context.read<CartBloc>().add(
       GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
     );
-
-    // Show preview dialog or navigate to checkout
+    
+    // Show loading message
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đang xử lý ${state.selectedItems.length} sản phẩm được chọn...',
-        ),
+      const SnackBar(
+        content: Text('Đang chuẩn bị thông tin thanh toán...'),
         backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _handlePreviewOrder(BuildContext context, CartLoaded state) {
-    if (!state.hasSelectedItems) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng chọn ít nhất một sản phẩm để xem trước'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    // Call PreviewOrder API with selected items
-    final selectedCartItemIds = state.selectedCartItemIds.toList();
-    context.read<CartBloc>().add(
-      GetSelectedItemsPreviewEvent(selectedCartItemIds: selectedCartItemIds),
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Đang lấy thông tin xem trước cho ${state.selectedItems.length} sản phẩm...',
-        ),
-        backgroundColor: Colors.green,
       ),
     );
   }

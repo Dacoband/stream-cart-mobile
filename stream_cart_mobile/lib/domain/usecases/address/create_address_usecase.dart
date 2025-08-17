@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../entities/address_entity.dart';
+import '../../entities/address/address_entity.dart';
 import '../../repositories/address_repository.dart';
 import '../../../core/error/failures.dart';
 import '../../../core/enums/address_type.dart';

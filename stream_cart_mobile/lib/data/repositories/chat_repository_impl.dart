@@ -1,46 +1,49 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_entity.dart';
-import 'package:stream_cart_mobile/domain/entities/chat_message_entity.dart';
-import 'package:stream_cart_mobile/domain/repositories/chat_repository.dart';
-import 'package:stream_cart_mobile/data/datasources/chat_remote_data_source.dart';
-import 'package:stream_cart_mobile/core/error/failures.dart';
-import 'package:stream_cart_mobile/core/error/exceptions.dart';
+import '../../domain/entities/chat/chat_room_entity.dart';
+import '../../domain/entities/chat/chat_message_entity.dart';
+import '../../domain/entities/chat/unread_count_entity.dart';
+import '../../domain/repositories/chat_repository.dart';
+import '../datasources/chat/chat_remote_data_source.dart';
+import '../../core/error/failures.dart';
+import '../../core/error/exceptions.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ChatRemoteDataSource remoteDataSource;
 
-  ChatRepositoryImpl(this.remoteDataSource);
+  ChatRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<ChatEntity>>> getChatRooms({
+  Future<Either<Failure, ChatRoomsPaginatedResponse>> getChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
     bool? isActive,
   }) async {
     try {
-      final chatRooms = await remoteDataSource.getChatRooms(
+      final result = await remoteDataSource.getChatRooms(
         pageNumber: pageNumber,
         pageSize: pageSize,
         isActive: isActive,
       );
-      return Right(chatRooms);
+      return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem danh sách phòng chat'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi lấy danh sách phòng chat'));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ChatRoomEntity>> getChatRoomDetail(String chatRoomId) async {
+    try {
+      final result = await remoteDataSource.getChatRoomDetail(chatRoomId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      return Left(_handleDioException(e, 'Lỗi khi lấy chi tiết phòng chat'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
@@ -62,21 +65,31 @@ class ChatRepositoryImpl implements ChatRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem tin nhắn'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 404) {
-        return Left(ServerFailure('Phòng chat không tồn tại'));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi lấy tin nhắn'));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ChatMessage>>> searchChatRoomMessages(
+    String chatRoomId, {
+    required String searchTerm,
+    int pageNumber = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final messages = await remoteDataSource.searchChatRoomMessages(
+        chatRoomId,
+        searchTerm: searchTerm,
+        pageNumber: pageNumber,
+        pageSize: pageSize,
+      );
+      return Right(messages);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      return Left(_handleDioException(e, 'Lỗi khi tìm kiếm tin nhắn'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
@@ -90,63 +103,28 @@ class ChatRepositoryImpl implements ChatRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để đánh dấu đã đọc'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 404) {
-        return Left(ServerFailure('Phòng chat không tồn tại'));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi đánh dấu đã đọc'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, List<ChatEntity>>> getChatRoomsByShop(String shopId, {
-    int pageNumber = 1,
-    int pageSize = 20,
-  }) async {
+  Future<Either<Failure, void>> sendTypingIndicator(String chatRoomId, bool isTyping) async {
     try {
-      final chatRooms = await remoteDataSource.getChatRoomsByShop(
-        shopId,
-        pageNumber: pageNumber,
-        pageSize: pageSize,
-      ); // Giả định remoteDataSource có phương thức này
-      return Right(chatRooms);
+      await remoteDataSource.sendTypingIndicator(chatRoomId, isTyping);
+      return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem phòng chat của shop'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 404) {
-        return Left(ServerFailure('Shop không tồn tại'));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi gửi trạng thái đang gõ'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, ChatEntity>> createChatRoom({
+  Future<Either<Failure, ChatRoomEntity>> createChatRoom({
     required String shopId,
     String? relatedOrderId,
     required String initialMessage,
@@ -161,19 +139,7 @@ class ChatRepositoryImpl implements ChatRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để tạo phòng chat'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi tạo phòng chat'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
@@ -195,91 +161,108 @@ class ChatRepositoryImpl implements ChatRepository {
       );
       return Right(message);
     } on ServerException catch (e) {
-      if (e.message.contains('Vui lòng đăng nhập')) {
-        return Left(UnauthorizedFailure(e.message));
-      } else if (e.message.contains('Yêu cầu không hợp lệ') ||
-          e.message.contains('không thành công')) {
-        return Left(ServerFailure(e.message));
-      } else if (e.message.contains('Phòng chat không tồn tại')) {
-        return Left(ServerFailure(e.message));
-      } else if (e.message.contains('Lỗi máy chủ nội bộ')) {
-        return Left(ServerFailure(e.message));
-      } else if (e.message.contains('Kết nối timeout')) {
-        return Left(NetworkFailure(e.message));
-      }
-      return Left(ServerFailure(e.message)); 
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      return Left(_handleDioException(e, 'Lỗi khi gửi tin nhắn'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, String>> getShopToken(
-    String chatRoomId, {
-    String? userId,
-    int? timestamp,
+  Future<Either<Failure, ChatMessage>> updateMessage({
+    required String messageId,
+    required String content,
   }) async {
     try {
-      final token = await remoteDataSource.getShopToken(
-        chatRoomId,
-        userId: userId,
-        timestamp: timestamp,
+      final message = await remoteDataSource.updateMessage(
+        messageId: messageId,
+        content: content,
       );
-      return Right(token);
+      return Right(message);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để lấy token'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 404) {
-        return Left(ServerFailure('Phòng chat không tồn tại'));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi cập nhật tin nhắn'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, List<ChatEntity>>> getShopChatRooms({
+  Future<Either<Failure, UnreadCountEntity>> getUnreadCount() async {
+    try {
+      final unreadCount = await remoteDataSource.getUnreadCount();
+      return Right(unreadCount);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      return Left(_handleDioException(e, 'Lỗi khi lấy số tin nhắn chưa đọc'));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ChatRoomsPaginatedResponse>> getShopChatRooms({
     int pageNumber = 1,
     int pageSize = 20,
     bool? isActive,
   }) async {
     try {
-      final chatRooms = await remoteDataSource.getShopChatRooms(
+      final result = await remoteDataSource.getShopChatRooms(
         pageNumber: pageNumber,
         pageSize: pageSize,
         isActive: isActive,
       );
-      return Right(chatRooms);
+      return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        return Left(UnauthorizedFailure('Vui lòng đăng nhập để xem phòng chat của shop'));
-      } else if (e.response?.statusCode == 400) {
-        final responseData = e.response?.data;
-        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
-        return Left(ServerFailure(message));
-      } else if (e.response?.statusCode == 500) {
-        return Left(ServerFailure('Lỗi máy chủ nội bộ'));
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(NetworkFailure('Kết nối timeout'));
-      }
-      return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      return Left(_handleDioException(e, 'Lỗi khi lấy phòng chat của shop'));
     } catch (e) {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
+
+  // Helper method để xử lý DioException
+  Failure _handleDioException(DioException e, String defaultMessage) {
+    switch (e.response?.statusCode) {
+      case 400:
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Yêu cầu không hợp lệ';
+        return ServerFailure(message);
+      case 401:
+        return UnauthorizedFailure('Vui lòng đăng nhập để tiếp tục');
+      case 403:
+        return UnauthorizedFailure('Bạn không có quyền thực hiện hành động này');
+      case 404:
+        return ServerFailure('Không tìm thấy dữ liệu');
+      case 409:
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Dữ liệu bị xung đột';
+        return ServerFailure(message);
+      case 422:
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Dữ liệu không hợp lệ';
+        return ValidationFailure(message);
+      case 500:
+        return ServerFailure('Lỗi máy chủ nội bộ');
+      case 502:
+        return ServerFailure('Lỗi kết nối máy chủ');
+      case 503:
+        return ServerFailure('Dịch vụ tạm thời không khả dụng');
+      default:
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout ||
+            e.type == DioExceptionType.sendTimeout) {
+          return NetworkFailure('Kết nối timeout');
+        } else if (e.type == DioExceptionType.connectionError) {
+          return NetworkFailure('Lỗi kết nối mạng');
+        } else if (e.type == DioExceptionType.cancel) {
+          return NetworkFailure('Yêu cầu đã bị hủy');
+        }
+        return NetworkFailure('$defaultMessage: ${e.message}');
     }
   }
 }

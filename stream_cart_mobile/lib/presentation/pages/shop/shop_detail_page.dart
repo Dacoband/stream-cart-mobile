@@ -4,7 +4,8 @@ import '../../../core/di/dependency_injection.dart' as di;
 import '../../blocs/shop/shop_bloc.dart';
 import '../../blocs/shop/shop_event.dart';
 import '../../blocs/shop/shop_state.dart';
-import '../../../domain/entities/shop.dart';
+import '../../../domain/entities/shop/shop.dart';
+import '../../../core/routing/app_router.dart';
 
 class ShopDetailPage extends StatefulWidget {
   final String shopId;
@@ -40,7 +41,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
             if (state is ShopError) {
               return Scaffold(
                 appBar: AppBar(
-                  title: const Text('Shop Details'),
+                  title: const Text('Chi tiết cửa hàng'),
                 ),
                 body: Center(
                   child: Column(
@@ -79,10 +80,10 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
 
             return Scaffold(
               appBar: AppBar(
-                title: const Text('Shop Details'),
+                title: const Text('Chi tiết cửa hàng'),
               ),
               body: const Center(
-                child: Text('Something went wrong'),
+                child: Text('Đã có lỗi xảy ra'),
               ),
             );
           },
@@ -146,15 +147,29 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                   bottom: 20,
                   left: 20,
                   right: 20,
-                  child: Row(
-                    children: [
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.35),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
                       // Shop Logo
                       Container(
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white, width: 1.9),
+                          border: Border.all(color: Colors.white, width: 1.6),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(13),
@@ -206,63 +221,45 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            // Quick Stats - No background, just text with shadow
+                            // Quick Stats - chips
                             Row(
                               children: [
-                                // Rating
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      color: Colors.orange,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      shop.ratingAverage.toStringAsFixed(1),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        shadows: [
-                                          Shadow(
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
-                                            color: Colors.black54,
-                                          ),
-                                        ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.orange, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        shop.ratingAverage.toStringAsFixed(1),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 16),
-                                // Products Count
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.inventory,
-                                      color: Colors.blue,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      shop.totalProduct.toString(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        shadows: [
-                                          Shadow(
-                                            offset: Offset(1, 1),
-                                            blurRadius: 2,
-                                            color: Colors.black54,
-                                          ),
-                                        ],
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.inventory, color: Colors.lightBlueAccent, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        shop.totalProduct.toString(),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -270,6 +267,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               ],
@@ -289,19 +287,19 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: const Color(0xFFB0F847).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
+                      border: Border.all(color: const Color(0xFFB0F847).withOpacity(0.45), width: 1.5),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'About Shop',
+                          'Về cửa hàng',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Color(0xFF202328),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -321,21 +319,20 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 
                 // Shop Info
                 const Text(
-                  'Shop Information',
+                  'Thông tin cửa hàng',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow('Bank', '${shop.bankName} - ${shop.bankAccountNumber}'),
-                _buildInfoRow('Tax Number', shop.taxNumber),
-                _buildInfoRow('Complete Rate', '${shop.completeRate.toStringAsFixed(1)}%'),
-                _buildInfoRow('Status', shop.status ? 'Active' : 'Inactive'),
-                _buildInfoRow('Reviews', shop.totalReview.toString()),
-                _buildInfoRow('Registration Date', _formatDate(shop.registrationDate)),
+                _buildInfoRowWithIcon('Ngân hàng', '${shop.bankName} - ${shop.bankAccountNumber}', Icons.account_balance),
+                _buildInfoRowWithIcon('Mã số thuế', shop.taxNumber, Icons.receipt_long),
+                _buildInfoRowWithIcon('Trạng thái', shop.status ? 'Hoạt động' : 'Ngừng hoạt động', Icons.verified),
+                _buildInfoRowWithIcon('Đánh giá', shop.totalReview.toString(), Icons.reviews),
+                _buildInfoRowWithIcon('Ngày đăng ký', _formatDate(shop.registrationDate), Icons.calendar_today),
                 if (shop.approvalDate != null)
-                  _buildInfoRow('Approval Date', _formatDate(shop.approvalDate!)),
+                  _buildInfoRowWithIcon('Ngày phê duyệt', _formatDate(shop.approvalDate!), Icons.check_circle),
               ],
             ),
           ),
@@ -348,12 +345,27 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
             child: Row(
               children: [
                 const Text(
-                  'Products',
+                  'Sản phẩm của cửa hàng',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF202328),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${products.length}',
+                      style: const TextStyle(
+                        color: Color(0xFFB0F847),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 const Spacer(),
                 if (isLoadingProducts)
                   const SizedBox(
@@ -381,52 +393,128 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 (context, index) {
                   final product = products[index];
                   return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: (product.primaryImageUrl != null &&
-                                      product.primaryImageUrl.isNotEmpty &&
-                                      product.primaryImageUrl.startsWith('http'))
-                                  ? ClipRRect(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    clipBehavior: Clip.hardEdge,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRouter.productDetails,
+                          arguments: product.id,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        product.primaryImageUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Center(
-                                            child: Icon(Icons.shopping_bag, size: 40),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : const Center(
-                                      child: Icon(Icons.shopping_bag, size: 40),
                                     ),
+                                    child: (product.primaryImageUrl != null &&
+                                            product.primaryImageUrl.isNotEmpty &&
+                                            product.primaryImageUrl.startsWith('http'))
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              product.primaryImageUrl,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return const Center(
+                                                  child: Icon(Icons.shopping_bag, size: 40),
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const Center(
+                                            child: Icon(Icons.shopping_bag, size: 40),
+                                          ),
+                                  ),
+                                  if (product.discountPrice > 0 && product.discountPrice < product.basePrice)
+                                    Positioned(
+                                      top: 8,
+                                      left: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          'SALE',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            product.productName ?? 'Product',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '₫${product.finalPrice?.toStringAsFixed(0) ?? '0'}',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 8),
+                            Text(
+                              product.productName,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    _formatPrice(
+                                      (product.discountPrice > 0 && product.discountPrice < product.basePrice)
+                                          ? product.finalPrice
+                                          : product.basePrice,
+                                    ),
+                                    style: const TextStyle(
+                                      color: Color(0xFF4CAF50),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (product.discountPrice > 0 && product.discountPrice < product.basePrice) ...[
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      _formatPrice(product.basePrice),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade600,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Còn lại: ${product.stockQuantity}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: product.stockQuantity > 10
+                                    ? Colors.green
+                                    : product.stockQuantity > 0
+                                        ? Colors.orange
+                                        : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -469,26 +557,43 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRowWithIcon(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB0F847).withOpacity(0.2),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, size: 18, color: const Color(0xFF202328)),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w400),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -498,5 +603,12 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
 
   String _formatDate(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
+
+  String _formatPrice(double price) {
+    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    String priceStr = price.toInt().toString();
+    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
+    return '${priceStr}₫';
   }
 }

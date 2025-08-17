@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../domain/entities/search_filters.dart';
-import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/search/search_filters.dart';
+import '../../../domain/entities/category/category_entity.dart';
 import '../../blocs/search/advanced_search_bloc.dart';
 import '../../blocs/search/advanced_search_event.dart' as search_events;
 import '../../blocs/search/advanced_search_state.dart';
