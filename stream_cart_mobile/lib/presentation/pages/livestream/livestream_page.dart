@@ -13,6 +13,7 @@ import '../../../core/config/livekit_config.dart';
 import '../../widgets/livestream/livestream_products_bottom_sheet.dart';
 import '../../widgets/livestream/chat_input.dart';
 import '../../widgets/livestream/pinned_product_floating.dart';
+import '../../../core/routing/app_router.dart';
 
 class LiveStreamPage extends StatefulWidget {
   final String liveStreamId;
@@ -64,6 +65,14 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                   tooltip: 'Sản phẩm',
                   icon: const Icon(Icons.shopping_bag_outlined),
                   onPressed: () => _showProductsBottomSheet(innerCtx),
+                ),
+                IconButton(
+                  tooltip: 'Đánh giá',
+                  icon: const Icon(Icons.reviews_outlined),
+                  onPressed: () => Navigator.of(innerCtx).pushNamed(
+                    AppRouter.livestreamReviews,
+                    arguments: widget.liveStreamId,
+                  ),
                 ),
               ],
               backgroundColor: Color(0xFF202328),

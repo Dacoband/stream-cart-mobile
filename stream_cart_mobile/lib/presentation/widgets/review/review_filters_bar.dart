@@ -27,49 +27,57 @@ class _ReviewFiltersBarState extends State<ReviewFiltersBar> {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(children: [
-        _StarChip(
-          label: 'Tất cả',
-          selected: _star == null,
-          onTap: () => setState(() => _star = null),
-        ),
-        for (int i = 5; i >= 1; i--)
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
           _StarChip(
-            label: '$i★',
-            selected: _star == i,
-            onTap: () => setState(() => _star = i),
+            label: 'Tất cả',
+            selected: _star == null,
+            onTap: () => setState(() => _star = null),
           ),
-        const Spacer(),
-        FilterChip(
-          label: const Text('Đã mua'),
-          selected: _verified,
-          onSelected: (v) => setState(() => _verified = v),
-          selectedColor: AppColors.brandAccent.withOpacity(0.4),
-          checkmarkColor: AppColors.brandDark,
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.sort_rounded),
-          onPressed: () async {
-            final result = await showModalBottomSheet<(String?, bool)>(
-              context: context,
-              builder: (_) => _SortSheet(initialSortBy: _sortBy, initialAscending: _asc),
-            );
-            if (result != null) {
-              setState(() {
-                _sortBy = result.$1;
-                _asc = result.$2;
-              });
-            }
-          },
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: () => widget.onChanged(_star, _star, _verified, _sortBy, _asc),
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandPrimary, foregroundColor: Colors.white),
-          child: const Text('Áp dụng'),
-        )
-      ]),
+          for (int i = 5; i >= 1; i--)
+            _StarChip(
+              label: '$i★',
+              selected: _star == i,
+              onTap: () => setState(() => _star = i),
+            ),
+          FilterChip(
+            label: const Text('Đã mua'),
+            selected: _verified,
+            onSelected: (v) => setState(() => _verified = v),
+            selectedColor: AppColors.brandAccent.withOpacity(0.4),
+            checkmarkColor: AppColors.brandDark,
+          ),
+          IconButton(
+            icon: const Icon(Icons.sort_rounded),
+            onPressed: () async {
+              final result = await showModalBottomSheet<(String?, bool)>(
+                context: context,
+                builder: (_) => _SortSheet(initialSortBy: _sortBy, initialAscending: _asc),
+              );
+              if (result != null) {
+                setState(() {
+                  _sortBy = result.$1;
+                  _asc = result.$2;
+                });
+              }
+            },
+          ),
+          ElevatedButton(
+            onPressed: () => widget.onChanged(_star, _star, _verified, _sortBy, _asc),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandPrimary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: const Size(0, 0),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Áp dụng'),
+          ),
+        ],
+      ),
     );
   }
 }

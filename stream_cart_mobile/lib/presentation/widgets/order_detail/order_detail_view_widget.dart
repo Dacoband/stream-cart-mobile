@@ -144,6 +144,10 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
                         },
                       );
                     },
+                    onWriteReviewTap: (item) {
+                      if (item.productId.isEmpty) return;
+                      Navigator.of(context).pushNamed(AppRouter.writeReview, arguments: item.productId);
+                    },
                   );
                 }
                 if (itemState is OrderItemError) {
@@ -168,6 +172,10 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
                       },
                     );
                   },
+                  onWriteReviewTap: (item) {
+                    if (item.productId.isEmpty) return;
+                    Navigator.of(context).pushNamed(AppRouter.writeReview, arguments: item.productId);
+                  },
                 );
               },
             ),
@@ -177,6 +185,8 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
             ShippingInfoSectionWidget(order: order),
             const SizedBox(height: 8),
             OrderActionSectionWidget(order: order),
+            const SizedBox(height: 8),
+            _OrderReviewsEntry(orderId: order.id),
             const SizedBox(height: 24),
           ],
         ),
@@ -315,6 +325,42 @@ class _OrderDetailViewWidgetState extends State<OrderDetailViewWidget> {
             const Text('Đơn hàng có thể đã bị xóa hoặc không tồn tại', textAlign: TextAlign.center),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OrderReviewsEntry extends StatelessWidget {
+  final String orderId;
+  const _OrderReviewsEntry({required this.orderId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.reviews_outlined, size: 20, color: Color(0xFF202328)),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Đánh giá đơn hàng',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pushNamed(AppRouter.orderReviews, arguments: orderId),
+            child: const Text('Xem tất cả'),
+          ),
+        ],
       ),
     );
   }

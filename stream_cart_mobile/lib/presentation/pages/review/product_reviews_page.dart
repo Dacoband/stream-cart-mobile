@@ -63,7 +63,15 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Đánh giá sản phẩm')),
+      appBar: AppBar(title: const 
+        Text('Đánh giá sản phẩm',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        )),
+        backgroundColor: Color(0xFF202328),
+        foregroundColor: Color(0xFFB0F847),
+      ),
       body: Column(
         children: [
           ReviewSummarySection(productId: widget.productId),
