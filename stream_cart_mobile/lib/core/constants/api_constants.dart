@@ -148,6 +148,16 @@ class ApiConstants {
   static const String getChatBotHistoryEndpoint = '/api/chatbot/chat/history'; // GET
   static const String sendChatBotMessageEndpoint = '/api/chatbot/chatAI'; // POST
 
+  // Review endpoints
+  static const String createReviewEndpoint = '/api/reviews'; // POST, tạo đánh giá
+  static const String getReviewByOrderEndpoint = '/api/reviews/orders/{orderId}'; // GET, lấy danh sách đánh giá theo orderId
+  static const String getReviewsByProductIdEndpoint = '/api/reviews/products/{productId}'; // GET, lấy danh sách đánh giá theo productId
+  static const String getReviewsByUserIdEndpoint = '/api/reviews/users/{userId}'; // GET, lấy danh sách đánh giá theo userId
+  static const String getReviewsByLivestreamIdEndpoint = '/api/reviews/livestreams/{livestreamId}'; // GET, lấy danh sách đánh giá theo livestreamId
+  static const String getReviewByIdEndpoint = '/api/reviews/{id}'; // GET, lấy thông tin đánh giá theo id
+  static const String updateReviewEndpoint = '/api/reviews/{id}'; // PUT, cập nhật đánh giá theo id
+  static const String deleteReviewEndpoint = '/api/reviews/{id}'; // DELETE, xóa đánh giá theo id
+
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;
