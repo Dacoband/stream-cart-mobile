@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -18,6 +19,7 @@ import 'presentation/blocs/notification/notification_bloc.dart';
 import 'presentation/blocs/address/address_bloc.dart';
 import 'presentation/pages/auth/auth_wrapper.dart';
 import 'presentation/pages/chat/chat_list_page.dart';
+import 'presentation/theme/app_colors.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -148,8 +150,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         onGenerateRoute: AppRouter.generateRoute,
         navigatorObservers: [routeObserver],
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.brandPrimary),
           useMaterial3: true,
+          textTheme: GoogleFonts.beVietnamProTextTheme(),
         ),
         home: const AuthWrapper(),
       ),

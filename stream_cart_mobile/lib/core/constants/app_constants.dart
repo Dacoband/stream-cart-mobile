@@ -1,7 +1,7 @@
 class AppConstants {
   // App Info
   static const String appName = 'Stream Cart Mobile';
-  static const String appJoinName = 'App';
+  static const String appJoinName = 'Stream Cart';
   static const String appVersion = '1.0.0';
   static const String appDescription = 'Stream Cart Mobile-UI is a comprehensive microservices-based e-commerce platform designed for live streaming commerce.';
   

@@ -36,7 +36,6 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     
     if (mounted) {
       final authState = context.read<AuthBloc>().state;
-      print('🔍 Auth state after delay: ${authState.runtimeType}');
       
       if (authState is AuthSuccess) {
         _initializeChatAndConnection();
@@ -52,31 +51,25 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
 
   void _initializeChatAndConnection() {
     final authState = context.read<AuthBloc>().state;
-    print('🔍 Current auth state in init: ${authState.runtimeType}');
     
     if (authState is! AuthSuccess) {
-      print('❌ User not authenticated in init');
       return;
     }
 
     final roleValue = authState.loginResponse.account.role;
     final userRole = UserRole.fromValue(roleValue ?? 1);
-
-    print('🚀 Initializing chat for role: $userRole');
     
     // Connect SignalR first
     context.read<ChatBloc>().add(const ConnectSignalREvent());
     
     // Load chat rooms based on role
     if (userRole == UserRole.customer) {
-      print('👥 Dispatching LoadChatRoomsEvent for Customer');
       context.read<ChatBloc>().add(const LoadChatRoomsEvent(
         pageNumber: 1, 
         pageSize: 20,
         isRefresh: true,
       ));
     } else if (userRole == UserRole.seller) {
-      print('🏪 Dispatching LoadShopChatRoomsEvent for Seller');
       context.read<ChatBloc>().add(const LoadShopChatRoomsEvent(
         pageNumber: 1, 
         pageSize: 20,
@@ -99,28 +92,22 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
 
   void _refreshChatRooms() {
     final authState = context.read<AuthBloc>().state;
-    print('🔍 Current auth state in refresh: ${authState.runtimeType}');
     
     if (authState is! AuthSuccess) {
-      print('❌ User not authenticated in refresh');
       return;
     }
 
     final roleValue = authState.loginResponse.account.role;
     final userRole = UserRole.fromValue(roleValue ?? 1);
-
-    print('🔄 Refreshing chat rooms for role: $userRole');
     
     // Dispatch appropriate event based on role
     if (userRole == UserRole.customer) {
-      print('👥 Dispatching LoadChatRoomsEvent for Customer refresh');
       context.read<ChatBloc>().add(const LoadChatRoomsEvent(
         pageNumber: 1, 
         pageSize: 20,
         isRefresh: true,
       ));
     } else if (userRole == UserRole.seller) {
-      print('🏪 Dispatching LoadShopChatRoomsEvent for Seller refresh');
       context.read<ChatBloc>().add(const LoadShopChatRoomsEvent(
         pageNumber: 1, 
         pageSize: 20,
@@ -264,7 +251,6 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                   }
                   
                   if (state is ChatRoomsLoaded) {
-                    print('🔍 Showing customer chat rooms: ${state.chatRooms.length}');
                     if (state.chatRooms.isEmpty) {
                       return const Center(
                         child: Column(
@@ -289,7 +275,6 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                   }
                   
                   if (state is ShopChatRoomsLoaded) {
-                    print('🏪 Showing shop chat rooms: ${state.chatRooms.length}');
                     if (state.chatRooms.isEmpty) {
                       return const Center(
                         child: Column(

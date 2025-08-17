@@ -60,6 +60,9 @@ class PinnedProductsBar extends StatelessWidget {
                         imageUrl: p.productImageUrl,
                         title: (p.variantName ?? '').trim().isNotEmpty ? p.variantName!.trim() : p.productName,
                         price: p.price,
+                        originalPrice: p.originalPrice,
+                        sku: p.sku,
+                        stock: p.productStock,
                         onTap: () async {
                           await Navigator.of(context).pushNamed(
                             AppRouter.productDetails,
@@ -87,12 +90,18 @@ class _PinnedCard extends StatelessWidget {
   final String imageUrl;
   final String title;
   final double price;
+  final double originalPrice;
+  final String sku;
+  final int stock;
   final VoidCallback onTap;
 
   const _PinnedCard({
     required this.imageUrl,
     required this.title,
     required this.price,
+    required this.originalPrice,
+    required this.sku,
+    required this.stock,
     required this.onTap,
   });
 
@@ -140,10 +149,36 @@ class _PinnedCard extends StatelessWidget {
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${price.toStringAsFixed(0)} đ',
-                    style: const TextStyle(color: Color(0xFFB0F847), fontWeight: FontWeight.w700),
+                  Row(
+                    children: [
+                      Text(
+                        '${price.toStringAsFixed(0)} đ',
+                        style: const TextStyle(color: Color(0xFFB0F847), fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 6),
+                      if (originalPrice > 0 && originalPrice > price)
+                        Text(
+                          '${originalPrice.toStringAsFixed(0)} đ',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                    ],
                   ),
+                  const SizedBox(height: 2),
+                  Builder(builder: (_) {
+                    final meta = <String>[];
+                    if (sku.trim().isNotEmpty) meta.add('SKU: $sku');
+                    meta.add(stock > 0 ? 'Còn: $stock' : 'Hết hàng');
+                    return Text(
+                      meta.join(' • '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                    );
+                  }),
                 ],
               ),
             )
