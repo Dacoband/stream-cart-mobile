@@ -177,6 +177,18 @@ import '../../domain/repositories/chatbot/chat_bot_repository.dart';
 import '../../domain/usecases/chatbot/get_chatbot_history_usecase.dart';
 import '../../domain/usecases/chatbot/send_chatbot_message_usecase.dart';
 import '../../presentation/blocs/chatbot/chat_bot_bloc.dart';
+import '../../data/datasources/review/review_remote_data_source.dart';
+import '../../data/repositories/review/review_repository_impl.dart';
+import '../../domain/repositories/review/review_repository.dart';
+import '../../domain/usecases/review/create_review_usecase.dart';
+import '../../domain/usecases/review/get_review_by_id_usecase.dart';
+import '../../domain/usecases/review/update_review_usecase.dart';
+import '../../domain/usecases/review/delete_review_usecase.dart';
+import '../../domain/usecases/review/get_reviews_by_order_usecase.dart';
+import '../../domain/usecases/review/get_reviews_by_user_usecase.dart';
+import '../../domain/usecases/review/get_reviews_by_livestream_usecase.dart';
+import '../../domain/usecases/review/get_reviews_by_product_usecase.dart';
+import '../../presentation/blocs/review/review_bloc.dart';
 
 
 final getIt = GetIt.instance;
@@ -447,6 +459,32 @@ Future<void> setupDependencies() async {
     resendOtpUseCase: getIt(),
     authRepository: getIt(),
   ));
+
+  // === REVIEW ===
+  // Data source
+  getIt.registerLazySingleton<ReviewRemoteDataSource>(() => ReviewRemoteDataSourceImpl(dio: getIt<Dio>()));
+  // Repository
+  getIt.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(remote: getIt<ReviewRemoteDataSource>()));
+  // Use cases
+  getIt.registerLazySingleton(() => CreateReviewUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => GetReviewByIdUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => UpdateReviewUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => DeleteReviewUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => GetReviewsByOrderUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => GetReviewsByUserUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => GetReviewsByLivestreamUseCase(getIt<ReviewRepository>()));
+  getIt.registerLazySingleton(() => GetReviewsByProductUseCase(getIt<ReviewRepository>()));
+  // Bloc
+  getIt.registerFactory(() => ReviewBloc(
+        createReview: getIt(),
+        getReviewById: getIt(),
+        updateReview: getIt(),
+        deleteReview: getIt(),
+        getReviewsByOrder: getIt(),
+        getReviewsByUser: getIt(),
+        getReviewsByLivestream: getIt(),
+        getReviewsByProduct: getIt(),
+      ));
 
   getIt.registerFactory(() => HomeBloc(
     getCategoriesUseCase: getIt(),
