@@ -313,11 +313,28 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   _buildMenuItem(
                     icon: Icons.payment_outlined,
-                    title: 'Phương thức thanh toán',
+                    title: 'Đánh giá của tài khoản',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
-                        // TODO: Navigate to payment methods
-                      }, 'Bạn cần đăng nhập để quản lý phương thức thanh toán');
+                        final authState = context.read<AuthBloc>().state;
+                        String? userId;
+                        if (authState is AuthSuccess) {
+                          userId = authState.loginResponse.account.id;
+                        } else {
+                          final profileState = context.read<ProfileBloc>().state;
+                          if (profileState is ProfileLoaded) {
+                            userId = profileState.profile.id;
+                          }
+                        }
+
+                        if (userId != null && userId.isNotEmpty) {
+                          Navigator.pushNamed(context, AppRouter.userReviews, arguments: userId);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Không lấy được thông tin tài khoản. Vui lòng thử lại.')),
+                          );
+                        }
+                      }, 'Bạn cần đăng nhập để quản lý đánh giá của tài khoản');
                     },
                   ),
                   _buildMenuItem(
