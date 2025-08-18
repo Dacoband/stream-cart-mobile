@@ -16,6 +16,7 @@ import '../../widgets/product_detail/variant_selector.dart';
 import '../../widgets/product_detail/product_detail_skeleton.dart';
 import '../../widgets/product_detail/add_to_cart_button.dart';
 import '../../widgets/product_detail/product_reviews_preview.dart';
+import '../../widgets/product_detail/you_may_like_section.dart';
 import '../../../domain/entities/products/product_detail_entity.dart';
 import '../../blocs/cart/cart_bloc.dart';
 import '../../blocs/cart/cart_state.dart';
@@ -415,6 +416,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   child: _buildDescription(product),
                 ),
                 const SizedBox(height: 16),
+                _buildProductDetails(product),
+                const SizedBox(height: 16),
                 
                 // Product Variants Section
                 BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
@@ -485,19 +488,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
-                // Shop Info
                 _buildShopInfo(product),
                 const SizedBox(height: 16),
-
-                // Product Reviews Preview
                 ProductReviewsPreview(productId: widget.productId),
                 const SizedBox(height: 16),
-                
-                // Product Details
-                _buildProductDetails(product),
-                
-                // Bottom padding để tránh bị che bởi bottom navigation
+                YouMayLikeSection(
+                  categoryId: product.categoryId,
+                  currentProductId: product.productId,
+                ),
+                const SizedBox(height: 16),
                 const SizedBox(height: 100),
               ],
             ),
@@ -511,18 +510,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return BlocBuilder<ProductVariantsBloc, ProductVariantsState>(
       builder: (context, state) {
         if (state is ProductVariantsLoaded) {
-          // Nếu có variant được chọn, hiển thị giá của variant đó
           if (state.selectedVariant != null) {
             return _buildVariantPriceSection(state.selectedVariant!);
           }
-          
-          // Nếu có cheapest variant, hiển thị price range
           if (state.cheapestVariant != null) {
             return _buildPriceRangeSection(state.variants);
           }
         }
-        
-        // Fallback về giá gốc của product
         return _buildPriceSection(product);
       },
     );
