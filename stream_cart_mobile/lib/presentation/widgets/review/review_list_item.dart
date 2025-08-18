@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../domain/entities/review/review_entity.dart';
 import '../../theme/app_colors.dart';
 import 'rating_stars.dart';
 import 'merchant_reply.dart';
+import '../../../core/routing/app_router.dart';
 
 class ReviewListItem extends StatelessWidget {
   final ReviewEntity review;
@@ -13,7 +15,46 @@ class ReviewListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final hasActions = onEdit != null || onDelete != null;
+    final List<Widget> actions = [
+      if (onEdit != null)
+        CustomSlidableAction(
+          onPressed: (_) => onEdit!.call(),
+          backgroundColor: AppColors.brandPrimary.withValues(alpha: 0.08),
+          foregroundColor: AppColors.brandPrimary,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.edit_outlined, size: 20, color: AppColors.brandPrimary),
+              SizedBox(height: 6),
+              SizedBox(width: 60, child: Text('Sửa', textAlign: TextAlign.center, maxLines: 1, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.brandDark))),
+            ],
+          ),
+        ),
+      if (onDelete != null)
+        CustomSlidableAction(
+          onPressed: (_) => onDelete!.call(),
+          backgroundColor: const Color(0xFFFFEBEE),
+          foregroundColor: Colors.red,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.delete_outline, size: 20, color: Colors.red),
+              SizedBox(height: 6),
+              SizedBox(width: 60, child: Text('Xóa', textAlign: TextAlign.center, maxLines: 1, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.red))),
+            ],
+          ),
+        ),
+    ];
+
+    final content = InkWell(
+      onTap: () => Navigator.pushNamed(
+        context,
+        AppRouter.reviewDetail,
+        arguments: review.id,
+      ),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,20 +66,9 @@ class ReviewListItem extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(review.reviewerName ?? 'Người dùng', style: Theme.of(context).textTheme.titleSmall),
-                  Text(_formatDate(review.createdAt), style: Theme.of(context).textTheme.bodySmall),
+                  Text(_formatTimeAgo(review.createdAt), style: Theme.of(context).textTheme.bodySmall),
                 ]),
               ),
-              if (onEdit != null || onDelete != null)
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    if (v == 'edit' && onEdit != null) onEdit!();
-                    if (v == 'delete' && onDelete != null) onDelete!();
-                  },
-                  itemBuilder: (_) => [
-                    if (onEdit != null) const PopupMenuItem(value: 'edit', child: Text('Sửa')),
-                    if (onDelete != null) const PopupMenuItem(value: 'delete', child: Text('Xóa')),
-                  ],
-                )
             ],
           ),
           const SizedBox(height: 6),
@@ -66,7 +96,43 @@ class ReviewListItem extends StatelessWidget {
           ],
         ],
       ),
+    ));
+
+    if (!hasActions) return content;
+
+    final extentRatio = actions.length == 2 ? 0.46 : 0.24;
+    return Slidable(
+      key: ValueKey('review-${review.id}'),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: extentRatio,
+        children: actions,
+      ),
+      child: content,
     );
+  }
+
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    Duration diff = now.difference(dateTime);
+    // If future date or more than a week old, show full date
+    if (diff.isNegative || diff.inDays >= 7) {
+      return _formatDate(dateTime);
+    }
+    if (diff.inSeconds < 60) {
+      final s = diff.inSeconds;
+      return s <= 1 ? 'Vừa xong' : '$s giây trước';
+    }
+    if (diff.inMinutes < 60) {
+      final m = diff.inMinutes;
+      return m == 1 ? '1 phút trước' : '$m phút trước';
+    }
+    if (diff.inHours < 24) {
+      final h = diff.inHours;
+      return h == 1 ? '1 giờ trước' : '$h giờ trước';
+    }
+    final d = diff.inDays;
+    return d == 1 ? '1 ngày trước' : '$d ngày trước';
   }
 
   String _formatDate(DateTime dt) {

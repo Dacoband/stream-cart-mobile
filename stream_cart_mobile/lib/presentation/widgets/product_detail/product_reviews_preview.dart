@@ -55,13 +55,14 @@ class ProductReviewsPreview extends StatelessWidget {
                 }
                 return Column(
                   children: [
-                    ...items.take(3).map(
+        ...items.take(3).map(
                       (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: _MiniReviewTile(
                           name: e.reviewerName ?? 'Người dùng',
                           rating: e.rating,
                           text: e.reviewText ?? '',
+          createdAt: e.createdAt,
                         ),
                       ),
                     ),
@@ -99,7 +100,8 @@ class _MiniReviewTile extends StatelessWidget {
   final String name;
   final int rating;
   final String text;
-  const _MiniReviewTile({required this.name, required this.rating, required this.text});
+  final DateTime createdAt;
+  const _MiniReviewTile({required this.name, required this.rating, required this.text, required this.createdAt});
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +130,11 @@ class _MiniReviewTile extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 2),
+              Text(
+                _formatTimeAgo(createdAt),
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
               const SizedBox(height: 4),
               Text(
                 text,
@@ -140,5 +147,29 @@ class _MiniReviewTile extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final diff = now.difference(dateTime);
+    if (diff.isNegative || diff.inDays >= 7) {
+      final d = dateTime.day.toString().padLeft(2, '0');
+      final m = dateTime.month.toString().padLeft(2, '0');
+      return '$d/$m/${dateTime.year}';
+    }
+    if (diff.inSeconds < 60) {
+      final s = diff.inSeconds;
+      return s <= 1 ? 'Vừa xong' : '$s giây trước';
+    }
+    if (diff.inMinutes < 60) {
+      final m = diff.inMinutes;
+      return m == 1 ? '1 phút trước' : '$m phút trước';
+    }
+    if (diff.inHours < 24) {
+      final h = diff.inHours;
+      return h == 1 ? '1 giờ trước' : '$h giờ trước';
+    }
+    final d = diff.inDays;
+    return d == 1 ? '1 ngày trước' : '$d ngày trước';
   }
 }

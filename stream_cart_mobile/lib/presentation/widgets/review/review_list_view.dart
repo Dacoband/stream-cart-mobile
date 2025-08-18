@@ -6,8 +6,17 @@ class ReviewListView extends StatelessWidget {
   final List<ReviewEntity> reviews;
   final bool showFooterSpinner;
   final bool showEndOfList;
+  final void Function(ReviewEntity review)? onEdit;
+  final void Function(ReviewEntity review)? onDelete;
 
-  const ReviewListView({super.key, required this.reviews, this.showFooterSpinner = false, this.showEndOfList = false});
+  const ReviewListView({
+    super.key,
+    required this.reviews,
+    this.showFooterSpinner = false,
+    this.showEndOfList = false,
+    this.onEdit,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +40,12 @@ class ReviewListView extends StatelessWidget {
           }
           return const SizedBox.shrink();
         }
-        return ReviewListItem(review: reviews[index]);
+        final item = reviews[index];
+        return ReviewListItem(
+          review: item,
+          onEdit: onEdit != null ? () => onEdit!(item) : null,
+          onDelete: onDelete != null ? () => onDelete!(item) : null,
+        );
       },
     );
   }
