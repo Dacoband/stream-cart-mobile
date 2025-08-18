@@ -71,6 +71,8 @@ class ReviewEntity extends Equatable {
 	final String? livestreamTitle;
 	final String? reviewerName;
 	final String? shopName;
+	final String? avatarImage;
+	final String? userName;
 
 	const ReviewEntity({
 		required this.id,
@@ -95,6 +97,8 @@ class ReviewEntity extends Equatable {
 		this.livestreamTitle,
 		this.reviewerName,
 		this.shopName,
+		this.avatarImage,
+		this.userName,
 	});
 
 	ReviewEntity copyWith({
@@ -120,6 +124,8 @@ class ReviewEntity extends Equatable {
 		String? livestreamTitle,
 		String? reviewerName,
 		String? shopName,
+		String? avatarImage,
+		String? userName,
 	}) {
 		return ReviewEntity(
 			id: id ?? this.id,
@@ -144,6 +150,8 @@ class ReviewEntity extends Equatable {
 			livestreamTitle: livestreamTitle ?? this.livestreamTitle,
 			reviewerName: reviewerName ?? this.reviewerName,
 			shopName: shopName ?? this.shopName,
+			avatarImage: avatarImage ?? this.avatarImage,
+			userName: userName ?? this.userName,
 		);
 	}
 
@@ -171,6 +179,8 @@ class ReviewEntity extends Equatable {
 				livestreamTitle,
 				reviewerName,
 				shopName,
+				avatarImage,
+				userName,
 			];
 }
 

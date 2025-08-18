@@ -56,13 +56,14 @@ class ProductReviewsPreview extends StatelessWidget {
                 return Column(
                   children: [
         ...items.take(3).map(
-                      (e) => Padding(
+          (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: _MiniReviewTile(
-                          name: e.reviewerName ?? 'Người dùng',
+            name: e.userName ?? e.reviewerName ?? 'Người dùng',
                           rating: e.rating,
                           text: e.reviewText ?? '',
           createdAt: e.createdAt,
+            avatarUrl: e.avatarImage,
                         ),
                       ),
                     ),
@@ -101,14 +102,19 @@ class _MiniReviewTile extends StatelessWidget {
   final int rating;
   final String text;
   final DateTime createdAt;
-  const _MiniReviewTile({required this.name, required this.rating, required this.text, required this.createdAt});
+  final String? avatarUrl;
+  const _MiniReviewTile({required this.name, required this.rating, required this.text, required this.createdAt, this.avatarUrl});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CircleAvatar(radius: 14, child: Icon(Icons.person, size: 16)),
+        CircleAvatar(
+          radius: 14,
+          backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty) ? NetworkImage(avatarUrl!) : null,
+          child: (avatarUrl == null || avatarUrl!.isEmpty) ? const Icon(Icons.person, size: 16) : null,
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
