@@ -312,7 +312,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                   _buildMenuItem(
-                    icon: Icons.payment_outlined,
+                    icon: Icons.feedback_outlined,
                     title: 'Đánh giá của tài khoản',
                     onTap: () {
                       _checkAuthAndNavigate(context, () {
