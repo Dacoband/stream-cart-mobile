@@ -33,6 +33,9 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 
 	StreamSubscription<RoomEvent>? _roomSub;
 	Timer? _primaryProbeTimer;
+		// Debounce reloads to avoid racing with backend persistence
+		Timer? _productsReloadDebounce;
+		Timer? _pinnedReloadDebounce;
 
 	LiveStreamBloc({
 		required this.getLiveStreamUseCase,
@@ -266,6 +269,8 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 						final stJoin = state;
 						final joinId = stJoin is LiveStreamLoaded ? stJoin.liveStream.id : currentState.liveStream.id;
 						await signalR.joinLivestreamChat(joinId);
+						// ensure server tracks viewer in this room for pinned/product events
+						await signalR.startViewingLivestream(joinId);
 						signalR.onReceiveViewerStats = (stats) {
 							final total = (stats['totalViewers'] as num?)?.toInt();
 							if (total != null) add(ViewerStatsReceived(total));
@@ -298,6 +303,44 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 							add(LiveStreamMessageReceived(entity));
 						} catch (_) {}
 					};
+									// --- Realtime products & pinned products ---
+									String? _lsIdFrom(Map<String, dynamic> m) {
+										final v = m['livestreamId'] ?? m['liveStreamId'] ?? m['LivestreamId'] ?? m['LiveStreamId'];
+										return v?.toString();
+									}
+												void _maybeReloadProducts(Map<String, dynamic> payload) {
+													final id = _lsIdFrom(payload) ?? joinId;
+													if (id == joinId) {
+														_productsReloadDebounce?.cancel();
+														_productsReloadDebounce = Timer(const Duration(milliseconds: 250), () {
+															add(LoadProductsByLiveStreamEvent(joinId));
+														});
+													}
+												}
+												void _maybeReloadPinned(Map<String, dynamic> payload) {
+													final id = _lsIdFrom(payload) ?? joinId;
+													if (id == joinId) {
+														_pinnedReloadDebounce?.cancel();
+														_pinnedReloadDebounce = Timer(const Duration(milliseconds: 250), () {
+															add(LoadPinnedProductsByLiveStreamEvent(joinId));
+														});
+													}
+												}
+									// Pinned list updated broadcast
+									signalR.onPinnedProductsUpdated = (payload) { _maybeReloadPinned(payload); };
+									// Product mutations
+									signalR.onProductAdded = (payload) { _maybeReloadProducts(payload); };
+									signalR.onProductRemoved = (payload) { _maybeReloadProducts(payload); };
+									signalR.onLivestreamProductUpdated = (payload) { _maybeReloadProducts(payload); };
+									// Pin status change -> reload both lists for consistency
+									signalR.onProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
+									signalR.onLivestreamProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
+									// Stock changes -> products list
+									signalR.onProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
+									signalR.onLivestreamProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
+									// Initial fetch to seed UI (safe to call here)
+									add(LoadProductsByLiveStreamEvent(joinId));
+									add(LoadPinnedProductsByLiveStreamEvent(joinId));
 					} catch (_) {}
 			_roomSub?.cancel();
 			_roomSub = liveKitService.events.listen((e) { add(LiveKitRoomEventReceived(e)); });
@@ -344,10 +387,22 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 			final s = getIt<SignalRService>();
 			s.onReceiveViewerStats = null; 
 			s.onReceiveLivestreamMessage = null;
+		// clear product-related listeners
+		s.onPinnedProductsUpdated = null;
+		s.onProductAdded = null;
+		s.onProductRemoved = null;
+		s.onLivestreamProductUpdated = null;
+		s.onProductPinStatusChanged = null;
+		s.onLivestreamProductPinStatusChanged = null;
+		s.onProductStockUpdated = null;
+		s.onLivestreamProductStockUpdated = null;
 			await s.leaveLivestreamChat(currentState.liveStream.id);
+			try { await s.stopViewingLivestream(currentState.liveStream.id); } catch (_) {}
 		} catch (_) {}
 		await liveKitService.disconnect();
 		await _roomSub?.cancel();
+		_productsReloadDebounce?.cancel();
+		_pinnedReloadDebounce?.cancel();
 		emit(currentState.copyWith(isConnectedRoom: false, primaryVideoTrack: null, participants: []));
 	}
 
@@ -423,6 +478,8 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	Future<void> close() {
 		_roomSub?.cancel();
 		_primaryProbeTimer?.cancel();
+		_productsReloadDebounce?.cancel();
+		_pinnedReloadDebounce?.cancel();
 		liveKitService.dispose();
 		return super.close();
 	}
