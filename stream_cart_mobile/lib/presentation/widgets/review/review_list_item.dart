@@ -61,11 +61,23 @@ class ReviewListItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(radius: 16, backgroundColor: AppColors.brandPrimary, child: Text(review.reviewerName?.substring(0, 1) ?? '?')),
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.brandPrimary,
+                backgroundImage: (review.avatarImage != null && review.avatarImage!.isNotEmpty)
+                    ? NetworkImage(review.avatarImage!)
+                    : null,
+                child: (review.avatarImage == null || review.avatarImage!.isEmpty)
+                    ? (() {
+                        final dn = (review.userName ?? review.reviewerName ?? '').trim();
+                        return Text(dn.isEmpty ? '?' : dn.characters.first);
+                      })()
+                    : null,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(review.reviewerName ?? 'Người dùng', style: Theme.of(context).textTheme.titleSmall),
+                  Text(review.userName ?? review.reviewerName ?? 'Người dùng', style: Theme.of(context).textTheme.titleSmall),
                   Text(_formatTimeAgo(review.createdAt), style: Theme.of(context).textTheme.bodySmall),
                 ]),
               ),

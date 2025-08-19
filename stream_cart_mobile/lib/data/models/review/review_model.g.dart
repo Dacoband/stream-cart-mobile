@@ -54,6 +54,8 @@ ReviewModel _$ReviewModelFromJson(Map<String, dynamic> json) => ReviewModel(
       livestreamTitle: json['livestreamTitle'] as String?,
       reviewerName: json['reviewerName'] as String?,
       shopName: json['shopName'] as String?,
+      avatarImage: json['avatarImage'] as String?,
+      userName: json['userName'] as String?,
     );
 
 Map<String, dynamic> _$ReviewModelToJson(ReviewModel instance) =>
@@ -80,6 +82,8 @@ Map<String, dynamic> _$ReviewModelToJson(ReviewModel instance) =>
       'livestreamTitle': instance.livestreamTitle,
       'reviewerName': instance.reviewerName,
       'shopName': instance.shopName,
+      'avatarImage': instance.avatarImage,
+      'userName': instance.userName,
     };
 
 ReviewResponseModel _$ReviewResponseModelFromJson(Map<String, dynamic> json) =>

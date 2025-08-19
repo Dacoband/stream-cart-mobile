@@ -13,6 +13,14 @@ typedef OnUserLeftRoom = void Function(String userId, String? userName);
 typedef OnConnectionStateChanged = void Function(HubConnectionState state);
 typedef OnError = void Function(String error);
 
+// Product-related callbacks (payloads are normalized Map<String, dynamic>)
+typedef OnPinnedProductsUpdated = void Function(Map<String, dynamic> payload);
+typedef OnProductAdded = void Function(Map<String, dynamic> payload);
+typedef OnProductRemoved = void Function(Map<String, dynamic> payload);
+typedef OnProductUpdated = void Function(Map<String, dynamic> payload);
+typedef OnProductPinStatusChanged = void Function(Map<String, dynamic> payload);
+typedef OnProductStockUpdated = void Function(Map<String, dynamic> payload);
+
 class SignalRService {
   late HubConnection _connection;
   String baseUrl;
@@ -26,6 +34,16 @@ class SignalRService {
   OnUserLeftRoom? onUserLeftRoom;
   OnConnectionStateChanged? onConnectionStateChanged;
   OnError? onError;
+
+  // Product-related listeners
+  OnPinnedProductsUpdated? onPinnedProductsUpdated;
+  OnProductAdded? onProductAdded;
+  OnProductRemoved? onProductRemoved;
+  OnProductUpdated? onLivestreamProductUpdated;
+  OnProductPinStatusChanged? onProductPinStatusChanged;
+  OnProductPinStatusChanged? onLivestreamProductPinStatusChanged;
+  OnProductStockUpdated? onProductStockUpdated;
+  OnProductStockUpdated? onLivestreamProductStockUpdated;
 
   bool _isConnected = false;
 
@@ -186,6 +204,113 @@ class SignalRService {
     });
   }
 
+  // ---------- Product actions ----------
+  Future<void> updateProductStock(String livestreamId, String productId, String? variantId, int newStock) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('UpdateProductStock', args: [livestreamId, productId, variantId, newStock]);
+      onStatusChanged?.call('✅ Đã cập nhật stock sản phẩm');
+    });
+  }
+
+  Future<void> pinProduct(String livestreamId, String productId, String? variantId, bool isPin) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('PinProduct', args: [livestreamId, productId, variantId, isPin]);
+      onStatusChanged?.call('✅ Đã cập nhật trạng thái pin sản phẩm');
+    });
+  }
+
+  Future<void> addProductToLivestream(
+    String livestreamId,
+    String productId,
+    String? variantId,
+    num price,
+    int stock,
+    {bool isPin = false}
+  ) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('AddProductToLivestream', args: [livestreamId, productId, variantId, price, stock, isPin]);
+      onStatusChanged?.call('✅ Đã thêm sản phẩm vào livestream');
+    });
+  }
+
+  Future<void> removeProductFromLivestream(String livestreamId, String productId, String? variantId) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('RemoveProductFromLivestream', args: [livestreamId, productId, variantId]);
+      onStatusChanged?.call('✅ Đã xoá sản phẩm khỏi livestream');
+    });
+  }
+
+  Future<dynamic> getLivestreamProducts(String livestreamId) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      return _connection.invoke('GetLivestreamProducts', args: [livestreamId]);
+    });
+  }
+
+  Future<dynamic> getPinnedProducts(String livestreamId) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      return _connection.invoke('GetPinnedProducts', args: [livestreamId]);
+    });
+  }
+
+  // ---------- Viewing helpers (some servers require this to receive room events) ----------
+  Future<void> startViewingLivestream(String livestreamId) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('StartViewingLivestream', args: [livestreamId]);
+      onStatusChanged?.call('👀 Bắt đầu xem livestream $livestreamId');
+    });
+  }
+
+  Future<void> stopViewingLivestream(String livestreamId) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('StopViewingLivestream', args: [livestreamId]);
+      onStatusChanged?.call('👋 Dừng xem livestream $livestreamId');
+    });
+  }
+
+  Future<void> updateLivestreamProductById(String id, num price, int stock, bool isPin) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('UpdateLivestreamProductById', args: [id, price, stock, isPin]);
+      onStatusChanged?.call('✅ Đã cập nhật sản phẩm theo id');
+    });
+  }
+
+  Future<void> pinLivestreamProductById(String id, bool isPin) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('PinLivestreamProductById', args: [id, isPin]);
+    });
+  }
+
+  Future<void> updateLivestreamProductStockById(String id, int newStock) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('UpdateLivestreamProductStockById', args: [id, newStock]);
+    });
+  }
+
+  Future<void> deleteLivestreamProductById(String id) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('DeleteLivestreamProductById', args: [id]);
+    });
+  }
+
+  Future<void> softDeleteLivestreamProductById(String id, {String reason = 'Removed by seller'}) async {
+    return _withRetry(() async {
+      await ensureConnected();
+      await _connection.invoke('SoftDeleteLivestreamProductById', args: [id, reason]);
+    });
+  }
+
   Future<void> joinChatRoom(String chatRoomId) async {
     return _withRetry(() async {
       await ensureConnected();
@@ -250,6 +375,21 @@ class SignalRService {
   }
 
   void _setupListeners() {
+    Map<String, dynamic> _decodeFirstArg(List<Object?>? arguments) {
+      if (arguments != null && arguments.isNotEmpty) {
+        final data = arguments[0];
+        if (data is Map<String, dynamic>) return data;
+        if (data is Map) return Map<String, dynamic>.from(data);
+        if (data is String) {
+          try {
+            final decoded = jsonDecode(data);
+            if (decoded is Map) return Map<String, dynamic>.from(decoded);
+          } catch (_) {}
+        }
+      }
+      return <String, dynamic>{};
+    }
+
     bool _hasLivestreamId(Map<String, dynamic> m) {
       return m.containsKey('livestreamId') || m.containsKey('liveStreamId') ||
             m.containsKey('LivestreamId') || m.containsKey('LiveStreamId');
@@ -317,8 +457,6 @@ class SignalRService {
     for (final eventName in possibleEvents) {
       _connection.on(eventName, (args) => handleIncoming(eventName, args));
     }
-
-    // Listen cho livestream messages (support multiple possible event names)
     void handleLivestreamIncoming(String eventName, List<Object?>? arguments) {
       try {
         if (arguments != null && arguments.isNotEmpty) {
@@ -361,6 +499,69 @@ class SignalRService {
     for (final eventName in possibleLivestreamEvents) {
       _connection.on(eventName, (args) => handleLivestreamIncoming(eventName, args));
     }
+
+    // ---------- Product & Pinned events ----------
+    void _emitPinnedProductsUpdated(List<Object?>? args, String evt) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      onPinnedProductsUpdated?.call(payload);
+      onStatusChanged?.call('📌 Nhận pinned products ($evt)');
+    }
+
+  _connection.on('PinnedProductsUpdated', (args) => _emitPinnedProductsUpdated(args, 'PinnedProductsUpdated'));
+  _connection.on('PinnedProductsChanged', (args) => _emitPinnedProductsUpdated(args, 'PinnedProductsChanged'));
+  _connection.on('PinnedUpdated', (args) => _emitPinnedProductsUpdated(args, 'PinnedUpdated'));
+
+    void _emitProductAdded(List<Object?>? args, String evt) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      onProductAdded?.call(payload);
+      onStatusChanged?.call('🟢 Sản phẩm được thêm ($evt)');
+    }
+    _connection.on('ProductAddedToLivestream', (args) => _emitProductAdded(args, 'ProductAddedToLivestream'));
+
+    void _emitProductRemoved(List<Object?>? args, String evt) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      onProductRemoved?.call(payload);
+      onStatusChanged?.call('🔴 Sản phẩm bị xoá ($evt)');
+    }
+    _connection.on('ProductRemovedFromLivestream', (args) => _emitProductRemoved(args, 'ProductRemovedFromLivestream'));
+
+    void _emitProductUpdated(List<Object?>? args, String evt) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      onLivestreamProductUpdated?.call(payload);
+      onStatusChanged?.call('✏️ Sản phẩm được cập nhật ($evt)');
+    }
+    _connection.on('LivestreamProductUpdated', (args) => _emitProductUpdated(args, 'LivestreamProductUpdated'));
+
+    void _emitPinChanged(List<Object?>? args, String evt, {required bool isLiveVariant}) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      if (isLiveVariant) {
+        onLivestreamProductPinStatusChanged?.call(payload);
+      } else {
+        onProductPinStatusChanged?.call(payload);
+      }
+      onStatusChanged?.call('📌 Trạng thái pin thay đổi ($evt)');
+    }
+    _connection.on('ProductPinStatusChanged', (args) => _emitPinChanged(args, 'ProductPinStatusChanged', isLiveVariant: false));
+    _connection.on('LivestreamProductPinStatusChanged', (args) => _emitPinChanged(args, 'LivestreamProductPinStatusChanged', isLiveVariant: true));
+
+    void _emitStockUpdated(List<Object?>? args, String evt, {required bool isLiveVariant}) {
+      final payload = _decodeFirstArg(args);
+      if (payload.isEmpty) return;
+      if (isLiveVariant) {
+        onLivestreamProductStockUpdated?.call(payload);
+      } else {
+        onProductStockUpdated?.call(payload);
+      }
+      onStatusChanged?.call('📦 Stock sản phẩm thay đổi ($evt)');
+    }
+    _connection.on('ProductStockUpdated', (args) => _emitStockUpdated(args, 'ProductStockUpdated', isLiveVariant: false));
+    _connection.on('LivestreamProductStockUpdated', (args) => _emitStockUpdated(args, 'LivestreamProductStockUpdated', isLiveVariant: true));
+  _connection.on('StockChanged', (args) => _emitStockUpdated(args, 'StockChanged', isLiveVariant: false));
     _connection.on("ReceiveViewerStats", (arguments) {
       try {
         if (arguments != null && arguments.isNotEmpty) {
@@ -486,6 +687,16 @@ class SignalRService {
     onConnectionStateChanged = null;
     onError = null;
     onStatusChanged = null;
+
+  // Product-related
+  onPinnedProductsUpdated = null;
+  onProductAdded = null;
+  onProductRemoved = null;
+  onLivestreamProductUpdated = null;
+  onProductPinStatusChanged = null;
+  onLivestreamProductPinStatusChanged = null;
+  onProductStockUpdated = null;
+  onLivestreamProductStockUpdated = null;
   }
 
   Future<void> dispose() async {

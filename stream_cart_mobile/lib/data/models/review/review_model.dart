@@ -122,6 +122,12 @@ class ReviewModel {
 	@JsonKey(name: 'shopName')
 	final String? shopName;
 
+	@JsonKey(name: 'avatarImage')
+	final String? avatarImage;
+
+	@JsonKey(name: 'userName')
+	final String? userName;
+
 	const ReviewModel({
 		required this.id,
 		this.orderID,
@@ -145,6 +151,8 @@ class ReviewModel {
 		this.livestreamTitle,
 		this.reviewerName,
 		this.shopName,
+		this.avatarImage,
+		this.userName,
 	});
 
 	factory ReviewModel.fromJson(Map<String, dynamic> json) => _$ReviewModelFromJson(json);
@@ -172,7 +180,9 @@ class ReviewModel {
 				orderCode: orderCode,
 				livestreamTitle: livestreamTitle,
 				reviewerName: reviewerName,
-				shopName: shopName,
+			shopName: shopName,
+			avatarImage: avatarImage,
+			userName: userName,
 			);
 }
 
