@@ -33,7 +33,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 
 	StreamSubscription<RoomEvent>? _roomSub;
 	Timer? _primaryProbeTimer;
-		// Debounce reloads to avoid racing with backend persistence
+		// Debounce timers
 		Timer? _productsReloadDebounce;
 		Timer? _pinnedReloadDebounce;
 
@@ -269,7 +269,6 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 						final stJoin = state;
 						final joinId = stJoin is LiveStreamLoaded ? stJoin.liveStream.id : currentState.liveStream.id;
 						await signalR.joinLivestreamChat(joinId);
-						// ensure server tracks viewer in this room for pinned/product events
 						await signalR.startViewingLivestream(joinId);
 						signalR.onReceiveViewerStats = (stats) {
 							final total = (stats['totalViewers'] as num?)?.toInt();
@@ -326,19 +325,14 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 														});
 													}
 												}
-									// Pinned list updated broadcast
 									signalR.onPinnedProductsUpdated = (payload) { _maybeReloadPinned(payload); };
-									// Product mutations
 									signalR.onProductAdded = (payload) { _maybeReloadProducts(payload); };
 									signalR.onProductRemoved = (payload) { _maybeReloadProducts(payload); };
 									signalR.onLivestreamProductUpdated = (payload) { _maybeReloadProducts(payload); };
-									// Pin status change -> reload both lists for consistency
 									signalR.onProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
 									signalR.onLivestreamProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
-									// Stock changes -> products list
 									signalR.onProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
 									signalR.onLivestreamProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
-									// Initial fetch to seed UI (safe to call here)
 									add(LoadProductsByLiveStreamEvent(joinId));
 									add(LoadPinnedProductsByLiveStreamEvent(joinId));
 					} catch (_) {}

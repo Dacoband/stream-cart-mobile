@@ -457,8 +457,6 @@ class SignalRService {
     for (final eventName in possibleEvents) {
       _connection.on(eventName, (args) => handleIncoming(eventName, args));
     }
-
-    // Listen cho livestream messages (support multiple possible event names)
     void handleLivestreamIncoming(String eventName, List<Object?>? arguments) {
       try {
         if (arguments != null && arguments.isNotEmpty) {
@@ -511,7 +509,6 @@ class SignalRService {
     }
 
   _connection.on('PinnedProductsUpdated', (args) => _emitPinnedProductsUpdated(args, 'PinnedProductsUpdated'));
-  // Accept alternate event names if backend differs
   _connection.on('PinnedProductsChanged', (args) => _emitPinnedProductsUpdated(args, 'PinnedProductsChanged'));
   _connection.on('PinnedUpdated', (args) => _emitPinnedProductsUpdated(args, 'PinnedUpdated'));
 
@@ -564,7 +561,6 @@ class SignalRService {
     }
     _connection.on('ProductStockUpdated', (args) => _emitStockUpdated(args, 'ProductStockUpdated', isLiveVariant: false));
     _connection.on('LivestreamProductStockUpdated', (args) => _emitStockUpdated(args, 'LivestreamProductStockUpdated', isLiveVariant: true));
-  // Some backends may use a generic name
   _connection.on('StockChanged', (args) => _emitStockUpdated(args, 'StockChanged', isLiveVariant: false));
     _connection.on("ReceiveViewerStats", (arguments) {
       try {
