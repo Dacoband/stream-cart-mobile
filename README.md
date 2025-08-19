@@ -494,6 +494,7 @@ We welcome contributions! Please follow these steps:
 - 💬 **Issues**: [GitHub Issues](https://github.com/Dacoband/stream-cart-mobile/issues)
 - 📖 **Documentation**: [Project Wiki](https://github.com/Dacoband/stream-cart-mobile/wiki)
 - 🌐 **Live Demo**: Run `flutter run -d web` to see the current implementation
+- 📲 **Mobile Simulator**: Run `flutter run -d your-simulator` 
 
 ### 🎯 **Project Status**
 - **Development Stage**: Active Development
