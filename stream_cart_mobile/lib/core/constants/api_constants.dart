@@ -158,6 +158,10 @@ class ApiConstants {
   static const String updateReviewEndpoint = '/api/reviews/{id}'; // PUT, cập nhật đánh giá theo id
   static const String deleteReviewEndpoint = '/api/reviews/{id}'; // DELETE, xóa đánh giá theo id
 
+  // Shop Voucher endpoints
+  static const String getShopVouchersByShopIdEndpoint = '/api/shops/{shopId}/vouchers'; // GET, lấy danh sách voucher theo shopId
+  static const String applyShopVoucherEndpoint = '/api/vouchers/{code}/apply'; // POST, áp dụng voucher theo code
+
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;
