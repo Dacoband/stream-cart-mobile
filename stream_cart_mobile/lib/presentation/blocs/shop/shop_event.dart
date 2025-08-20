@@ -56,6 +56,14 @@ class LoadShopProducts extends ShopEvent {
   List<Object> get props => [shopId];
 }
 
+    class RefreshShopProducts extends ShopEvent {
+      final String shopId;
+      const RefreshShopProducts(this.shopId);
+
+      @override
+      List<Object> get props => [shopId];
+    }
+
 class SearchShops extends ShopEvent {
   final String searchTerm;
   final int pageNumber;

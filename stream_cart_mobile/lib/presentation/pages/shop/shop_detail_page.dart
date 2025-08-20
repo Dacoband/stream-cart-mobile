@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/dependency_injection.dart' as di;
@@ -20,17 +21,27 @@ class ShopDetailPage extends StatefulWidget {
 }
 
 class _ShopDetailPageState extends State<ShopDetailPage> {
+  late final ShopBloc _bloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = di.getIt<ShopBloc>();
+    _bloc.add(LoadShopDetail(widget.shopId));
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => di.getIt<ShopBloc>()..add(LoadShopDetail(widget.shopId)),
+    return BlocProvider.value(
+      value: _bloc,
       child: Scaffold(
         body: BlocBuilder<ShopBloc, ShopState>(
           builder: (context, state) {
-            // Khi đã có shop detail, tự động gọi event load products nếu chưa có
-            if (state is ShopDetailLoaded && !state.isLoadingProducts && state.products.isEmpty) {
-              context.read<ShopBloc>().add(LoadShopProducts(widget.shopId));
-            }
 
             if (state is ShopDetailLoading) {
               return const Center(
@@ -64,7 +75,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {
-                          context.read<ShopBloc>().add(LoadShopDetail(widget.shopId));
+                          _bloc.add(LoadShopDetail(widget.shopId));
                         },
                         child: const Text('Try Again'),
                       ),
@@ -93,7 +104,25 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
   }
 
   Widget _buildShopDetail(BuildContext context, Shop shop, List products, bool isLoadingProducts) {
-    return CustomScrollView(
+    return RefreshIndicator(
+      onRefresh: () async {
+        final completer = Completer<void>();
+        final bloc = context.read<ShopBloc>();
+        late final StreamSubscription sub;
+        sub = bloc.stream.listen((st) {
+          if (st is ShopDetailLoaded && !st.isLoadingProducts) {
+            sub.cancel();
+            completer.complete();
+          }
+          if (st is ShopError) {
+            sub.cancel();
+            completer.complete();
+          }
+        });
+        bloc.add(RefreshShopProducts(shop.id));
+        return completer.future;
+      },
+      child: CustomScrollView(
       slivers: [
         // Shop Header
         SliverAppBar(
@@ -127,8 +156,6 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                           color: Colors.grey,
                         ),
                       ),
-                
-                // Light gradient overlay only for text readability
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -548,12 +575,12 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
               ),
             ),
           ),
-
         // Bottom padding
         const SliverToBoxAdapter(
           child: SizedBox(height: 40),
         ),
       ],
+      ),
     );
   }
 

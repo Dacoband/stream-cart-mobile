@@ -19,16 +19,15 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
     on<LoadShops>(_onLoadShops);
     on<LoadShopDetail>(_onLoadShopDetail);
     on<LoadShopProducts>(_onLoadShopProducts);
+    on<RefreshShopProducts>(_onRefreshShopProducts);
     on<SearchShops>(_onSearchShops);
     on<RefreshShops>(_onRefreshShops);
   }
 
   Future<void> _onLoadShops(LoadShops event, Emitter<ShopState> emit) async {
-    // If it's the first page, show loading
     if (event.pageNumber == 1) {
       emit(ShopLoading());
     } else {
-      // If loading more pages, update state to show loading more
       if (state is ShopLoaded) {
         final currentState = state as ShopLoaded;
         emit(currentState.copyWith(isLoadingMore: true));
@@ -95,6 +94,7 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
       },
       (shop) {
         emit(ShopDetailLoaded(shop: shop));
+        add(LoadShopProducts(event.shopId));
       },
     );
   }
@@ -102,12 +102,15 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
   Future<void> _onLoadShopProducts(LoadShopProducts event, Emitter<ShopState> emit) async {
     if (state is ShopDetailLoaded) {
       final currentState = state as ShopDetailLoaded;
-      emit(currentState.copyWith(isLoadingProducts: true));
+      if (currentState.hasRequestedProducts || currentState.isLoadingProducts) {
+        return;
+      }
+      emit(currentState.copyWith(isLoadingProducts: true, hasRequestedProducts: true));
       final result = await getProductsByShopUseCase(event.shopId);
 
       result.fold(
         (failure) {
-          emit(ShopError(_mapFailureToMessage(failure)));
+          emit(currentState.copyWith(isLoadingProducts: false));
         },
         (products) {
           emit(currentState.copyWith(
@@ -116,6 +119,14 @@ class ShopBloc extends Bloc<ShopEvent, ShopState> {
           ));
         },
       );
+    }
+  }
+
+  Future<void> _onRefreshShopProducts(RefreshShopProducts event, Emitter<ShopState> emit) async {
+    if (state is ShopDetailLoaded) {
+      final currentState = state as ShopDetailLoaded;
+      emit(currentState.copyWith(hasRequestedProducts: false));
+      add(LoadShopProducts(event.shopId));
     }
   }
 
