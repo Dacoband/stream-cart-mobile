@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-// Core voucher entity
 class ShopVoucherEntity extends Equatable {
 	final String id;
 	final String shopId;
@@ -193,7 +192,6 @@ class ShopVoucherEntity extends Equatable {
 	String toString() => 'ShopVoucherEntity(code: $code, type: $type, value: $value)';
 }
 
-// Pagination payload for vouchers list (data field)
 class ShopVouchersPaginatedEntity extends Equatable {
 	final int currentPage;
 	final int pageSize;
@@ -271,7 +269,6 @@ class ShopVouchersPaginatedEntity extends Equatable {
 			];
 }
 
-// Envelope for GET vouchers response
 class ShopVouchersResponseEntity extends Equatable {
 	final bool success;
 	final String message;
@@ -309,7 +306,6 @@ class ShopVouchersResponseEntity extends Equatable {
 	List<Object?> get props => [success, message, data, errors];
 }
 
-// Apply voucher request entity
 class ApplyShopVoucherRequestEntity extends Equatable {
 	final String code;
 	final double orderAmount;
@@ -343,7 +339,6 @@ class ApplyShopVoucherRequestEntity extends Equatable {
 	List<Object?> get props => [code, orderAmount, orderId];
 }
 
-// Apply voucher response data
 class ApplyShopVoucherDataEntity extends Equatable {
 	final bool isApplied;
 	final String message;
@@ -426,7 +421,6 @@ class ApplyShopVoucherDataEntity extends Equatable {
 			];
 }
 
-// Envelope for apply-voucher response
 class ApplyShopVoucherResponseEntity extends Equatable {
 	final bool success;
 	final String message;
