@@ -47,25 +47,29 @@ class ShopDetailLoaded extends ShopState {
   final Shop shop;
   final List<ProductEntity> products;
   final bool isLoadingProducts;
+  final bool hasRequestedProducts;
 
   const ShopDetailLoaded({
     required this.shop,
     this.products = const [],
     this.isLoadingProducts = false,
+    this.hasRequestedProducts = false,
   });
 
   @override
-  List<Object> get props => [shop, products, isLoadingProducts];
+  List<Object> get props => [shop, products, isLoadingProducts, hasRequestedProducts];
 
   ShopDetailLoaded copyWith({
     Shop? shop,
     List<ProductEntity>? products,
     bool? isLoadingProducts,
+    bool? hasRequestedProducts,
   }) {
     return ShopDetailLoaded(
       shop: shop ?? this.shop,
       products: products ?? this.products,
       isLoadingProducts: isLoadingProducts ?? this.isLoadingProducts,
+      hasRequestedProducts: hasRequestedProducts ?? this.hasRequestedProducts,
     );
   }
 }
