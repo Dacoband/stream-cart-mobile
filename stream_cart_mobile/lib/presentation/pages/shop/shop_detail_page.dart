@@ -7,6 +7,11 @@ import '../../blocs/shop/shop_event.dart';
 import '../../blocs/shop/shop_state.dart';
 import '../../../domain/entities/shop/shop.dart';
 import '../../../core/routing/app_router.dart';
+import '../../blocs/shop_voucher/shop_voucher_bloc.dart';
+import '../../blocs/shop_voucher/shop_voucher_event.dart';
+import '../../blocs/shop_voucher/shop_voucher_state.dart';
+import '../../theme/app_colors.dart';
+import '../../widgets/shop_voucher/shop_voucher_horizontal_card.dart';
 
 class ShopDetailPage extends StatefulWidget {
   final String shopId;
@@ -344,7 +349,7 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 
                 const SizedBox(height: 24),
                 
-                // Shop Info
+          // Shop Info
                 const Text(
                   'Thông tin cửa hàng',
                   style: TextStyle(
@@ -360,6 +365,73 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
                 _buildInfoRowWithIcon('Ngày đăng ký', _formatDate(shop.registrationDate), Icons.calendar_today),
                 if (shop.approvalDate != null)
                   _buildInfoRowWithIcon('Ngày phê duyệt', _formatDate(shop.approvalDate!), Icons.check_circle),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Voucher của shop',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandDark,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'NEW',
+                        style: TextStyle(color: AppColors.brandAccent, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRouter.shopVouchers, arguments: shop.id);
+                      },
+                      child: const Text('Xem tất cả'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 110,
+                  child: BlocProvider(
+                    create: (_) => di.getIt<ShopVoucherBloc>()..add(LoadShopVouchersEvent(shopId: shop.id, pageNumber: 1, pageSize: 5)),
+                    child: BlocBuilder<ShopVoucherBloc, ShopVoucherState>(
+                      builder: (context, state) {
+                        if (state is ShopVoucherLoading) {
+                          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                        }
+                        if (state is ShopVouchersLoaded) {
+                          final vouchers = state.vouchers.data?.items ?? [];
+                          if (vouchers.isEmpty) {
+                            return const Center(child: Text('Chưa có voucher'));
+                          }
+                          return ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemBuilder: (_, i) => ShopVoucherHorizontalCard(voucher: vouchers[i]),
+                            separatorBuilder: (_, __) => const SizedBox(width: 12),
+                            itemCount: vouchers.length,
+                          );
+                        }
+                        if (state is ShopVoucherError) {
+                          return Center(child: Text(state.message));
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -639,3 +711,5 @@ class _ShopDetailPageState extends State<ShopDetailPage> {
     return '${priceStr}₫';
   }
 }
+
+// voucher card moved to widgets/shop_voucher/shop_voucher_horizontal_card.dart
