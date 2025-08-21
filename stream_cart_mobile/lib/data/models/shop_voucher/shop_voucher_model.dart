@@ -242,27 +242,32 @@ class ShopVouchersResponseModel {
 class ApplyShopVoucherRequestModel {
 	final String code;
 	final double orderAmount;
-	final String orderId;
+	final String? orderId;
 
 	const ApplyShopVoucherRequestModel({
 		required this.code,
 		required this.orderAmount,
-		required this.orderId,
+		this.orderId,
 	});
 
 	factory ApplyShopVoucherRequestModel.fromJson(Map<String, dynamic> json) {
 		return ApplyShopVoucherRequestModel(
 			code: json['code'] ?? '',
 			orderAmount: (json['orderAmount'] as num?)?.toDouble() ?? 0,
-			orderId: json['orderId'] ?? '',
+			orderId: (json['orderId'] as String?),
 		);
 	}
 
-	Map<String, dynamic> toJson() => {
-				'code': code,
-				'orderAmount': orderAmount,
-				'orderId': orderId,
-			};
+	Map<String, dynamic> toJson() {
+		final map = <String, dynamic>{
+			'code': code,
+			'orderAmount': orderAmount,
+		};
+		if (orderId != null && orderId!.isNotEmpty) {
+			map['orderId'] = orderId;
+		}
+		return map;
+	}
 
 	factory ApplyShopVoucherRequestModel.fromEntity(
 			ApplyShopVoucherRequestEntity entity) {

@@ -2,6 +2,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:stream_cart_mobile/data/datasources/shop_voucher/shop_voucher_remote_data_source.dart';
+import 'package:stream_cart_mobile/data/repositories/shop_voucher/shop_voucher_repository_impl.dart';
+import 'package:stream_cart_mobile/domain/repositories/shop_voucher/shop_voucher_repository.dart';
+import 'package:stream_cart_mobile/domain/usecases/shop_voucher/apply_shop_voucher_usecase.dart';
+import 'package:stream_cart_mobile/domain/usecases/shop_voucher/get_shop_vouchers_usecase.dart';
+import 'package:stream_cart_mobile/presentation/blocs/shop_voucher/shop_voucher_bloc.dart';
 import '../../core/network/network_config.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/storage_service.dart';
@@ -342,6 +348,16 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetShopByIdUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductsByShopUseCase(getIt()));
   getIt.registerLazySingleton(() => GetProductCountByShopUseCase(getIt()));
+
+  // === SHOP VOUCHER ===
+  getIt.registerLazySingleton<ShopVoucherRemoteDataSource>(() => ShopVoucherRemoteDataSourceImpl(dioClient: getIt()));
+  getIt.registerLazySingleton<ShopVoucherRepository>(() => ShopVoucherRepositoryImpl(getIt()));
+  getIt.registerLazySingleton(() => GetShopVouchersUseCase(getIt()));
+  getIt.registerLazySingleton(() => ApplyShopVoucherUseCase(getIt()));
+  getIt.registerFactory(() => ShopVoucherBloc(
+    getShopVouchersUseCase: getIt(),
+    applyShopVoucherUseCase: getIt(),
+  ));
 
   // === CHAT (SignalR only) ===
   // Data sources

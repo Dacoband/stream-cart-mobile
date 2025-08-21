@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../domain/entities/cart/cart_entity.dart';
 import '../../blocs/deliveries/deliveries_state.dart';
+import '../../../domain/entities/shop_voucher/shop_voucher_entity.dart';
 
 
 class CurrencyFormatter {
@@ -12,11 +13,13 @@ class CurrencyFormatter {
 class CheckoutOrderSummaryWidget extends StatelessWidget {
   final PreviewOrderDataEntity previewOrderData;
   final DeliveryState? deliveryState;
+  final Map<String, ApplyShopVoucherDataEntity>? appliedVouchers;
 
   const CheckoutOrderSummaryWidget({
     super.key,
     required this.previewOrderData,
     this.deliveryState,
+    this.appliedVouchers,
   });
 
   @override
@@ -62,6 +65,7 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
   }
 
   Widget _buildShopSection(CartShopEntity shop) {
+    final applied = appliedVouchers?[shop.shopId];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -88,6 +92,29 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
         
         // Products
         ...shop.products.map((product) => _buildProductItem(product)),
+        if (applied != null && applied.isApplied) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Giảm giá voucher', style: TextStyle(color: Colors.red)),
+                Text('-${CurrencyFormatter.format(applied.discountAmount)}', style: const TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Tạm tính sau giảm'),
+                Text(CurrencyFormatter.format(applied.finalAmount), style: const TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
       ],
     );
   }
@@ -172,11 +199,20 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
   }
 
   Widget _buildTotalSummary() {
-    // Calculate delivery fee
     final deliveryFee = deliveryState is DeliveryLoaded 
         ? (deliveryState as DeliveryLoaded).totalDeliveryFee 
         : 0.0;
-    final double finalTotal = previewOrderData.totalAmount + deliveryFee;
+    double discountedSubtotal = 0;
+    for (final shop in previewOrderData.listCartItem) {
+      final applied = appliedVouchers?[shop.shopId];
+      if (applied != null && applied.isApplied) {
+        discountedSubtotal += applied.finalAmount;
+      } else {
+        discountedSubtotal += shop.totalPriceInShop;
+      }
+    }
+    final double voucherDiscount = (previewOrderData.subTotal - discountedSubtotal).clamp(0, double.infinity);
+    final double finalTotal = discountedSubtotal + deliveryFee;
     
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -187,12 +223,12 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
             CurrencyFormatter.format(previewOrderData.subTotal),
           ),
           const SizedBox(height: 8),
-          _buildDeliveryFeeRow(deliveryFee),
+      _buildDeliveryFeeRow(deliveryFee),
           const SizedBox(height: 8),
-          if (previewOrderData.discount > 0) ...[
+      if (voucherDiscount > 0) ...[
             _buildSummaryRow(
               'Giảm giá',
-              '-${CurrencyFormatter.format(previewOrderData.discount)}',
+        '-${CurrencyFormatter.format(voucherDiscount)}',
               isDiscount: true,
             ),
             const SizedBox(height: 8),

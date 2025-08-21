@@ -22,6 +22,9 @@ import '../../widgets/checkout/checkout_order_summary_widget.dart';
 import '../../widgets/checkout/checkout_delivery_options_widget.dart';
 import '../../widgets/checkout/checkout_payment_method_widget.dart';
 import '../../widgets/checkout/bottom_bar_widget.dart';
+import '../../theme/app_colors.dart';
+import '../../widgets/checkout/checkout_shop_vouchers_widget.dart';
+import '../../../domain/entities/shop_voucher/shop_voucher_entity.dart';
 
 class CheckoutView extends StatefulWidget {
   final PreviewOrderDataEntity previewOrderData;
@@ -38,6 +41,8 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedPaymentMethod = 'COD'; 
   AddressEntity? selectedShippingAddress; 
+  final Map<String, String> _voucherCodes = {};
+  final Map<String, ApplyShopVoucherDataEntity> _appliedVoucherResults = {};
   
   @override
   void initState() {
@@ -119,7 +124,6 @@ class _CheckoutViewState extends State<CheckoutView> {
                 }
                 final isBankTransfer = selectedPaymentMethod == 'BANK_TRANSFER';
                 if (isBankTransfer) {
-                  // Điều hướng tới trang QR
                   Navigator.pushNamed(
                     context,
                     AppRouter.paymentQr,
@@ -190,6 +194,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                         return CheckoutOrderSummaryWidget(
                           previewOrderData: widget.previewOrderData,
                           deliveryState: deliveryState,
+                          appliedVouchers: _appliedVoucherResults,
                         );
                       },
                     ),
@@ -215,6 +220,43 @@ class _CheckoutViewState extends State<CheckoutView> {
                     ),
                     
                     const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.bubbleNeutral,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.brandPrimary.withOpacity(0.15)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Mã giảm giá của từng shop',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.brandDark),
+                          ),
+                          const SizedBox(height: 8),
+                          CheckoutShopVouchersWidget(
+                            shops: widget.previewOrderData.listCartItem,
+                            initialCodes: _voucherCodes,
+                            onCodeChanged: (shopId, code) {
+                              setState(() {
+                                if (code.trim().isEmpty) {
+                                  _voucherCodes.remove(shopId);
+                                    _appliedVoucherResults.remove(shopId);
+                                } else {
+                                  _voucherCodes[shopId] = code.trim();
+                                }
+                              });
+                            },
+                            onApplied: (shopId, data) {
+                              setState(() {
+                                _appliedVoucherResults[shopId] = data;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                     
                     // 4. Payment Method Section
                     CheckoutPaymentMethodWidget(
@@ -340,6 +382,7 @@ class _CheckoutViewState extends State<CheckoutView> {
           shippingProviderId: shippingProviderId,
           shippingFee: selectedService?.totalAmount ?? 0.0,
           expectedDeliveryDay: selectedService?.expectedDeliveryDate.toIso8601String(),
+          voucherCode: _voucherCodes[shop.shopId],
           customerNotes: "",
           items: shop.products.map((product) {
             return CreateOrderItemEntity(

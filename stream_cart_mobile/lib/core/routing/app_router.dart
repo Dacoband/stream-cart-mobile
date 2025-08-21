@@ -46,6 +46,9 @@ import '../../presentation/pages/review/user_reviews_page.dart';
 import '../../presentation/pages/review/livestream_reviews_page.dart';
 import '../../presentation/pages/review/review_detail_page.dart';
 import '../../domain/entities/review/review_entity.dart';
+import '../../presentation/pages/shop_voucher/shop_voucher_list_page.dart';
+import '../../presentation/blocs/shop_voucher/shop_voucher_bloc.dart';
+import '../di/dependency_injection.dart' show getIt; // ensure getIt is available
 
 class AppRouter {
   static const String login = '/login';
@@ -70,6 +73,7 @@ class AppRouter {
   static const String chatList = '/chat-list';
   static const String chatDetail = '/chat-detail';
   static const String chatBot = '/chat-bot';
+  static const String shopVouchers = '/shop-vouchers';
   static const String addressList = '/address-list';
   static const String addAddress = '/add-address';
   static const String editAddress = '/edit-address';
@@ -258,6 +262,14 @@ class AppRouter {
         final String shopId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (_) => ShopDetailPage(shopId: shopId),
+        );
+      case shopVouchers:
+        final String shopId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ShopVoucherBloc>(),
+            child: ShopVoucherListPage(shopId: shopId),
+          ),
         );
       case chatList:
         return MaterialPageRoute(

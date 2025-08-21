@@ -309,12 +309,12 @@ class ShopVouchersResponseEntity extends Equatable {
 class ApplyShopVoucherRequestEntity extends Equatable {
 	final String code;
 	final double orderAmount;
-	final String orderId;
+	final String? orderId;
 
 	const ApplyShopVoucherRequestEntity({
 		required this.code,
 		required this.orderAmount,
-		required this.orderId,
+		this.orderId,
 	});
 
 	ApplyShopVoucherRequestEntity copyWith({
@@ -329,11 +329,16 @@ class ApplyShopVoucherRequestEntity extends Equatable {
 		);
 	}
 
-	Map<String, dynamic> toJson() => {
-				'code': code,
-				'orderAmount': orderAmount,
-				'orderId': orderId,
-			};
+	Map<String, dynamic> toJson() {
+		final map = <String, dynamic>{
+			'code': code,
+			'orderAmount': orderAmount,
+		};
+		if (orderId != null && orderId!.isNotEmpty) {
+			map['orderId'] = orderId;
+		}
+		return map;
+	}
 
 	@override
 	List<Object?> get props => [code, orderAmount, orderId];

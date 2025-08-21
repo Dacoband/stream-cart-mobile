@@ -8,6 +8,7 @@ import '../../blocs/deliveries/deliveries_bloc.dart';
 import '../../blocs/order/order_bloc.dart';
 import '../../blocs/payment/payment_bloc.dart';
 import 'check_out_view.dart';
+import '../../blocs/shop_voucher/shop_voucher_bloc.dart';
 
 class CheckoutPage extends StatelessWidget {
   final PreviewOrderDataEntity previewOrderData;
@@ -33,6 +34,9 @@ class CheckoutPage extends StatelessWidget {
         ),
         BlocProvider<PaymentBloc>(
           create: (context) => getIt<PaymentBloc>(),
+        ),
+        BlocProvider<ShopVoucherBloc>(
+          create: (context) => getIt<ShopVoucherBloc>(),
         ),
       ],
       child: CheckoutView(previewOrderData: previewOrderData),
