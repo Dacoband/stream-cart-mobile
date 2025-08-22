@@ -18,6 +18,7 @@ import '../../../core/config/livekit_config.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../../core/services/signalr_service.dart';
 import '../../../domain/entities/livestream/livestream_message_entity.dart';
+import '../../../domain/entities/livestream/livestream_product_entity.dart';
 
 class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetLiveStreamUseCase getLiveStreamUseCase;
@@ -33,9 +34,8 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 
 	StreamSubscription<RoomEvent>? _roomSub;
 	Timer? _primaryProbeTimer;
-		// Debounce timers
-		Timer? _productsReloadDebounce;
-		Timer? _pinnedReloadDebounce;
+	Timer? _productsReloadDebounce;
+	DateTime? _lastProductsReloadAt;
 
 	LiveStreamBloc({
 		required this.getLiveStreamUseCase,
@@ -309,31 +309,74 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 									}
 												void _maybeReloadProducts(Map<String, dynamic> payload) {
 													final id = _lsIdFrom(payload) ?? joinId;
-													if (id == joinId) {
-														_productsReloadDebounce?.cancel();
-														_productsReloadDebounce = Timer(const Duration(milliseconds: 250), () {
-															add(LoadProductsByLiveStreamEvent(joinId));
-														});
-													}
+													if (id != joinId) return;
+													final now = DateTime.now();
+													if (_lastProductsReloadAt != null && now.difference(_lastProductsReloadAt!).inMilliseconds < 1200) return;
+													_lastProductsReloadAt = now;
+													_productsReloadDebounce?.cancel();
+													_productsReloadDebounce = Timer(const Duration(milliseconds: 200), () {
+														add(LoadProductsByLiveStreamEvent(joinId));
+													});
 												}
-												void _maybeReloadPinned(Map<String, dynamic> payload) {
+												// Apply pinned realtime without API reload
+												void _applyPinnedRealtime(Map<String, dynamic> payload) {
 													final id = _lsIdFrom(payload) ?? joinId;
-													if (id == joinId) {
-														_pinnedReloadDebounce?.cancel();
-														_pinnedReloadDebounce = Timer(const Duration(milliseconds: 250), () {
-															add(LoadPinnedProductsByLiveStreamEvent(joinId));
-														});
+													if (id != joinId) return;
+													final current = state;
+													if (current is! LiveStreamLoaded) return;
+													final raw = payload['pinnedProducts'] ?? payload['products'] ?? payload['items'];
+													if (raw is! List) return;
+													List<LiveStreamProductEntity> mapped = [];
+													for (final e in raw) {
+														if (e is Map) {
+															final m = e.cast<String, dynamic>();
+															try {
+																final created = () {
+																	final ts = m['createdAt'] ?? m['timestamp'] ?? m['created_at'];
+																	if (ts is String) { return DateTime.tryParse(ts) ?? DateTime.now(); }
+																	return DateTime.now();
+																}();
+																final modified = () {
+																	final ts = m['lastModifiedAt'] ?? m['updatedAt'] ?? m['modifiedAt'];
+																	if (ts is String) { return DateTime.tryParse(ts) ?? created; }
+																	return created;
+																}();
+																mapped.add(LiveStreamProductEntity(
+																	id: (m['id'] ?? m['livestreamProductId'] ?? '').toString(),
+																	livestreamId: (m['livestreamId'] ?? m['liveStreamId'] ?? joinId).toString(),
+																	productId: (m['productId'] ?? '').toString(),
+																	variantId: m['variantId']?.toString(),
+																	flashSaleId: m['flashSaleId']?.toString(),
+																	isPin: true,
+																	originalPrice: ((m['originalPrice'] is num) ? m['originalPrice'] : num.tryParse('${m['originalPrice']}') ?? 0).toDouble(),
+																	price: ((m['price'] is num) ? m['price'] : num.tryParse('${m['price']}') ?? 0).toDouble(),
+																	stock: ((m['stock'] is num) ? m['stock'] : num.tryParse('${m['stock']}') ?? 0).toInt(),
+																	productStock: ((m['productStock'] is num) ? m['productStock'] : num.tryParse('${m['productStock']}') ?? ((m['stock'] is num) ? m['stock'] : num.tryParse('${m['stock']}') ?? 0)).toInt(),
+																	createdAt: created,
+																	lastModifiedAt: modified,
+																	sku: (m['sku'] ?? '').toString(),
+																	productName: (m['productName'] ?? m['name'] ?? 'SP').toString(),
+																	productImageUrl: (m['productImageUrl'] ?? m['imageUrl'] ?? '').toString(),
+																	variantName: m['variantName']?.toString(),
+																));
+														} catch (_) {}
 													}
+													}
+													final currIds = current.pinnedProducts.map((p)=>p.id).join(',');
+													final newIds = mapped.map((p)=>p.id).join(',');
+													if (currIds == newIds) return;
+													emit(current.copyWith(pinnedProducts: mapped));
 												}
-									signalR.onPinnedProductsUpdated = (payload) { _maybeReloadPinned(payload); };
+												signalR.onPinnedProductsUpdated = (payload) { _applyPinnedRealtime(payload); };
 									signalR.onProductAdded = (payload) { _maybeReloadProducts(payload); };
 									signalR.onProductRemoved = (payload) { _maybeReloadProducts(payload); };
 									signalR.onLivestreamProductUpdated = (payload) { _maybeReloadProducts(payload); };
-									signalR.onProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
-									signalR.onLivestreamProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _maybeReloadPinned(payload); };
+												signalR.onProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _applyPinnedRealtime(payload); };
+												signalR.onLivestreamProductPinStatusChanged = (payload) { _maybeReloadProducts(payload); _applyPinnedRealtime(payload); };
 									signalR.onProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
 									signalR.onLivestreamProductStockUpdated = (payload) { _maybeReloadProducts(payload); };
 									add(LoadProductsByLiveStreamEvent(joinId));
+									// Single initial pinned fetch still okay; afterwards realtime updates manage state
 									add(LoadPinnedProductsByLiveStreamEvent(joinId));
 					} catch (_) {}
 			_roomSub?.cancel();
@@ -381,22 +424,20 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 			final s = getIt<SignalRService>();
 			s.onReceiveViewerStats = null; 
 			s.onReceiveLivestreamMessage = null;
-		// clear product-related listeners
-		s.onPinnedProductsUpdated = null;
-		s.onProductAdded = null;
-		s.onProductRemoved = null;
-		s.onLivestreamProductUpdated = null;
-		s.onProductPinStatusChanged = null;
-		s.onLivestreamProductPinStatusChanged = null;
-		s.onProductStockUpdated = null;
-		s.onLivestreamProductStockUpdated = null;
-			await s.leaveLivestreamChat(currentState.liveStream.id);
-			try { await s.stopViewingLivestream(currentState.liveStream.id); } catch (_) {}
+      s.onPinnedProductsUpdated = null;
+      s.onProductAdded = null;
+      s.onProductRemoved = null;
+      s.onLivestreamProductUpdated = null;
+      s.onProductPinStatusChanged = null;
+      s.onLivestreamProductPinStatusChanged = null;
+      s.onProductStockUpdated = null;
+      s.onLivestreamProductStockUpdated = null;
+        await s.leaveLivestreamChat(currentState.liveStream.id);
+        try { await s.stopViewingLivestream(currentState.liveStream.id); } catch (_) {}
 		} catch (_) {}
 		await liveKitService.disconnect();
 		await _roomSub?.cancel();
 		_productsReloadDebounce?.cancel();
-		_pinnedReloadDebounce?.cancel();
 		emit(currentState.copyWith(isConnectedRoom: false, primaryVideoTrack: null, participants: []));
 	}
 
@@ -473,7 +514,6 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		_roomSub?.cancel();
 		_primaryProbeTimer?.cancel();
 		_productsReloadDebounce?.cancel();
-		_pinnedReloadDebounce?.cancel();
 		liveKitService.dispose();
 		return super.close();
 	}
