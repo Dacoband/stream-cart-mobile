@@ -17,7 +17,9 @@ CartProductLiveModel _$CartProductLiveModelFromJson(
           json['priceData'] as Map<String, dynamic>),
       quantity: (json['quantity'] as num).toInt(),
       primaryImage: json['primaryImage'] as String,
-      attributes: Map<String, String>.from(json['attributes'] as Map),
+      attributes: (json['attributes'] as Map?)?.map(
+          (k, e) => MapEntry(k.toString(), e.toString()),
+        ),
       stockQuantity: (json['stockQuantity'] as num).toInt(),
       productStatus: json['productStatus'] as bool,
       length: (json['length'] as num).toDouble(),
