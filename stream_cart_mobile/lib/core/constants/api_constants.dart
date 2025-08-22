@@ -162,6 +162,9 @@ class ApiConstants {
   static const String getShopVouchersByShopIdEndpoint = '/api/shops/{shopId}/vouchers'; // GET, lấy danh sách voucher theo shopId
   static const String applyShopVoucherEndpoint = '/api/vouchers/{code}/apply'; // POST, áp dụng voucher theo code
 
+  // Livestream cart endpoints
+  static const String getPreviewOrderLiveCartEndpoint = '/api/livestream-carts/PreviewOrder'; // GET, lấy thông tin giỏ hàng livestream
+
   // HTTP Status codes
   static const int successCode = 200;
   static const int createdCode = 201;
