@@ -61,6 +61,24 @@ class LiveCartItemWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
+                if (_variantText().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F6F8),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFE0E3E6)),
+                      ),
+                      child: Text(
+                        _variantText(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -122,6 +140,17 @@ class LiveCartItemWidget extends StatelessWidget {
 
   String _formatPrice(double v) {
     return '${v.toStringAsFixed(0)}₫';
+  }
+
+  String _variantText() {
+    // Prefer explicit attribute values as variant name
+    if (item.attributes != null && item.attributes!.isNotEmpty) {
+      // Only values: "Đỏ / Size L" or if keys meaningful keep key: value. Choose values-only for brevity.
+      final values = item.attributes!.values.where((v) => v.trim().isNotEmpty).toList();
+      return values.join(' / ');
+    }
+    // If no attributes, hide instead of showing opaque variant ID
+    return '';
   }
 }
 
