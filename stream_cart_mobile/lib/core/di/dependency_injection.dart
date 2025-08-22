@@ -195,6 +195,15 @@ import '../../domain/usecases/review/get_reviews_by_user_usecase.dart';
 import '../../domain/usecases/review/get_reviews_by_livestream_usecase.dart';
 import '../../domain/usecases/review/get_reviews_by_product_usecase.dart';
 import '../../presentation/blocs/review/review_bloc.dart';
+// === LIVESTREAM CART ===
+import '../../core/services/livestream_cart_service.dart';
+import '../../domain/usecases/cart_live/get_livestream_cart_usecase.dart';
+import '../../domain/usecases/cart_live/add_to_livestream_cart_usecase.dart';
+import '../../domain/usecases/cart_live/update_livestream_cart_item_quantity_usecase.dart';
+import '../../domain/usecases/cart_live/remove_livestream_cart_item_usecase.dart';
+import '../../domain/usecases/cart_live/clear_livestream_cart_usecase.dart';
+import '../../domain/usecases/cart_live/listen_livestream_cart_events_usecase.dart';
+import '../../presentation/blocs/cart_live/cart_live_bloc.dart';
 
 
 final getIt = GetIt.instance;
@@ -500,6 +509,23 @@ Future<void> setupDependencies() async {
         getReviewsByUser: getIt(),
         getReviewsByLivestream: getIt(),
         getReviewsByProduct: getIt(),
+      ));
+
+  // === LIVESTREAM CART (SignalR) ===
+  getIt.registerLazySingleton<LivestreamCartService>(() => LivestreamCartService(getIt<SignalRService>()));
+  getIt.registerLazySingleton(() => GetLivestreamCartUsecase(getIt()));
+  getIt.registerLazySingleton(() => AddToLivestreamCartUsecase(getIt()));
+  getIt.registerLazySingleton(() => UpdateLivestreamCartItemQuantityUsecase(getIt()));
+  getIt.registerLazySingleton(() => RemoveLivestreamCartItemUsecase(getIt()));
+  getIt.registerLazySingleton(() => ClearLivestreamCartUsecase(getIt()));
+  getIt.registerLazySingleton(() => ListenLivestreamCartEventsUsecase(getIt()));
+  getIt.registerFactory(() => CartLiveBloc(
+        getCartUsecase: getIt(),
+        addUsecase: getIt(),
+        updateQtyUsecase: getIt(),
+        removeItemUsecase: getIt(),
+        clearUsecase: getIt(),
+        listenEventsUsecase: getIt(),
       ));
 
   getIt.registerFactory(() => HomeBloc(
