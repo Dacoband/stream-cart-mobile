@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/di/dependency_injection.dart';
+import '../../blocs/cart_live/cart_live_bloc.dart';
+import '../../blocs/cart_live/cart_live_event.dart';
 
 import '../../../core/routing/app_router.dart';
 import '../../../domain/entities/livestream/livestream_product_entity.dart';
 import '../../blocs/livestream/livestream_bloc.dart';
-import '../../blocs/livestream/livestream_event.dart';
 import '../../blocs/livestream/livestream_state.dart';
 
 class LiveStreamProductsBottomSheet extends StatelessWidget {
@@ -23,21 +25,11 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final st = bloc.state;
-    if (st is LiveStreamLoaded) {
-      if (!st.isLoadingProducts && st.products.isEmpty) {
-        bloc.add(LoadProductsByLiveStreamEvent(liveStreamId));
-      }
-      if (!st.isLoadingPinned && st.pinnedProducts.isEmpty) {
-        bloc.add(LoadPinnedProductsByLiveStreamEvent(liveStreamId, limit: 5));
-      }
-    } else {
-      bloc.add(LoadProductsByLiveStreamEvent(liveStreamId));
-      bloc.add(LoadPinnedProductsByLiveStreamEvent(liveStreamId, limit: 5));
-    }
-
-    return BlocProvider.value(
-      value: bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: bloc),
+        BlocProvider(create: (_) => getIt<CartLiveBloc>()..add(LoadCartLiveEvent(liveStreamId))),
+      ],
       child: DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.75,
@@ -174,6 +166,16 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
                                               if (!rootContext.mounted) return;
                                               reopenBottomSheet();
                                             },
+                                            onAddToCart: () {
+                                              context.read<CartLiveBloc>().add(AddToCartLiveEvent(
+                                                    livestreamId: liveStreamId,
+                                                    livestreamProductId: p.id,
+                                                    quantity: 1,
+                                                  ));
+                                              ScaffoldMessenger.of(rootContext).showSnackBar(
+                                                const SnackBar(content: Text('Đang thêm vào giỏ live...')),
+                                              );
+                                            },
                                           );
                                         },
                                         childCount: state.pinnedProducts.length,
@@ -221,6 +223,16 @@ class LiveStreamProductsBottomSheet extends StatelessWidget {
                                             if (!rootContext.mounted) return;
                                             reopenBottomSheet();
                                           },
+                                          onAddToCart: () {
+                                            context.read<CartLiveBloc>().add(AddToCartLiveEvent(
+                                                  livestreamId: liveStreamId,
+                                                  livestreamProductId: p.id,
+                                                  quantity: 1,
+                                                ));
+                                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                                              const SnackBar(content: Text('Đang thêm vào giỏ live...')),
+                                            );
+                                          },
                                         );
                                       },
                                       childCount: state.products.length,
@@ -255,11 +267,13 @@ class _ProductCard extends StatelessWidget {
   final LiveStreamProductEntity product;
   final VoidCallback onTap;
   final Color priceColor;
+  final VoidCallback? onAddToCart;
 
   const _ProductCard({
     required this.product,
     required this.onTap,
     required this.priceColor,
+    this.onAddToCart,
   });
 
   @override
@@ -331,9 +345,23 @@ class _ProductCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-          Container(
+                  if (onAddToCart != null)
+                    InkWell(
+                      onTap: onAddToCart,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: priceColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: const Icon(Icons.add_shopping_cart, size: 16),
+                      ),
+                    ),
+                  const SizedBox(width: 6),
+                  Container(
                     decoration: BoxDecoration(
-            color: priceColor.withValues(alpha: 0.1),
+                      color: priceColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Padding(

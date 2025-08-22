@@ -30,6 +30,8 @@ import '../../presentation/pages/shop/shop_list_page.dart';
 import '../../presentation/pages/shop/shop_detail_page.dart';
 import '../../presentation/pages/livestream/livestream_page.dart';
 import '../../presentation/pages/livestream/livestream_list_page.dart';
+import '../../presentation/pages/cart_live/live_cart_page.dart';
+import '../../presentation/blocs/cart_live/cart_live_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -48,7 +50,7 @@ import '../../presentation/pages/review/review_detail_page.dart';
 import '../../domain/entities/review/review_entity.dart';
 import '../../presentation/pages/shop_voucher/shop_voucher_list_page.dart';
 import '../../presentation/blocs/shop_voucher/shop_voucher_bloc.dart';
-import '../di/dependency_injection.dart' show getIt; // ensure getIt is available
+import '../di/dependency_injection.dart' show getIt;
 
 class AppRouter {
   static const String login = '/login';
@@ -88,6 +90,8 @@ class AppRouter {
   static const String userReviews = '/user-reviews';
   static const String livestreamReviews = '/livestream-reviews';
   static const String reviewDetail = '/review-detail';
+  // Live cart
+  static const String liveCart = '/live-cart';
 
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -252,6 +256,20 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => LiveStreamPage(
             liveStreamId: liveStreamId,
+          ),
+        );
+      case liveCart:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final livestreamId = args?['livestreamId'] as String?;
+        if (livestreamId == null || livestreamId.isEmpty) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(body: Center(child: Text('Thiếu livestreamId'))),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => getIt<CartLiveBloc>(),
+            child: LiveCartPage(livestreamId: livestreamId),
           ),
         );
       case shopList:

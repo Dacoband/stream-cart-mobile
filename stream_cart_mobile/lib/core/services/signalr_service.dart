@@ -23,6 +23,7 @@ typedef OnProductStockUpdated = void Function(Map<String, dynamic> payload);
 
 class SignalRService {
   late HubConnection _connection;
+  HubConnection get connection => _connection;
   String baseUrl;
   StorageService storageService;
   SignalRStatusCallback? onStatusChanged;

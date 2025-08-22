@@ -38,7 +38,6 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
         ..add(LoadLiveStreamEvent(widget.liveStreamId))
   ..add(JoinLiveStreamEvent(widget.liveStreamId))
   ..add(LoadProductsByLiveStreamEvent(widget.liveStreamId))
-  ..add(LoadPinnedProductsByLiveStreamEvent(widget.liveStreamId, limit: 5))
   ;
     }
   }
@@ -61,6 +60,16 @@ class _LiveStreamPageState extends State<LiveStreamPage> {
                 ),
               ),
               actions: [
+                IconButton(
+                  tooltip: 'Giỏ live',
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                  onPressed: () {
+                    Navigator.of(innerCtx).pushNamed(
+                      AppRouter.liveCart,
+                      arguments: {'livestreamId': widget.liveStreamId},
+                    );
+                  },
+                ),
                 IconButton(
                   tooltip: 'Sản phẩm',
                   icon: const Icon(Icons.shopping_bag_outlined),
