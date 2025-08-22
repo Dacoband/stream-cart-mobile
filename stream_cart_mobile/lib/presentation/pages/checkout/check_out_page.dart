@@ -12,10 +12,14 @@ import '../../blocs/shop_voucher/shop_voucher_bloc.dart';
 
 class CheckoutPage extends StatelessWidget {
   final PreviewOrderDataEntity previewOrderData;
+  final List<String>? liveCartItemIds; // IDs from live cart (selected)
+  final String? livestreamId; // live stream context
 
   const CheckoutPage({
     super.key,
     required this.previewOrderData,
+    this.liveCartItemIds,
+    this.livestreamId,
   });
 
   @override
@@ -39,7 +43,11 @@ class CheckoutPage extends StatelessWidget {
           create: (context) => getIt<ShopVoucherBloc>(),
         ),
       ],
-      child: CheckoutView(previewOrderData: previewOrderData),
+      child: CheckoutView(
+        previewOrderData: previewOrderData,
+        liveCartItemIds: liveCartItemIds,
+        livestreamId: livestreamId,
+      ),
     );
   }
 }

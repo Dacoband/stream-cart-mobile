@@ -31,6 +31,7 @@ import '../../presentation/pages/shop/shop_detail_page.dart';
 import '../../presentation/pages/livestream/livestream_page.dart';
 import '../../presentation/pages/livestream/livestream_list_page.dart';
 import '../../presentation/pages/cart_live/live_cart_page.dart';
+import '../../presentation/blocs/cart_live/preview_order_live_bloc.dart';
 import '../../presentation/blocs/cart_live/cart_live_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
 import '../../presentation/blocs/profile/profile_event.dart';
@@ -193,7 +194,18 @@ class AppRouter {
           builder: (_) => const CartPage(), 
         );
       case checkout:
-        final previewOrderData = settings.arguments as PreviewOrderDataEntity?;
+        // Accept either PreviewOrderDataEntity directly or Map with preview + live info
+        PreviewOrderDataEntity? previewOrderData;
+        List<String>? liveIds;
+        String? livestreamId;
+        final args = settings.arguments;
+        if (args is PreviewOrderDataEntity) {
+          previewOrderData = args;
+        } else if (args is Map<String, dynamic>) {
+          previewOrderData = args['preview'] as PreviewOrderDataEntity?;
+          liveIds = (args['liveCartItemIds'] as List<dynamic>?)?.map((e) => e.toString()).toList();
+          livestreamId = args['livestreamId'] as String?;
+        }
         if (previewOrderData == null) {
           return MaterialPageRoute(
             builder: (_) => const Scaffold(
@@ -204,7 +216,11 @@ class AppRouter {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => CheckoutPage(previewOrderData: previewOrderData),
+          builder: (_) => CheckoutPage(
+            previewOrderData: previewOrderData!,
+            liveCartItemIds: liveIds,
+            livestreamId: livestreamId,
+          ),
         );
       case categoryDetail:
         final Map<String, dynamic> args = settings.arguments as Map<String, dynamic>;
@@ -267,8 +283,11 @@ class AppRouter {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) => getIt<CartLiveBloc>(),
+          builder: (_) => MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<CartLiveBloc>()),
+              BlocProvider(create: (_) => getIt<PreviewOrderLiveBloc>()),
+            ],
             child: LiveCartPage(livestreamId: livestreamId),
           ),
         );

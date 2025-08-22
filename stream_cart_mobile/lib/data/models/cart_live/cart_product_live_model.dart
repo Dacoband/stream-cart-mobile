@@ -14,7 +14,8 @@ class CartProductLiveModel {
   final PriceDataLiveModel priceData;
   final int quantity;
   final String primaryImage;
-  final Map<String, String> attributes;
+  @JsonKey(fromJson: _attributesFromJson, toJson: _attributesToJson)
+  final Map<String, String>? attributes;
   final int stockQuantity;
   final bool productStatus;
   final double length;
@@ -30,7 +31,7 @@ class CartProductLiveModel {
     required this.priceData,
     required this.quantity,
     required this.primaryImage,
-    required this.attributes,
+  required this.attributes,
     required this.stockQuantity,
     required this.productStatus,
     required this.length,
@@ -52,7 +53,7 @@ class CartProductLiveModel {
     priceData: priceData.toEntity(),
     quantity: quantity,
     primaryImage: primaryImage,
-    attributes: attributes,
+  attributes: attributes ?? {},
     stockQuantity: stockQuantity,
     productStatus: productStatus,
     length: length,
@@ -70,7 +71,7 @@ class CartProductLiveModel {
       priceData: PriceDataLiveModel.fromEntity(entity.priceData),
       quantity: entity.quantity,
       primaryImage: entity.primaryImage,
-      attributes: entity.attributes,
+  attributes: entity.attributes,
       stockQuantity: entity.stockQuantity,
       productStatus: entity.productStatus,
       length: entity.length,
@@ -88,7 +89,7 @@ class CartProductLiveModel {
     PriceDataLiveModel? priceData,
     int? quantity,
     String? primaryImage,
-    Map<String, String>? attributes,
+  Map<String, String>? attributes,
     int? stockQuantity,
     bool? productStatus,
     double? length,
@@ -113,4 +114,14 @@ class CartProductLiveModel {
       weight: weight ?? this.weight,
     );
   }
+
+  static Map<String, String>? _attributesFromJson(dynamic json) {
+    if (json == null) return null;
+    if (json is Map) {
+      return json.map((key, value) => MapEntry(key.toString(), value.toString()));
+    }
+    return null;
+  }
+
+  static dynamic _attributesToJson(Map<String, String>? map) => map;
 }

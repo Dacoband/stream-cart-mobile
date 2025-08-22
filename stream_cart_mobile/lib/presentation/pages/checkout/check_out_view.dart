@@ -28,10 +28,14 @@ import '../../../domain/entities/shop_voucher/shop_voucher_entity.dart';
 
 class CheckoutView extends StatefulWidget {
   final PreviewOrderDataEntity previewOrderData;
+  final List<String>? liveCartItemIds;
+  final String? livestreamId;
 
   const CheckoutView({
     super.key,
     required this.previewOrderData,
+    this.liveCartItemIds,
+    this.livestreamId,
   });
 
   @override
@@ -113,14 +117,20 @@ class _CheckoutViewState extends State<CheckoutView> {
           BlocListener<OrderBloc, OrderState>(
             listener: (context, orderState) {
               if (orderState is OrdersCreated) {
-                final cartItemIds = widget.previewOrderData.listCartItem
-                    .expand((shop) => shop.products)
-                    .map((item) => item.cartItemId)
-                    .toList();
-                if (cartItemIds.isNotEmpty) {
-                  context.read<CartBloc>().add(
-                        RemoveSelectedCartItemsEvent(cartItemIds: cartItemIds),
-                      );
+                // Nếu là checkout live: không dùng CartBloc remove (giỏ live khác) -> chỉ phát sự kiện clear qua SignalR sau khi backend xác nhận
+                if (widget.liveCartItemIds == null) {
+                  final cartItemIds = widget.previewOrderData.listCartItem
+                      .expand((shop) => shop.products)
+                      .map((item) => item.cartItemId)
+                      .toList();
+                  if (cartItemIds.isNotEmpty) {
+                    context.read<CartBloc>().add(
+                          RemoveSelectedCartItemsEvent(cartItemIds: cartItemIds),
+                        );
+                  }
+                } else {
+                  // Trigger clear live items locally via a callback route pop result (handled in LiveCartPage) if needed
+                  Navigator.popUntil(context, (r) => r.settings.name == AppRouter.home || r.isFirst);
                 }
                 final isBankTransfer = selectedPaymentMethod == 'BANK_TRANSFER';
                 if (isBankTransfer) {

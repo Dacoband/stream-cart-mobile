@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../data/models/cart_live/preview_order_live_model.dart';
 
 class LiveCartSummaryWidget extends StatelessWidget {
@@ -17,7 +18,7 @@ class LiveCartSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalSelected = _selectedItemsTotal();
+  final totalSelected = _selectedItemsTotal();
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10 + 8),
       decoration: const BoxDecoration(
@@ -39,15 +40,47 @@ class LiveCartSummaryWidget extends StatelessWidget {
                   children: [
                     Text(
                       selectedIds.isEmpty
-                          ? 'Tổng: ${_fmt(cart.totalAmount)}'
-                          : 'Chọn (${selectedIds.length}) • ${_fmt(totalSelected)}',
+                          ? 'Chưa chọn sản phẩm'
+                          : 'Đã chọn (${selectedIds.length}) • ${_fmt(totalSelected)}',
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      'Tạm tính: ${_fmt(cart.subTotal)}  Giảm: ${_fmt(cart.discount)}',
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
+                    if (selectedIds.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                _fmt(_selectedItemsOriginalTotal()),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              if (_selectedItemsDiscount() > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '-${_discountPercent()}%',
+                                    style: const TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Tạm tính: ${_fmt(_selectedItemsSubtotal())}  Giảm: ${_fmt(_selectedItemsDiscount())}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -86,12 +119,58 @@ class LiveCartSummaryWidget extends StatelessWidget {
     );
   }
 
-  double _selectedItemsTotal() {
-    // Since grouping by shop not fully implemented, fallback to full total if selectedIds not empty
+  double _selectedItemsSubtotal() {
     if (selectedIds.isEmpty) return 0;
-    // Without per-item price reference here, return proportionally (approx) or full total.
-    return cart.totalAmount; // placeholder until item-level mapping provided externally
+    double sum = 0;
+    for (final shop in cart.listCartItem) {
+      for (final p in shop.products) {
+        if (selectedIds.contains(p.cartItemId)) {
+          sum += p.priceData.currentPrice * p.quantity;
+        }
+      }
+    }
+    return sum;
   }
 
-  String _fmt(double v) => '${v.toStringAsFixed(0)}₫';
+  double _selectedItemsDiscount() {
+    if (selectedIds.isEmpty) return 0;
+    double discount = 0;
+    for (final shop in cart.listCartItem) {
+      for (final p in shop.products) {
+        if (selectedIds.contains(p.cartItemId)) {
+          final original = p.priceData.originalPrice * p.quantity;
+          final current = p.priceData.currentPrice * p.quantity;
+          discount += (original - current).clamp(0, double.infinity);
+        }
+      }
+    }
+    return discount;
+  }
+
+  double _selectedItemsTotal() => _selectedItemsSubtotal() - _selectedItemsDiscount();
+
+  double _selectedItemsOriginalTotal() {
+    if (selectedIds.isEmpty) return 0;
+    double sum = 0;
+    for (final shop in cart.listCartItem) {
+      for (final p in shop.products) {
+        if (selectedIds.contains(p.cartItemId)) {
+          sum += p.priceData.originalPrice * p.quantity;
+        }
+      }
+    }
+    return sum;
+  }
+
+  int _discountPercent() {
+    final original = _selectedItemsOriginalTotal();
+    if (original <= 0) return 0;
+    final discount = _selectedItemsDiscount();
+    return (discount / original * 100).round();
+  }
+
+  String _fmt(double v) {
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '', decimalDigits: 0);
+    return '${formatter.format(v)}₫';
+  }
 }
