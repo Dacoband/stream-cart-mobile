@@ -432,10 +432,12 @@ flutter run -d windows
 
 ## 📞 Support & Contact
 
+
 - 📧 Email: bolicious123@gmail.com
 - 💬 Issues: [GitHub Issues](https://github.com/Dacoband/stream-cart-mobile/issues)
 - 📖 Wiki: Project documentation (work in progress)
 - 🌐 Demo: `flutter run -d web`
+
 
 ### 🎯 Project Status
 - Stage: Active Development (Core Feature‑Complete)
