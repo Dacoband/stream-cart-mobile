@@ -3,7 +3,7 @@
 <div align="center">
   <img src="stream_cart_mobile/assets/icons/app_icon.png" alt="Stream Cart Logo" width="128" height="128">
   
-  **A comprehensive microservices-based e-commerce platform designed for live streaming Stream Cart commerce**
+  **A production‑ready microservices-based live commerce & e‑commerce Flutter application**
   
   [![Flutter](https://img.shields.io/badge/Flutter-3.7.2+-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
   [![Dart](https://img.shields.io/badge/Dart-3.7.2+-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
@@ -16,8 +16,10 @@
 ## 📖 Table of Contents
 
 - [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🏗️ Architecture](#️-architecture)
+- [✨ Feature Matrix](#-feature-matrix)
+- [🚀 Current Development Status](#-current-development-status-august-2025)
+- [🛠️ Recent Updates](#-recent-updates-aug-2025)
+- [🏗️ Architecture](#-architecture)
 - [🔧 Tech Stack](#-tech-stack)
 - [📱 Screenshots](#-screenshots)
 - [🚀 Getting Started](#-getting-started)
@@ -25,218 +27,241 @@
 - [🧪 Testing](#-testing)
 - [📦 Build & Deploy](#-build--deploy)
 - [🤝 Contributing](#-contributing)
+- [📞 Support & Contact](#-support--contact)
 - [📄 License](#-license)
 
 ---
 
 ## 🎯 Overview
 
-**Stream Cart Mobile** is a cutting-edge e-commerce mobile application built with Flutter, designed specifically for live streaming commerce. The application follows **Domain-Driven Design (DDD)** principles with **Clean Architecture** patterns, ensuring scalability, maintainability, and testability.
+**Stream Cart Mobile** is a production‑oriented live commerce + e‑commerce super‑app built with Flutter and powered by a microservices backend. It implements **Domain-Driven Design (DDD)** + **Clean Architecture**, enabling clear separation of concerns, scalability, testability, and rapid feature evolution.
 
-### 🎯 Key Objectives
-- 🛍️ **Live Shopping Experience**: Real-time shopping during live streams (Coming Soon)
-- 📱 **Cross-Platform**: Native performance on iOS, Android, and Web
-- 🏗️ **Scalable Architecture**: Microservices-based backend integration
-- 🔒 **Secure**: JWT authentication and secure API communication
-- 🎨 **Modern UI/UX**: Intuitive and engaging user interface
+> 🇻🇳 Tóm tắt: Ứng dụng thương mại điện tử & livestream với kiến trúc sạch (DDD, Clean Architecture) hỗ trợ giỏ hàng, đơn hàng, voucher, chat realtime, thông báo đẩy, livestream (LiveKit), SignalR, tìm kiếm, quản lý địa chỉ, biến thể sản phẩm, cửa hàng.
 
-### ✅ **Current Status (July 2025)**
-- ✅ **HomePage**: Complete with real API integration (Categories & Products)
-- ✅ **ProfilePage**: User authentication and profile display
-- ✅ **API Integration**: Connected to production backend APIs
-- ✅ **State Management**: BLoC pattern implementation
-- 🚧 **LiveStream**: UI ready, backend integration pending
-- 🚧 **Shopping Cart**: UI components ready for backend integration
+### 🎯 Core Value
+- 🛒 **Unified Commerce**: Catalog, variants, vouchers, cart, checkout, orders
+- 🎥 **Interactive Live Streaming**: LiveKit + realtime chat + pinned products
+- 💬 **Real-time Chat & Notifications**: SignalR + Firebase Cloud Messaging
+- ⚡ **Reactive UX**: BLoC state management & granular loading states
+- 🔐 **Secure**: JWT auth, secure token storage, guarded APIs
+- 🧩 **Extensible Domain Model**: Modular feature packages & use cases
 
----
-
-## ✨ Features
-
-### 🛒 E-commerce Core (Implemented)
-- ✅ **Product Catalog**: Browse products with real API data from `/api/products`
-- ✅ **Category Navigation**: Dynamic categories from `/api/categorys`
-- ✅ **Search Functionality**: Real-time product search
-- ✅ **Product Display**: Name, price, stock quantity, and images
-- � **Shopping Cart**: UI ready for backend integration
-- 🚧 **Order Management**: Planned for next phase
-
-### 📺 Live Streaming (UI Ready)
-- 🚧 **Live Stream Interface**: UI components implemented
-- 🚧 **Real-time Integration**: Backend APIs pending
-- � **Interactive Features**: Chat and live shopping prepared
-- � **Stream Analytics**: Framework ready for implementation
-
-### 👤 User Management (Fully Implemented)
-- ✅ **JWT Authentication**: Secure login/logout with token management
-- ✅ **User Profile**: Real user data from `/api/auth/me`
-- ✅ **Profile Display**: FullName, Email, Avatar, Verification status
-- ✅ **Token Management**: Automatic token storage and retrieval
-- ✅ **Session Handling**: Proper authentication flow
-
-### 💾 Data & Storage (Implemented)
-- ✅ **API Integration**: RESTful API calls with Dio
-- ✅ **Local Storage**: Secure token storage with flutter_secure_storage
-- ✅ **State Management**: BLoC pattern for predictable state
-- ✅ **Error Handling**: Comprehensive error states and retry logic
-- ✅ **Loading States**: Professional loading indicators
+### ✅ Current Status (Aug 2025)
+- ✅ Home / Explore (products, categories, shops, banners)
+- ✅ Authentication & Profile (JWT, secure storage)
+- ✅ Product Variants, Cheapest Variant Resolution
+- ✅ Cart (add / update / bulk select / preview / clear)
+- ✅ Checkout Preview & Order Creation Flow (price breakdown)
+- ✅ Order Management (status tabs, detail, timeline, reviews scaffold)
+- ✅ Live Streaming (join, active streams, products, pinned items, messages)
+- ✅ Real-time Chat (rooms, unread count, typing indicators)
+- ✅ Notifications (list, mark read, unread counter, SignalR + FCM + local)
+- ✅ Address Book (CRUD, default selection)
+- ✅ Vouchers (shop vouchers apply / list)
+- ✅ Search (products + search history service)
+- ✅ Theming & Responsive Layout (Material 3 + Google Fonts)
+- ✅ Push Notifications (foreground / background handlers)
+- ✅ Dependency Injection (GetIt) & modular use cases
+- 🚧 Payment Gateway Integration (stubbed payment method selection)
+- 🚧 Stream Analytics / Insights
+- 🚧 Advanced Recommendation Engine
 
 ---
 
-## 🚀 **Current Development Status (July 2025)**
+## ✨ Feature Matrix
 
-### ✅ **Completed Features**
-- **✅ HomePage**: Complete product catalog with real API integration
-  - Dynamic categories from `/api/categorys`
-  - Product grid from `/api/products` 
-  - Search functionality with real-time API calls
-  - Professional UI with loading states and error handling
+### 🛍️ Commerce Core
+- Products & Categories (filter, search, variants, cheapest variant resolver)
+- Shops (listing, product count per shop)
+- Vouchers (list + apply at checkout preview)
+- Cart (add/update/remove, multi‑select, preview order, bulk deletion)
+- Checkout Preview (price breakdown, shipping, voucher, payment method select)
+- Orders (tabbed status lists, detail, status timeline, price breakdown, review scaffold)
+- Addresses (CRUD + default selection)
 
-- **✅ ProfilePage**: Full user authentication system
-  - JWT token management with secure storage
-  - Real user data from `/api/auth/me`
-  - Login/logout flow with proper state management
-  - Display: FullName, Email, Avatar, Verification status
+### 🎥 Live Streaming & Engagement
+- Join active live streams (LiveKit join token connect)
+- Products & pinned products per stream (debounced reload)
+- Live stream chat (separate from standard chat domain)
+- Viewer stats & real-time events pipeline
 
-- **✅ Core Architecture**: Clean Architecture implementation
-  - BLoC state management for predictable UI states
-  - Repository pattern with proper abstraction
-  - Dependency injection with GetIt
-  - Network layer with authentication interceptors
+### 💬 Real-time Communication
+- SignalR abstraction (chat + notifications + typing indicators)
+- Chat Rooms (user/shop, load messages, search, unread counts)
+- Typing indicators, join/leave events, reconnection strategy
 
-### 🚧 **In Progress**
-- **LiveStream Interface**: UI components ready, backend integration pending
-- **Shopping Cart**: Frontend structure prepared for API integration
-- **Order Management**: Architecture planned, implementation upcoming
+### 🔔 Notifications
+- FCM + local notifications (foreground / background / terminated)
+- SignalR real-time push (new + updated notification merging)
+- Pagination & filtering (type, read state), unread counter
 
-### 📋 **Next Development Phase**
-1. Complete LiveStream real-time functionality
-2. Shopping cart backend integration
-3. Order management system
-4. Payment gateway integration
-5. Push notifications system
+### 👤 User & Auth
+- JWT Login / Me endpoint, secure storage, automatic token hydration
+- Role awareness (user / shop contexts prepared)
+- Profile display & avatar
+
+### 🧱 Architecture & Quality
+- DDD Layers (Entities, Repositories, UseCases)
+- Clean separation (data / domain / presentation)
+- GetIt DI (ready for Injectable codegen)
+- Consistent error & loading state modeling
+- Modular BLoC per feature (auth, cart, chat, order items, notification, livestream, address, voucher, variants, etc.)
+
+### 🔐 Security & Reliability
+- Secure token storage (flutter_secure_storage)
+- Graceful reconnection routines (SignalR, LiveKit probes)
+- Defensive parsing & failure surfaces (Either / Failures)
+
+### 🛠 Developer Experience
+- Build runner ready (retrofit, json_serializable, hive, injectable)
+- Search history service persisted locally
+- Clear feature folder conventions
+
+### 🚀 Backlog / Planned
+- Payment gateway integration (online methods)
+- Advanced analytics (viewer retention, conversion funnels)
+- Recommendation / personalization engine
+- In‑stream purchase overlay & scheduled pinning
+- Moderation tools & reporting flows
+- Multi-language i18n expansion
 
 ---
 
-## 🛠️ **Recent Updates (July 5, 2025)**
+## 🚀 Current Development Status (August 2025)
 
-### 🔧 **Critical Bug Fixes**
-- **Token Management**: Fixed authentication token storage key mismatch
-- **API Response Parsing**: Corrected category API response structure handling
-- **UI Overflow**: Resolved category section layout issues on mobile devices
+### ✅ Recently Completed (Highlights)
+1. Full cart lifecycle (bulk selection + preview + voucher application)
+2. Order listing, detail, status timeline & price breakdown
+3. Live streaming join/connect flow (LiveKit + join token handshake)
+4. Real-time chat (typing, unread counts, reconnection, search)
+5. Unified notifications (SignalR + FCM + local)
+6. Product variants + cheapest variant / availability use cases
+7. Shop vouchers & shop listing components
+8. Address management & checkout integration
 
-### 🆕 **New Features Added**
-- **Real API Integration**: Connected to production backend at `https://brightpa.me`
-- **Debug Logging**: Comprehensive logging system for API calls and state changes
-- **Error Handling**: Professional error states with retry functionality
-- **Loading States**: Smooth loading indicators across all screens
+### 🔄 Active Work
+- Payment gateway integration layer
+- Stream analytics & engagement metrics
 
-### 🎨 **UI/UX Improvements**
-- **Responsive Design**: Optimized for mobile, tablet, and web platforms
-- **Material Design 3**: Modern UI components with consistent theming
-- **Professional Layout**: Production-ready interface design
+### 📋 Next (Planned)
+1. Recommendation & personalization services
+2. Advanced moderation & reporting in streams
+3. Multi-language i18n expansion
+4. Full test coverage ramp-up (unit + widget + integration)
+
+---
+
+## 🛠️ Recent Updates (Aug 2025)
+
+### 🔧 Fixes
+- Reconnection improvements (SignalR & LiveKit lifecycle aware)
+- Debounced product reload in live streams (API efficiency)
+- Notification pagination + unread counter sync issues resolved
+- Variant price resolution & null safety hardening
+
+### 🆕 Additions
+- Order domain (detail, status timeline, review scaffold)
+- Live stream chat + pinned products + viewer stats events
+- Vouchers (list + apply) & address integration in checkout preview
+- Bulk cart operations & selected items preview order path
+- Search history persistence service
+- Local + push notification orchestration service
+
+### 🎨 UX Enhancements
+- Consistent skeleton shimmer loading states
+- Payment + status badge components
+- Improved empty / error / retry states across lists
+- Unified typography (Be Vietnam Pro via Google Fonts)
 
 ---
 
 ## 🏗️ Architecture
 
-Stream Cart Mobile follows **Clean Architecture** principles with **Domain-Driven Design (DDD)**:
+Stream Cart Mobile follows **Clean Architecture** + **DDD** with feature‑oriented modularity:
 
 ```
 lib/
-├── 🎯 core/                    # Core utilities and configurations
-│   ├── config/                # App configuration and environment
-│   ├── constants/             # Global constants and API endpoints
-│   ├── di/                    # Dependency injection setup (GetIt)
-│   ├── error/                 # Error handling and failures
-│   ├── network/               # Network layer with Auth interceptor
-│   ├── routing/               # App routing with go_router
-│   ├── services/              # Storage and HTTP services
-│   └── utils/                 # Utility functions
-├── 📊 data/                   # Data layer (Clean Architecture)
-│   ├── datasources/           # API calls (Home, Profile, Auth)
-│   ├── models/                # JSON models (Product, Category, User)
-│   └── repositories/          # Repository implementations
-├── 🏢 domain/                 # Domain layer (Business Logic)
-│   ├── entities/              # Core entities (Product, Category, User)
-│   ├── repositories/          # Repository interfaces
-│   └── usecases/              # Business use cases (Get Products, etc.)
-└── 🎨 presentation/           # Presentation layer (UI)
-    ├── blocs/                 # BLoC state management (Home, Profile, Auth)
-    ├── pages/                 # Screen widgets (Home, Profile, Login)
-    └── widgets/               # Reusable UI components (SearchBar, ProductGrid)
+├── 🎯 core/                    # Config, constants, env, DI, routing, network, services
+├── 📊 data/                    # Datasources (remote/local), models, repos impl
+├── 🏢 domain/                  # Entities, repositories (contracts), use cases
+└── 🎨 presentation/            # BLoCs, pages, widgets, themes
 ```
 
-### 📋 Architecture Principles
+Additional Feature Domains Present:
+- cart/, order_item/, notification/, chat/, livestream/, address/, voucher/, product_variants/, shop/, search/
 
-- **🎯 Separation of Concerns**: Each layer has a specific responsibility
-- **🔄 Dependency Inversion**: Dependencies point inward to the domain
-- **🧪 Testability**: Easy to unit test business logic
-- **🔧 Maintainability**: Clean, organized, and scalable codebase
-- **🚀 Performance**: Efficient state management and data flow
+### 🧩 Key Services
+- `SignalRService` – unified hub connection & callbacks (chat, notifications)
+- `LiveKitService` – media session, room events, probing & metrics
+- `FirebaseNotificationService` – FCM + local notification orchestration
+- `SearchHistoryService` – persistent recent searches
 
-### 🔗 **API Integration Status**
-- ✅ **Authentication**: `/api/auth/login`, `/api/auth/me`
-- ✅ **Categories**: `/api/categorys` 
-- ✅ **Products**: `/api/products`, `/api/products/search`
-- 🚧 **Cart**: `/api/cart` (API ready, integration pending)
-- 🚧 **Orders**: `/api/orders` (planned)
-- 🚧 **LiveStream**: Backend APIs in development
+### 🔄 Real-time Flow
+SignalR events → Bloc events → UI state updates (chat, notifications, typing, viewer stats)
+LiveKit room events → LiveStreamBloc (participants, probing, pinned products sync)
+
+### 🔗 API Integration Status (Live)
+- ✅ Auth: `/api/auth/login`, `/api/auth/me`
+- ✅ Categories: `/api/categorys`
+- ✅ Products: `/api/products`, `/api/products/search`
+- ✅ Product Variants: `/api/product-variants/*`
+- ✅ Cart: `/api/cart/*`
+- ✅ Orders: `/api/orders/*`
+- ✅ Vouchers: `/api/vouchers/*`, `/api/shop-vouchers/*`
+- ✅ Live Streams: `/api/livestreams/*` + LiveKit signaling
+- ✅ Notifications: `/api/notifications/*` + SignalR hub
+- ✅ Chat: `/api/chat/*` + SignalR hub
+- ✅ Addresses: `/api/addresses/*`
+- 🚧 Payments: (gateway integration pending)
 
 ---
 
 ## 🔧 Tech Stack
 
-### 🎨 Frontend Framework
-- **Flutter 3.7.2+** - Cross-platform mobile development
-- **Dart 3.7.2+** - Programming language
+### 🎨 Framework
+- **Flutter 3.7.2+**, **Dart 3.7.2+**
 
 ### 🏛️ State Management
-- **flutter_bloc 8.1.3** - Predictable state management
-- **equatable 2.0.5** - Value equality for Dart objects
+- **flutter_bloc** (feature BLoCs) + **equatable**
 
-### 🌐 Networking & API
-- **dio 5.3.2** - Powerful HTTP client with interceptors
-- **retrofit 4.0.3** - Type-safe HTTP client generator
-- **json_annotation 4.8.1** - JSON serialization annotations
+### 🌐 Networking & Realtime
+- **dio**, **retrofit**, **json_serializable**, **signalr_core**, **livekit_client**
 
-### 💾 Local Storage
-- **flutter_secure_storage 9.2.2** - Secure token storage
-- **shared_preferences 2.3.2** - Simple persistent storage
-- **hive 2.2.3** - Lightweight NoSQL database (future use)
+### 💾 Storage
+- **flutter_secure_storage**, **shared_preferences**, **hive / hive_flutter**
 
 ### 🔧 Dependency Injection
-- **get_it 7.6.4** - Service locator for dependency management
-- **injectable 2.3.2** - Code generation for DI (planned)
+- **get_it** (ready for **injectable** code generation)
 
-### 🛠️ Development Tools
-- **build_runner 2.4.12** - Code generation
-- **json_serializable 6.8.0** - JSON serialization
-- **flutter_launcher_icons 0.13.1** - App icon generation
+### 🛠 Codegen & Dev
+- **build_runner**, **retrofit_generator**, **json_serializable**, **hive_generator**, **injectable_generator**
 
 ### 🔒 Security & Utils
-- **crypto 3.0.3** - Cryptographic functions
-- **flutter_dotenv 5.2.1** - Environment variables
-- **dartz 0.10.1** - Functional programming (Either, Option)
-- **equatable 2.0.5** - Value equality for Dart objects
+- **crypto**, **flutter_dotenv**, **dartz**, **intl**
 
-### 🎨 UI & Navigation  
-- **go_router 12.1.3** - Declarative navigation
-- **cached_network_image 3.3.0** - Image caching
-- **flutter_svg 2.0.9** - SVG image support
+### 🎨 UI & Navigation
+- Material 3, **Google Fonts (Be Vietnam Pro)**, **cached_network_image**, **shimmer**, **flutter_svg**, **flutter_slidable**
+- Custom routing (`AppRouter` + observer)
+
+### 🔔 Notifications & Messaging
+- **firebase_core**, **firebase_messaging**, **flutter_local_notifications**
 
 ---
 
 ## 📱 Screenshots
 
 <div align="center">
-  <p><em>Screenshots will be available soon. The app currently features:</em></p>
+  <p><em>Screenshots (updated set incoming). The app currently features:</em></p>
   
-  **🏠 HomePage** - Product catalog with categories and search<br>
-  **👤 ProfilePage** - User authentication and profile management<br>
-  **🔐 LoginPage** - JWT authentication with secure token storage<br>
-  **🎥 LivePage** - Live streaming interface (UI ready)<br>
+  **🏠 Home** - Catalog + categories + banners + search<br>
+  **👤 Profile** - Authenticated user info<br>
+  **🛒 Cart & Checkout Preview** - Voucher + price breakdown<br>
+  **📦 Orders** - Status tabs & detail timeline<br>
+  **🎥 Live Stream** - Realtime video + chat + pinned products<br>
+  **💬 Chat** - Realtime rooms & typing indicators<br>
+  **🔔 Notifications** - Realtime + push hybrid<br>
   
-  <p><em>Web version available at: <code>flutter run -d web</code></em></p>
+  <p><em>Run on Web: <code>flutter run -d web</code></em></p>
 </div>
 
 ---
@@ -245,134 +270,81 @@ lib/
 
 ### 📋 Prerequisites
 
-Before you begin, ensure you have the following installed:
+Ensure you have:
 
-- ✅ **Flutter SDK 3.7.2+** - [Install Flutter](https://docs.flutter.dev/get-started/install)
-- ✅ **Dart SDK 3.7.2+** - (Included with Flutter)
-- ✅ **Android Studio** or **VS Code** with Flutter extensions
-- ✅ **Git** - Version control
+- ✅ Flutter SDK 3.7.2+ (includes Dart)
+- ✅ Android Studio or VS Code with Flutter extension
+- ✅ Git
+- ✅ Firebase project (for push notifications) – optional for core features
 
 ### 🔧 Installation
 
-1. **Clone the repository**
+1. Clone repository
    ```bash
    git clone https://github.com/yourusername/stream-cart-mobile.git
-   cd stream-cart-mobile
+   cd stream-cart-mobile/stream_cart_mobile
    ```
-
-2. **Navigate to the Flutter project directory**
-   ```bash
-   cd stream_cart_mobile
-   ```
-
-3. **Install dependencies**
+2. Install dependencies
    ```bash
    flutter pub get
    ```
-
-4. **Set up environment variables**
+3. (Optional) Create `.env`
    ```bash
-   # Create .env file with your API configuration
-   # The app uses: https://brightpa.me as default API base URL
    echo "API_BASE_URL=https://brightpa.me" > .env
    echo "ENVIRONMENT=development" >> .env
    ```
-
-5. **Run the application**
+4. Run the app
    ```bash
-   # Run on web (recommended for development)
    flutter run -d web
-   
-   # Or run on mobile device/emulator
+   # or
    flutter run
    ```
 
-> **Note**: The app is currently configured to work with the production API at `https://brightpa.me`. No additional backend setup is required for testing the current features.
+> Default API base points to production: `https://brightpa.me`.
 
-### ⚙️ Configuration
-
-The app is pre-configured to work with the production API. If you need to customize:
-
-**API Configuration** (Optional):
+### ⚙️ Environment (Optional)
 ```env
-# Create .env file in project root
 API_BASE_URL=https://brightpa.me
-API_VERSION=v1
 API_TIMEOUT=30000
 ENVIRONMENT=development
-
-# Features
 ENABLE_DEBUG_LOGGING=true
 ```
 
-**Current API Endpoints**:
-- **Authentication**: `POST /api/auth/login`, `GET /api/auth/me`
-- **Categories**: `GET /api/categorys`
-- **Products**: `GET /api/products`, `GET /api/products/search`
+**Core API (subset)**:
+- Auth: `/api/auth/login`, `/api/auth/me`
+- Catalog: `/api/products`, `/api/products/search`, `/api/categorys`
+- Cart: `/api/cart/*` | Orders: `/api/orders/*` | Vouchers: `/api/vouchers/*`
+- Live Streams, Chat & Notifications: REST + SignalR hubs + LiveKit server
 
-**Test Credentials** (for demo):
-- The app includes a working authentication flow
-- Real user data is displayed in ProfilePage after login
+**Auth Flow**: Provide valid backend credentials (no demo account bundled).
 
 ---
 
 ## 🔨 Development
 
-### 🏃‍♂️ Running the App
-
-#### Development Mode
+### Run
 ```bash
-# Run on web (best for development)
 flutter run -d web
+flutter run            # auto device detection
+flutter run -d android # specify platform
+```
 
-# Run on connected device/emulator  
-flutter run
-
-# Run with debug logging
+### Debug Options
+```bash
 flutter run --dart-define=ENVIRONMENT=development
-
-# Hot reload (automatic with flutter run)
-# Press 'r' in terminal for hot reload
-# Press 'R' for hot restart
 ```
 
-#### Platform-specific Commands
+### Code Generation
+Run when adding retrofit APIs / json models / hive adapters / injectable config:
 ```bash
-# Android
-flutter run -d android
-
-# iOS (macOS only)
-flutter run -d ios
-
-# Web
-flutter run -d web
-
-# Desktop (Windows)
-flutter run -d windows
+flutter pub run build_runner build --delete-conflicting-outputs
+flutter pub run build_runner watch
 ```
 
-### 🛠️ Code Generation
-
-**Currently Not Required** - The app works without code generation. For future development:
-
+### Code Quality
 ```bash
-# If you add new JSON models or dependency injection
-flutter packages pub run build_runner build --delete-conflicting-outputs
-
-# Watch for changes (for active development)
-flutter packages pub run build_runner watch
-```
-
-### 📏 Code Quality
-
-```bash
-# Format code
 flutter format .
-
-# Analyze code
 flutter analyze
-
-# Fix analysis issues
 dart fix --apply
 ```
 
@@ -380,132 +352,103 @@ dart fix --apply
 
 ## 🧪 Testing
 
-### 🔬 Running Tests
-
+### Run Tests
 ```bash
-# Run all tests
 flutter test
-
-# Run tests with coverage
 flutter test --coverage
-
-# Run integration tests
-flutter test integration_test/
 ```
 
-### 📊 Test Structure
-
+### Structure (Planned Expansion)
 ```
 test/
-├── unit/                  # Unit tests (planned)
-│   ├── domain/           # Domain layer tests
-│   ├── data/             # Data layer tests  
-│   └── presentation/     # Presentation layer tests
-├── widget/               # Widget tests (planned)
-└── integration/          # Integration tests (planned)
+├── unit/          # Domain, use cases, blocs
+├── widget/        # Widget tests (goldens planned)
+└── integration/   # End-to-end flows
 ```
 
-**Current Status**: Basic app functionality tested manually. Comprehensive test suite planned for next development phase.
+Current: Core flows manually tested; automated coverage ramp-up in progress.
 
 ---
 
 ## 📦 Build & Deploy
 
-### 🏗️ Building for Production
-
-#### Android
+### Android
 ```bash
-# Build APK
 flutter build apk --release
-
-# Build AAB (recommended for Play Store)
 flutter build appbundle --release
-
-# Build with obfuscation
 flutter build apk --release --obfuscate --split-debug-info=build/debug-info/
 ```
 
-#### iOS
+### iOS (macOS only)
 ```bash
-# Build for iOS (macOS only)
 flutter build ios --release
-
-# Build IPA
 flutter build ipa --release
 ```
 
-#### Web
+### Web
 ```bash
-# Build for web
 flutter build web --release
 ```
 
-### 🚀 Deployment
+### Desktop (Dev)
+```bash
+flutter run -d windows
+```
 
-#### Android - Google Play Store
-1. Generate signing key
-2. Configure `android/app/build.gradle`
-3. Upload to Google Play Console
-
-#### iOS - App Store
-1. Configure signing in Xcode
-2. Archive and upload via Xcode or Transporter
+### Deployment (High Level)
+- Android: Sign, upload AAB to Play Console
+- iOS: Archive in Xcode, distribute via App Store Connect
+- Web: Host `/build/web` on static hosting / CDN
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
-
-1. **Fork the repository**
-2. **Create a feature branch**
+1. Fork repository
+2. Create feature branch:
    ```bash
    git checkout -b feature/amazing-feature
    ```
-3. **Make your changes**
-4. **Run tests and ensure code quality**
+3. Implement & test
+4. Ensure quality:
    ```bash
-   flutter test
    flutter analyze
+   flutter test
    flutter format .
    ```
-5. **Commit your changes**
+5. Commit & push:
    ```bash
-   git commit -m 'Add amazing feature'
-   ```
-6. **Push to the branch**
-   ```bash
+   git commit -m "feat: add amazing feature"
    git push origin feature/amazing-feature
    ```
-7. **Open a Pull Request**
+6. Open Pull Request
 
-### 📝 Coding Standards
-
-- Follow [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style)
-- Write comprehensive tests for new features
-- Document public APIs
-- Use meaningful commit messages
+### Standards
+- Effective Dart style
+- Tests for new logic (where reasonable)
+- Clear commit messages (conventional preferred)
 
 ---
 
 ## 📞 Support & Contact
 
-- 📧 **Email**: bolicious123@gmail.com
-- 💬 **Issues**: [GitHub Issues](https://github.com/Dacoband/stream-cart-mobile/issues)
-- 📖 **Documentation**: [Project Wiki](https://github.com/Dacoband/stream-cart-mobile/wiki)
-- 🌐 **Live Demo**: Run `flutter run -d web` to see the current implementation
+- 📧 Email: bolicious123@gmail.com
+- 💬 Issues: [GitHub Issues](https://github.com/Dacoband/stream-cart-mobile/issues)
+- 📖 Wiki: Project documentation (work in progress)
+- 🌐 Demo: `flutter run -d web`
 
-### 🎯 **Project Status**
-- **Development Stage**: Active Development
-- **API Integration**: Production APIs connected
-- **Platform Support**: ✅ Web, ✅ Android, ✅ iOS
-- **Last Updated**: July 5, 2025
+### 🎯 Project Status
+- Stage: Active Development (Core Feature‑Complete)
+- API: Production microservices connected
+- Real-time Stack: SignalR + LiveKit + FCM operational
+- Platforms: ✅ Web ✅ Android ✅ iOS ✅ Windows (dev)
+- Last Updated: Aug 2025
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under the MIT License – see [LICENSE](LICENSE).
 
 ---
 
@@ -513,12 +456,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   
   **Made with ❤️ using Flutter**
   
-  **🔥 Ready for Production Testing**
+  **🔥 Core Features Production‑Ready**
   
-  ⭐ Star this repo if you like it!
+  ⭐ Star this repo if it helps you!
   
   ---
   
-  **Quick Start**: `git clone` → `cd stream_cart_mobile` → `flutter run -d web`
+  **Quick Start**: `git clone` → `cd stream_cart_mobile` → `flutter pub get` → `flutter run -d web`
   
 </div>
