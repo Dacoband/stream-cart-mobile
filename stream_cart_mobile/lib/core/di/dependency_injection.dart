@@ -204,6 +204,7 @@ import '../../domain/usecases/cart_live/remove_livestream_cart_item_usecase.dart
 import '../../domain/usecases/cart_live/clear_livestream_cart_usecase.dart';
 import '../../domain/usecases/cart_live/listen_livestream_cart_events_usecase.dart';
 import '../../presentation/blocs/cart_live/cart_live_bloc.dart';
+import '../../presentation/blocs/cart_live/preview_order_live_bloc.dart';
 import '../../data/datasources/cart_live/preview_order_live_remote_data_source.dart';
 import '../../data/repositories/cart_live/preview_order_live_repository_impl.dart';
 import '../../domain/repositories/cart_live/preview_order_live_repository.dart';
@@ -535,6 +536,7 @@ Future<void> setupDependencies() async {
         clearUsecase: getIt(),
         listenEventsUsecase: getIt(),
       ));
+  getIt.registerFactory(() => PreviewOrderLiveBloc(getPreviewOrderLiveUsecase: getIt()));
 
   getIt.registerFactory(() => HomeBloc(
     getCategoriesUseCase: getIt(),
