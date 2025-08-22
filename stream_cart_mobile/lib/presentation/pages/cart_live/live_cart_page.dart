@@ -6,6 +6,8 @@ import '../../blocs/cart_live/cart_live_state.dart';
 import '../../widgets/cart_live/live_cart_shop_section_widget.dart';
 import '../../widgets/cart_live/live_cart_summary_widget.dart';
 import '../../widgets/cart_live/empty_live_cart_widget.dart';
+import '../../blocs/cart_live/preview_order_live_bloc.dart';
+import '../../../core/routing/app_router.dart';
 
 class LiveCartPage extends StatefulWidget {
   final String livestreamId;
@@ -52,15 +54,55 @@ class _LiveCartPageState extends State<LiveCartPage> {
           ),
         ],
       ),
-      body: BlocConsumer<CartLiveBloc, CartLiveState>(
-        listener: (context, state) {
-          if (state is CartLiveError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
-            );
-          }
-        },
-        builder: (context, state) {
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<CartLiveBloc, CartLiveState>(
+            listener: (context, state) {
+              if (state is CartLiveError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+                );
+              }
+            },
+          ),
+          BlocListener<PreviewOrderLiveBloc, PreviewOrderLiveState>(
+            listener: (context, pState) {
+              if (pState is PreviewOrderLiveLoading) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(child: CircularProgressIndicator()),
+                );
+              } else if (pState is PreviewOrderLiveLoaded) {
+                if (Navigator.canPop(context)) Navigator.pop(context); 
+                final preview = pState.data.toPreviewOrderDataEntity();
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.checkout,
+                  arguments: {
+                    'preview': preview,
+                    'liveCartItemIds': pState.data.listCartItem
+                        .expand((s) => s.products.map((p) => p.cartItemId))
+                        .where((id) => (context.read<CartLiveBloc>().state is CartLiveLoaded)
+                            ? (context.read<CartLiveBloc>().state as CartLiveLoaded).selectedCartItemIds.contains(id)
+                            : (context.read<CartLiveBloc>().state is CartLiveUpdated)
+                                ? (context.read<CartLiveBloc>().state as CartLiveUpdated).selectedCartItemIds.contains(id)
+                                : true)
+                        .toList(),
+                    'livestreamId': widget.livestreamId,
+                  },
+                );
+              } else if (pState is PreviewOrderLiveError) {
+                if (Navigator.canPop(context)) Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(pState.message), backgroundColor: Colors.redAccent),
+                );
+              }
+            },
+          ),
+        ],
+  child: BlocBuilder<CartLiveBloc, CartLiveState>(
+  builder: (context, state) {
           if (state is CartLiveLoading || state is CartLiveActionInProgress) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -106,10 +148,9 @@ class _LiveCartPageState extends State<LiveCartPage> {
                   cart: cart,
                   selectedIds: selected,
                   onCheckout: () {
-                    // TODO: navigate to checkout live order preview
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Chức năng thanh toán live đang phát triển'),
-                    ));
+                    final ids = selected.toList();
+                    if (ids.isEmpty) return;
+                    context.read<PreviewOrderLiveBloc>().add(RequestPreviewOrderLiveEvent(ids));
                   },
                   onClear: () => context
                       .read<CartLiveBloc>()
@@ -141,6 +182,7 @@ class _LiveCartPageState extends State<LiveCartPage> {
 
           return EmptyLiveCartWidget(onBackToLive: () => Navigator.pop(context));
         },
+        ),
       ),
     );
   }
