@@ -204,6 +204,10 @@ import '../../domain/usecases/cart_live/remove_livestream_cart_item_usecase.dart
 import '../../domain/usecases/cart_live/clear_livestream_cart_usecase.dart';
 import '../../domain/usecases/cart_live/listen_livestream_cart_events_usecase.dart';
 import '../../presentation/blocs/cart_live/cart_live_bloc.dart';
+import '../../data/datasources/cart_live/preview_order_live_remote_data_source.dart';
+import '../../data/repositories/cart_live/preview_order_live_repository_impl.dart';
+import '../../domain/repositories/cart_live/preview_order_live_repository.dart';
+import '../../domain/usecases/cart_live/get_preview_order_live_usecase.dart';
 
 
 final getIt = GetIt.instance;
@@ -519,6 +523,10 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => RemoveLivestreamCartItemUsecase(getIt()));
   getIt.registerLazySingleton(() => ClearLivestreamCartUsecase(getIt()));
   getIt.registerLazySingleton(() => ListenLivestreamCartEventsUsecase(getIt()));
+  // Preview Order Live (REST) – tính toán preview dựa trên danh sách cart item đã chọn
+  getIt.registerLazySingleton<PreviewOrderLiveRemoteDataSource>(() => PreviewOrderLiveRemoteDataSourceImpl(dio: getIt()));
+  getIt.registerLazySingleton<PreviewOrderLiveRepository>(() => PreviewOrderLiveRepositoryImpl(getIt()));
+  getIt.registerLazySingleton(() => GetPreviewOrderLiveUsecase(getIt()));
   getIt.registerFactory(() => CartLiveBloc(
         getCartUsecase: getIt(),
         addUsecase: getIt(),
