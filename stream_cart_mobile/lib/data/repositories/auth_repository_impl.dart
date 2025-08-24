@@ -14,6 +14,9 @@ import '../datasources/auth/auth_local_data_source.dart';
 import '../models/auth/login_request_model.dart';
 import '../models/auth/register_request_model.dart';
 import '../models/auth/otp_models.dart';
+import '../models/auth/change_password_model.dart';
+import '../../domain/entities/auth/change_password_request_entity.dart';
+import '../../domain/entities/auth/change_password_response_entity.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -225,5 +228,31 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String?> getStoredRefreshToken() async {
     return await localDataSource.getRefreshToken();
+  }
+
+  @override
+  Future<Either<Failure, ChangePasswordResponseEntity>> changePassword(ChangePasswordRequestEntity request) async {
+    try {
+      final model = ChangePasswordRequestModel.fromEntity(request);
+      final response = await remoteDataSource.changePassword(model);
+      if (response.success) {
+        return Right(response.toEntity());
+      } else {
+        return Left(ServerFailure(response.message));
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final dynamic data = e.response?.data;
+        final String msg = (data is Map && data['message'] != null)
+            ? data['message'].toString()
+            : 'Yêu cầu không hợp lệ';
+        return Left(ValidationFailure(msg));
+      } else if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Mật khẩu hiện tại không đúng hoặc phiên hết hạn'));
+      }
+      return Left(NetworkFailure('Lỗi mạng khi đổi mật khẩu'));
+    } catch (e) {
+      return Left(ServerFailure('Không thể đổi mật khẩu: $e'));
+    }
   }
 }

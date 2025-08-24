@@ -18,6 +18,8 @@ import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/profile/profile_detail_page.dart';
 import '../../presentation/pages/profile/edit_profile_page.dart';
+import '../../presentation/pages/profile/change_password_page.dart';
+import '../../presentation/blocs/auth/change_password/change_password_bloc.dart';
 import '../../presentation/pages/product_detail/product_detail_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/search/advanced_search_page.dart';
@@ -61,6 +63,7 @@ class AppRouter {
   static const String profile = '/profile';
   static const String profileDetail = '/profile-detail';
   static const String editProfile = '/edit-profile';
+  static const String changePassword = '/change-password';
   static const String productDetails = '/product-details';
   static const String search = '/search';
   static const String advancedSearch = '/advanced-search';
@@ -128,6 +131,13 @@ class AppRouter {
           builder: (_) => BlocProvider(
             create: (context) => getIt<ProfileBloc>(),
             child: EditProfilePage(currentProfile: currentProfile),
+          ),
+        );
+      case changePassword:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => getIt<ChangePasswordBloc>(),
+            child: const ChangePasswordPage(),
           ),
         );
       case productDetails:
