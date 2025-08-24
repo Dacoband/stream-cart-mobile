@@ -285,6 +285,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                   _buildMenuItem(
+                    icon: Icons.lock_outline,
+                    title: 'Đổi mật khẩu',
+                    onTap: () {
+                      _checkAuthAndNavigate(context, () {
+                        Navigator.pushNamed(context, AppRouter.changePassword);
+                      }, 'Bạn cần đăng nhập để đổi mật khẩu');
+                    },
+                  ),
+                  _buildMenuItem(
                     icon: Icons.shopping_bag_outlined,
                     title: 'Đơn hàng của tôi',
                     onTap: () {

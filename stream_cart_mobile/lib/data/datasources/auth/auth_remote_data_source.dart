@@ -4,6 +4,7 @@ import '../../models/auth/login_response_model.dart';
 import '../../models/auth/register_request_model.dart';
 import '../../models/auth/register_response_model.dart';
 import '../../models/auth/otp_models.dart';
+import '../../models/auth/change_password_model.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_url_helper.dart';
 
@@ -13,6 +14,7 @@ abstract class AuthRemoteDataSource {
   Future<VerifyOtpResponseModel> verifyOtp(VerifyOtpRequestModel request);
   Future<ResendOtpResponseModel> resendOtp(ResendOtpRequestModel request);
   Future<LoginResponseModel> refreshToken(Map<String, String> refreshToken);
+  Future<ChangePasswordResponseModel> changePassword(ChangePasswordRequestModel request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -53,5 +55,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final url = ApiUrlHelper.getAuthUrl(ApiConstants.refreshTokenEndpoint);
     final response = await dio.post(url, data: refreshToken);
     return LoginResponseModel.fromJson(response.data);
+  }
+
+  @override
+  Future<ChangePasswordResponseModel> changePassword(ChangePasswordRequestModel request) async {
+    final url = ApiUrlHelper.getAuthUrl(ApiConstants.changePasswordEndpoint);
+    final response = await dio.post(url, data: request.toJson());
+    return ChangePasswordResponseModel.fromJson(response.data);
   }
 }

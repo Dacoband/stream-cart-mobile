@@ -35,6 +35,7 @@ import '../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../domain/usecases/auth/login_usecase.dart';
 import '../../domain/usecases/auth/register_usecase.dart';
 import '../../domain/usecases/auth/otp_usecases.dart';
+import '../../domain/usecases/auth/change_password_usecase.dart';
 import '../../domain/usecases/category/get_category_detail_usecase.dart';
 import '../../domain/usecases/deliveries/preview_order_delivery_usecase.dart';
 import '../../domain/usecases/product/get_products_by_category_usecase.dart';
@@ -80,6 +81,7 @@ import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/blocs/deliveries/deliveries_bloc.dart';
 import '../../presentation/blocs/home/home_bloc.dart';
 import '../../presentation/blocs/profile/profile_bloc.dart';
+import '../../presentation/blocs/auth/change_password/change_password_bloc.dart';
 import '../../presentation/blocs/product_detail/product_detail_bloc.dart';
 import '../../presentation/blocs/search/search_bloc.dart';
 import '../../presentation/blocs/search/advanced_search_bloc.dart';
@@ -270,6 +272,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepositoryImpl(remoteDataSource: getIt()));
   getIt.registerLazySingleton(() => GetUserProfileUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateUserProfileUseCase(getIt()));
+  getIt.registerLazySingleton(() => ChangePasswordUseCase(getIt()));
 
   // Cart
   getIt.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(dioClient: getIt()));
@@ -561,6 +564,7 @@ Future<void> setupDependencies() async {
     getUserProfileUseCase: getIt(),
     updateUserProfileUseCase: getIt(),
   ));
+  getIt.registerFactory(() => ChangePasswordBloc(useCase: getIt()));
 
   getIt.registerFactory(() => ProductDetailBloc(
     getProductDetailUseCase: getIt(),
