@@ -63,7 +63,7 @@ class LivestreamCartService {
     Future<void> removeItem(String cartItemId) async {
     await signalRService.connect();
     final conn = signalRService.connection;
-    await conn.invoke('RemoveFromLivestreamCart', args: [cartItemId]);
+    await conn.invoke('DeleteLivestreamCartItem', args: [cartItemId]);
   }
 
   Future<void> clearCart(String livestreamId) async {

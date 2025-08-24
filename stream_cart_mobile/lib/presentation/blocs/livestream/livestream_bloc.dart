@@ -280,9 +280,13 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 							final parsedTs = tsRaw != null ? DateTime.tryParse(tsRaw) : null;
 							final senderId = (map['senderId'] ?? '').toString();
 							final rawId = (map['id'])?.toString();
-							final genId = (rawId != null && rawId.isNotEmpty)
-								? rawId
-								: 'rt-${(parsedTs ?? DateTime.now()).microsecondsSinceEpoch}-$senderId';
+							String genId;
+							if (rawId != null && rawId.isNotEmpty) {
+								genId = rawId;
+							} else {
+								final stableBase = '${(map['livestreamId'] ?? joinId).toString()}|$senderId|${(map['message'] ?? '').toString()}';
+								genId = 'rt-${stableBase.hashCode}';
+							}
 							final entity = LiveStreamChatMessageEntity(
 								id: genId,
 								livestreamId: (map['livestreamId'] ?? joinId).toString(),
