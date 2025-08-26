@@ -4,6 +4,9 @@ import '../../../domain/entities/products/product_entity.dart';
 import '../../../domain/entities/category/category_entity.dart';
 import '../../../domain/usecases/search/search_products_usecase.dart' as search;
 import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/shop/get_shops_usecase.dart';
+import '../../../domain/entities/shop/shop.dart';
+import '../../../data/models/shop/shop_model.dart';
 import '../../../domain/usecases/product/get_product_primary_images_usecase.dart';
 import '../../../core/services/search_history_service.dart';
 import '../../../core/error/failures.dart';
@@ -15,12 +18,14 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
   final SearchHistoryService searchHistoryService;
+  final GetShopsUseCase getShopsUseCase;
 
   SearchBloc({
     required this.searchProductsUseCase,
     required this.getCategoriesUseCase,
     required this.getProductPrimaryImagesUseCase,
     required this.searchHistoryService,
+    required this.getShopsUseCase,
   }) : super(const SearchInitial()) {
     on<SearchQueryChangedEvent>(_onSearchQueryChanged);
     on<SearchSubmittedEvent>(_onSearchSubmitted);
@@ -31,7 +36,6 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }
 
   void _onSearchQueryChanged(SearchQueryChangedEvent event, Emitter<SearchState> emit) {
-    // Debounce search while typing - for now just clear if empty
     if (event.query.trim().isEmpty) {
       emit(SearchInitial(searchHistory: searchHistoryService.getSearchHistory()));
     }
@@ -45,17 +49,16 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     emit(SearchLoading());
 
     try {
-      // Save to search history
       await searchHistoryService.addSearchQuery(query);
-
-      // Search both products and categories in parallel
       final List<dynamic> futures = await Future.wait([
         searchProductsUseCase(query: query, page: 1, limit: 20),
         getCategoriesUseCase(),
+        getShopsUseCase(GetShopsParams(pageNumber: 1, pageSize: 10, searchTerm: query)),
       ]);
 
-      final productsResult = futures[0] as Either<Failure, List<ProductEntity>>;
-      final categoriesResult = futures[1] as Either<Failure, List<CategoryEntity>>;
+  final productsResult = futures[0] as Either<Failure, List<ProductEntity>>;
+  final categoriesResult = futures[1] as Either<Failure, List<CategoryEntity>>;
+  final shopsResult = futures[2] as Either<Failure, ShopResponse>;
 
       final products = productsResult.fold(
         (failure) {
@@ -79,7 +82,15 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
         category.description.toLowerCase().contains(query.toLowerCase())
       ).toList();
 
-      if (products.isEmpty && filteredCategories.isEmpty) {
+      final shops = shopsResult.fold(
+        (failure) {
+          print('[SearchBloc] Shops search failed: ${failure.message}');
+          return <Shop>[];
+        },
+        (shopResponse) => shopResponse.items,
+      );
+
+  if (products.isEmpty && filteredCategories.isEmpty && shops.isEmpty) {
         emit(SearchEmpty(query));
         return;
       }
@@ -88,10 +99,9 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
         query: query,
         products: products,
         categories: filteredCategories,
+        shops: shops,
         hasMoreProducts: products.length >= 20,
       ));
-
-      // Load product images if we have products
       if (products.isNotEmpty) {
         final productIds = products.map((p) => p.id).toList();
         final imagesResult = await getProductPrimaryImagesUseCase(productIds);

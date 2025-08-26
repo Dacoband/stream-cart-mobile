@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../../domain/entities/category/category_entity.dart';
+import '../../../domain/entities/shop/shop.dart';
 
 abstract class SearchState extends Equatable {
   const SearchState();
@@ -24,6 +25,7 @@ class SearchLoaded extends SearchState {
   final String query;
   final List<ProductEntity> products;
   final List<CategoryEntity> categories;
+  final List<Shop> shops;
   final Map<String, String> productImages;
   final bool hasMoreProducts;
 
@@ -31,6 +33,7 @@ class SearchLoaded extends SearchState {
     required this.query,
     required this.products,
     required this.categories,
+    required this.shops,
     this.productImages = const {},
     this.hasMoreProducts = false,
   });
@@ -39,7 +42,8 @@ class SearchLoaded extends SearchState {
   List<Object?> get props => [
     query,
     products,
-    categories,
+  categories,
+  shops,
     productImages,
     hasMoreProducts,
   ];
@@ -48,6 +52,7 @@ class SearchLoaded extends SearchState {
     String? query,
     List<ProductEntity>? products,
     List<CategoryEntity>? categories,
+    List<Shop>? shops,
     Map<String, String>? productImages,
     bool? hasMoreProducts,
   }) {
@@ -55,6 +60,7 @@ class SearchLoaded extends SearchState {
       query: query ?? this.query,
       products: products ?? this.products,
       categories: categories ?? this.categories,
+      shops: shops ?? this.shops,
       productImages: productImages ?? this.productImages,
       hasMoreProducts: hasMoreProducts ?? this.hasMoreProducts,
     );
