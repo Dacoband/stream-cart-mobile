@@ -197,6 +197,7 @@ class _SearchPageState extends State<SearchPage> {
         query: state.query,
         products: state.products,
         categories: state.categories,
+        shops: state.shops,
         productImages: state.productImages,
         hasMoreProducts: state.hasMoreProducts,
       );

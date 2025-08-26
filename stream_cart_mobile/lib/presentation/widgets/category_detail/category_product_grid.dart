@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../../core/routing/app_router.dart';
@@ -206,13 +207,9 @@ class CategoryProductGrid extends StatelessWidget {
   }
 
   String _formatPrice(double price) {
-    if (price >= 1000000) {
-      return '${(price / 1000000).toStringAsFixed(1)}M₫';
-    } else if (price >= 1000) {
-      return '${(price / 1000).toStringAsFixed(0)}K₫';
-    } else {
-      return '${price.toStringAsFixed(0)}₫';
-    }
+    // Vietnamese format with thousand separators
+    final formatter = NumberFormat.decimalPattern('vi_VN');
+    return '${formatter.format(price.round())}₫';
   }
 
   Widget _buildProductImage(ProductEntity product) {

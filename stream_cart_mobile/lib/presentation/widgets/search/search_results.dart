@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../../domain/entities/category/category_entity.dart';
+import '../../../domain/entities/shop/shop.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
 
@@ -8,6 +10,7 @@ class SearchResults extends StatelessWidget {
   final String query;
   final List<ProductEntity> products;
   final List<CategoryEntity> categories;
+  final List<Shop> shops;
   final Map<String, String> productImages;
   final bool hasMoreProducts;
 
@@ -16,7 +19,8 @@ class SearchResults extends StatelessWidget {
     required this.query,
     required this.products,
     required this.categories,
-    required this.productImages,
+  required this.shops,
+  required this.productImages,
     required this.hasMoreProducts,
   });
 
@@ -31,6 +35,11 @@ class SearchResults extends StatelessWidget {
           _buildSearchSummary(context),
           const SizedBox(height: 16),
           
+          // Shops section
+          if (shops.isNotEmpty) ...[
+            _buildShopsSection(context),
+            const SizedBox(height: 24),
+          ],
           // Categories section
           if (categories.isNotEmpty) ...[
             _buildCategoriesSection(context),
@@ -43,7 +52,7 @@ class SearchResults extends StatelessWidget {
           ],
           
           // No results message
-          if (products.isEmpty && categories.isEmpty) ...[
+          if (products.isEmpty && categories.isEmpty && shops.isEmpty) ...[
             _buildNoResults(context),
           ],
         ],
@@ -52,7 +61,7 @@ class SearchResults extends StatelessWidget {
   }
 
   Widget _buildSearchSummary(BuildContext context) {
-    final totalResults = products.length + categories.length;
+  final totalResults = products.length + categories.length + shops.length;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -81,6 +90,127 @@ class SearchResults extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildShopsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.storefront, color: Color(0xFF4CAF50), size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Cửa hàng (${shops.length})',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4CAF50),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: shops.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => _buildShopCard(context, shops[index]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildShopCard(BuildContext context, Shop shop) {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, AppRouter.shopDetail, arguments: shop.id),
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: shop.logoURL.isNotEmpty
+                      ? Image.network(
+                          shop.logoURL,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: 48,
+                          height: 48,
+                          color: const Color(0xFF202328).withOpacity(0.06),
+                          child: const Icon(Icons.storefront, color: Color(0xFF4CAF50)),
+                        ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        shop.shopName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 14, color: Color(0xFFFFC107)),
+                          const SizedBox(width: 4),
+                          Text(
+                            shop.ratingAverage.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(width: 6),
+                          Text('(${shop.totalReview})', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              shop.description.isNotEmpty ? shop.description : 'Không có mô tả',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700, height: 1.2),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.inventory_2_outlined, size: 14, color: Color(0xFF4CAF50)),
+                const SizedBox(width: 4),
+                Text('${shop.totalProduct} sản phẩm', style: const TextStyle(fontSize: 11)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -116,8 +246,14 @@ class SearchResults extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to category page
-            print('Category tapped: ${category.categoryName}');
+            Navigator.pushNamed(
+              context,
+              AppRouter.categoryDetail,
+              arguments: {
+                'categoryId': category.categoryId,
+                'categoryName': category.categoryName,
+              },
+            );
           },
           borderRadius: BorderRadius.circular(8),
           child: Container(
@@ -238,6 +374,7 @@ class SearchResults extends StatelessWidget {
   }
 
   Widget _buildProductItem(BuildContext context, ProductEntity product, String? imageUrl) {
+  String formatCurrency(num value) => NumberFormat.decimalPattern('vi_VN').format(value);
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -376,15 +513,15 @@ class SearchResults extends StatelessWidget {
                       children: [
                         if (product.isOnSale) ...[
                           Text(
-                            '${product.basePrice.toStringAsFixed(0)}₫',
+                            '${formatCurrency(product.basePrice)}₫',
                             style: TextStyle(
                               decoration: TextDecoration.lineThrough,
                               color: Colors.grey.shade500,
-                              fontSize: 14,
+                              fontSize: 13,
                             ),
                           ),
                           Text(
-                            '${product.finalPrice.toStringAsFixed(0)}₫',
+                            '${formatCurrency(product.finalPrice)}₫',
                             style: TextStyle(
                               color: Colors.red.shade600,
                               fontWeight: FontWeight.bold,
@@ -393,14 +530,25 @@ class SearchResults extends StatelessWidget {
                           ),
                         ] else ...[
                           Text(
-                            '${product.finalPrice.toStringAsFixed(0)}₫',
-                            style: TextStyle(
+                            '${formatCurrency(product.finalPrice)}₫',
+                            style: const TextStyle(
                               color: Color.fromARGB(255, 136, 201, 40),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
                         ],
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.inventory_2_rounded, size: 10, color: Color(0xFF4CAF50)),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Chỉ còn: ${product.stockQuantity}',
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],

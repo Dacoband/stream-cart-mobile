@@ -554,6 +554,7 @@ Future<void> setupDependencies() async {
     getCategoriesUseCase: getIt(),
     getProductPrimaryImagesUseCase: getIt(),
     searchHistoryService: getIt(),
+    getShopsUseCase: getIt(),
   ));
 
   getIt.registerFactory(() => AdvancedSearchBloc(
