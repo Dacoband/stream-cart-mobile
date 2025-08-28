@@ -295,6 +295,7 @@ class _CheckoutViewState extends State<CheckoutView> {
             deliveryState: deliveryState,
             selectedPaymentMethod: selectedPaymentMethod,
             onPlaceOrder: () => _handlePlaceOrder(context, deliveryState),
+            appliedVouchers: _appliedVoucherResults,
           );
         },
       ),

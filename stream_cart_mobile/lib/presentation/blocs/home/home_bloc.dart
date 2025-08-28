@@ -6,6 +6,8 @@ import '../../../domain/usecases/product/get_products_usecase.dart';
 import '../../../domain/usecases/product/get_product_primary_images_usecase.dart';
 import '../../../domain/usecases/flash-sale/get_flash_sales.dart';
 import '../../../domain/usecases/flash-sale/get_flash_sale_products.dart';
+import '../../../domain/usecases/livestream/get_active_livestreams_usecase.dart';
+import '../../../domain/entities/livestream/livestream_entity.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -15,13 +17,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
   final GetFlashSalesUseCase getFlashSalesUseCase;
   final GetFlashSaleProductsUseCase getFlashSaleProductsUseCase; 
+  final GetActiveLiveStreamsUseCase getActiveLiveStreamsUseCase;
 
   HomeBloc({
     required this.getCategoriesUseCase,
     required this.getProductsUseCase,
     required this.getProductPrimaryImagesUseCase,
     required this.getFlashSalesUseCase,
-    required this.getFlashSaleProductsUseCase,
+  required this.getFlashSaleProductsUseCase,
+  required this.getActiveLiveStreamsUseCase,
   }) : super(HomeInitial()) {
     on<LoadHomeDataEvent>(_onLoadHomeData);
     on<RefreshHomeDataEvent>(_onRefreshHomeData);
@@ -78,12 +82,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         (products) => products,
       );
 
+      // Fetch livestreams in parallel now that API is ready
+      final liveStreamsResult = await getActiveLiveStreamsUseCase();
+      final liveStreams = liveStreamsResult.fold((_) => <LiveStreamEntity>[], (list) => list);
+
       emit(HomeLoaded(
         categories: categories,
         products: products,
-        liveStreams: [], // TODO: Load livestreams when API is ready
+        liveStreams: liveStreams,
         hasMoreProducts: products.length >= 20,
-        isLoadingFlashSales: true, // Set loading state for flash sales
+        isLoadingFlashSales: true,
       ));
 
       // Auto-load flash sales and product images after initial load
@@ -100,14 +108,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onRefreshHomeData(RefreshHomeDataEvent event, Emitter<HomeState> emit) async {
-    // Also refresh flash sales when refreshing home data
-    final currentState = state;
-    if (currentState is HomeLoaded) {
-      add(const LoadFlashSalesEvent());
-    }
-    
-    // Use the same logic as LoadHomeDataEvent
-    add(const LoadHomeDataEvent());
+  // Refresh everything including livestreams & flash sales
+  add(const LoadHomeDataEvent());
   }
 
   Future<void> _onLoadMoreProducts(LoadMoreProductsEvent event, Emitter<HomeState> emit) async {

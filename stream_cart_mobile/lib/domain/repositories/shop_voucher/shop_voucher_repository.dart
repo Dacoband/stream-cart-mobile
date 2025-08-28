@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:stream_cart_mobile/core/error/failures.dart';
 
 import '../../entities/shop_voucher/shop_voucher_entity.dart';
+import '../../entities/shop_voucher/available_shop_voucher_entity.dart';
 
 abstract class ShopVoucherRepository {
   /// - [shopId]: Required path parameter of the shop.
@@ -23,5 +24,11 @@ abstract class ShopVoucherRepository {
   Future<Either<Failure, ApplyShopVoucherResponseEntity>> applyVoucher({
     required String code,
     required ApplyShopVoucherRequestEntity request,
+  });
+
+  Future<Either<Failure, AvailableShopVouchersResponseEntity>> getAvailableVouchers({
+    required double orderAmount,
+    String? shopId,
+    bool sortByDiscountDesc = true,
   });
 }

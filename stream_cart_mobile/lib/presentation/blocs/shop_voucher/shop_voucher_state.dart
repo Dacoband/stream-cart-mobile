@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/shop_voucher/shop_voucher_entity.dart';
+import '../../../domain/entities/shop_voucher/available_shop_voucher_entity.dart';
 
 abstract class ShopVoucherState extends Equatable {
   const ShopVoucherState();
@@ -30,6 +31,15 @@ class ShopVoucherApplied extends ShopVoucherState {
 
   @override
   List<Object?> get props => [response];
+}
+
+class AvailableShopVouchersLoading extends ShopVoucherState {}
+
+class AvailableShopVouchersLoaded extends ShopVoucherState {
+  final AvailableShopVouchersResponseEntity data;
+  const AvailableShopVouchersLoaded(this.data);
+  @override
+  List<Object?> get props => [data];
 }
 
 class ShopVoucherError extends ShopVoucherState {

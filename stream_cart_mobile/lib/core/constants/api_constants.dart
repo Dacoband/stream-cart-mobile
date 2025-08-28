@@ -160,7 +160,8 @@ class ApiConstants {
 
   // Shop Voucher endpoints
   static const String getShopVouchersByShopIdEndpoint = '/api/shops/{shopId}/vouchers'; // GET, lấy danh sách voucher theo shopId
-  static const String applyShopVoucherEndpoint = '/api/vouchers/{code}/apply'; // POST, áp dụng voucher theo code
+  // static const String applyShopVoucherEndpoint = '/api/vouchers/{code}/apply'; // POST, áp dụng voucher theo code
+  static const String availableShopVouchersEndpoint = '/api/vouchers/available'; // POST, lấy danh sách voucher khả dụng theo  và sử dụng nó 
 
   // Livestream cart endpoints
   static const String getPreviewOrderLiveCartEndpoint = '/api/livestream-carts/PreviewOrder'; // GET, lấy thông tin giỏ hàng livestream
