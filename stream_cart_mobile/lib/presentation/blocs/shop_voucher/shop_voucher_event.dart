@@ -41,3 +41,18 @@ class ApplyShopVoucherEvent extends ShopVoucherEvent {
   @override
   List<Object?> get props => [code, request];
 }
+
+class LoadAvailableShopVouchersEvent extends ShopVoucherEvent {
+  final double orderAmount;
+  final String? shopId;
+  final bool sortByDiscountDesc;
+
+  const LoadAvailableShopVouchersEvent({
+    required this.orderAmount,
+    this.shopId,
+    this.sortByDiscountDesc = true,
+  });
+
+  @override
+  List<Object?> get props => [orderAmount, shopId, sortByDiscountDesc];
+}

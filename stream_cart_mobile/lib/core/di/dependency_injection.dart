@@ -7,6 +7,7 @@ import 'package:stream_cart_mobile/data/repositories/shop_voucher/shop_voucher_r
 import 'package:stream_cart_mobile/domain/repositories/shop_voucher/shop_voucher_repository.dart';
 import 'package:stream_cart_mobile/domain/usecases/shop_voucher/apply_shop_voucher_usecase.dart';
 import 'package:stream_cart_mobile/domain/usecases/shop_voucher/get_shop_vouchers_usecase.dart';
+import 'package:stream_cart_mobile/domain/usecases/shop_voucher/get_available_shop_vouchers_usecase.dart';
 import 'package:stream_cart_mobile/presentation/blocs/shop_voucher/shop_voucher_bloc.dart';
 import '../../core/network/network_config.dart';
 import '../../core/services/auth_service.dart';
@@ -371,9 +372,11 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<ShopVoucherRepository>(() => ShopVoucherRepositoryImpl(getIt()));
   getIt.registerLazySingleton(() => GetShopVouchersUseCase(getIt()));
   getIt.registerLazySingleton(() => ApplyShopVoucherUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetAvailableShopVouchersUseCase(getIt()));
   getIt.registerFactory(() => ShopVoucherBloc(
     getShopVouchersUseCase: getIt(),
     applyShopVoucherUseCase: getIt(),
+  getAvailableShopVouchersUseCase: getIt(),
   ));
 
   // === CHAT (SignalR only) ===

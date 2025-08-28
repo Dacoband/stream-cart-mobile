@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../blocs/deliveries/deliveries_state.dart';
 import '../../../domain/entities/cart/cart_entity.dart';
+import '../../../domain/entities/shop_voucher/shop_voucher_entity.dart';
 
 class CurrencyFormatter {
   static String format(num value) {
@@ -13,6 +14,7 @@ class CheckoutBottomBarWidget extends StatelessWidget {
   final DeliveryState deliveryState;
   final String selectedPaymentMethod;
   final VoidCallback onPlaceOrder;
+  final Map<String, ApplyShopVoucherDataEntity>? appliedVouchers; // shopId -> applied data
 
   const CheckoutBottomBarWidget({
     super.key,
@@ -20,6 +22,7 @@ class CheckoutBottomBarWidget extends StatelessWidget {
     required this.deliveryState,
     required this.selectedPaymentMethod,
     required this.onPlaceOrder,
+    this.appliedVouchers,
   });
 
   @override
@@ -27,8 +30,19 @@ class CheckoutBottomBarWidget extends StatelessWidget {
     final deliveryFee = deliveryState is DeliveryLoaded 
         ? (deliveryState as DeliveryLoaded).totalDeliveryFee 
         : 0.0;
-    
-    final finalTotal = previewOrderData.totalAmount + deliveryFee;
+
+    // Recalculate discounted subtotal using applied vouchers
+    double discountedSubtotal = 0;
+    for (final shop in previewOrderData.listCartItem) {
+      final applied = appliedVouchers?[shop.shopId];
+      if (applied != null && applied.isApplied) {
+        discountedSubtotal += applied.finalAmount;
+      } else {
+        discountedSubtotal += shop.totalPriceInShop;
+      }
+    }
+    final voucherDiscount = (previewOrderData.subTotal - discountedSubtotal).clamp(0, double.infinity);
+    final finalTotal = discountedSubtotal + deliveryFee;
 
     return Container(
       decoration: BoxDecoration(
@@ -57,7 +71,7 @@ class CheckoutBottomBarWidget extends StatelessWidget {
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   Text(
-                    CurrencyFormatter.format(previewOrderData.totalAmount),
+                    CurrencyFormatter.format(previewOrderData.subTotal),
                     style: const TextStyle(fontSize: 14),
                   ),
                 ],
@@ -81,7 +95,24 @@ class CheckoutBottomBarWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
+              if (voucherDiscount > 0) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Giảm giá:',
+                      style: TextStyle(fontSize: 14, color: Colors.red),
+                    ),
+                    Text(
+                      '-${CurrencyFormatter.format(voucherDiscount)}',
+                      style: const TextStyle(fontSize: 14, color: Colors.red),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+              ],
+              const SizedBox(height: 4),
               const Divider(),
               const SizedBox(height: 8),
               
@@ -99,13 +130,28 @@ class CheckoutBottomBarWidget extends StatelessWidget {
                           color: Colors.grey,
                         ),
                       ),
-                      Text(
-                        CurrencyFormatter.format(finalTotal),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF4CAF50),
-                        ),
+                      Row(
+                        children: [
+                          if (voucherDiscount > 0) ...[
+                            Text(
+                              CurrencyFormatter.format(previewOrderData.subTotal + deliveryFee),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            CurrencyFormatter.format(finalTotal),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF4CAF50),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

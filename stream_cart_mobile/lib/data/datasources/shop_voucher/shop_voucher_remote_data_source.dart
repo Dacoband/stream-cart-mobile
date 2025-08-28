@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../models/shop_voucher/shop_voucher_model.dart';
+import '../../models/shop_voucher/available_shop_voucher_model.dart';
 
 abstract class ShopVoucherRemoteDataSource {
   Future<ShopVouchersResponseModel> getVouchers({
@@ -14,6 +15,11 @@ abstract class ShopVoucherRemoteDataSource {
   Future<ApplyShopVoucherResponseModel> applyVoucher({
     required String code,
     required ApplyShopVoucherRequestModel request,
+  });
+  Future<AvailableShopVouchersResponseModel> getAvailableVouchers({
+    required double orderAmount,
+    String? shopId,
+    bool sortByDiscountDesc = true,
   });
 }
 
@@ -59,16 +65,32 @@ class ShopVoucherRemoteDataSourceImpl implements ShopVoucherRemoteDataSource {
     required String code,
     required ApplyShopVoucherRequestModel request,
   }) async {
+    throw UnimplementedError('Apply voucher endpoint deprecated. Use available vouchers calculation instead.');
+  }
+
+  @override
+  Future<AvailableShopVouchersResponseModel> getAvailableVouchers({
+    required double orderAmount,
+    String? shopId,
+    bool sortByDiscountDesc = true,
+  }) async {
     try {
+      final body = <String, dynamic>{
+        'orderAmount': orderAmount,
+        'sortByDiscountDesc': sortByDiscountDesc,
+      };
+      if (shopId != null && shopId.isNotEmpty) {
+        body['shopId'] = shopId;
+      }
       final response = await _dioClient.post(
-        ApiConstants.applyShopVoucherEndpoint.replaceAll('{code}', code),
-        data: request.toJson(),
+        ApiConstants.availableShopVouchersEndpoint,
+        data: body,
       );
-      return ApplyShopVoucherResponseModel.fromJson(response.data);
+      return AvailableShopVouchersResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioException(e);
     } catch (e) {
-      throw Exception('Failed to apply voucher: $e');
+      throw Exception('Failed to get available vouchers: $e');
     }
   }
 
