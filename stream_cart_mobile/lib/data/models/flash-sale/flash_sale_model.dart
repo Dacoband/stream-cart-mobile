@@ -11,6 +11,10 @@ class FlashSaleModel extends FlashSaleEntity {
     required super.isActive,
     required super.startTime,
     required super.endTime,
+  super.slot = 0,
+  super.productName,
+  super.productImageUrl,
+  super.variantName,
   });
 
   factory FlashSaleModel.fromJson(Map<String, dynamic> json) {
@@ -18,12 +22,16 @@ class FlashSaleModel extends FlashSaleEntity {
       id: json['id'] ?? '',
       productId: json['productId'] ?? '',
       variantId: json['variantId'],
-      flashSalePrice: (json['flashSalePrice'] ?? 0).toDouble(),
+      flashSalePrice: (json['flashSalePrice'] as num?)?.toDouble() ?? 0,
       quantityAvailable: json['quantityAvailable'] ?? 0,
       quantitySold: json['quantitySold'] ?? 0,
       isActive: json['isActive'] ?? false,
-      startTime: DateTime.parse(json['startTime'] ?? DateTime.now().toIso8601String()),
-      endTime: DateTime.parse(json['endTime'] ?? DateTime.now().toIso8601String()),
+      startTime: DateTime.tryParse(json['startTime'] ?? '') ?? DateTime.now(),
+      endTime: DateTime.tryParse(json['endTime'] ?? '') ?? DateTime.now(),
+      slot: json['slot'] ?? 0,
+      productName: json['productName']?.toString(),
+      productImageUrl: json['productImageUrl']?.toString(),
+      variantName: json['variantName']?.toString(),
     );
   }
 
@@ -38,6 +46,10 @@ class FlashSaleModel extends FlashSaleEntity {
       'isActive': isActive,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
+  'slot': slot,
+  'productName': productName,
+  'productImageUrl': productImageUrl,
+  'variantName': variantName,
     };
   }
 
@@ -52,6 +64,10 @@ class FlashSaleModel extends FlashSaleEntity {
       isActive: isActive,
       startTime: startTime,
       endTime: endTime,
+      slot: slot,
+      productName: productName,
+      productImageUrl: productImageUrl,
+      variantName: variantName,
     );
   }
 }

@@ -8,6 +8,10 @@ class FlashSaleEntity {
   final bool isActive;
   final DateTime startTime;
   final DateTime endTime;
+  final int slot;
+  final String? productName;
+  final String? productImageUrl;
+  final String? variantName;
 
   const FlashSaleEntity({
     required this.id,
@@ -19,6 +23,10 @@ class FlashSaleEntity {
     required this.isActive,
     required this.startTime,
     required this.endTime,
+  this.slot = 0,
+  this.productName,
+  this.productImageUrl,
+  this.variantName,
   });
 
   // Calculate discount percentage
