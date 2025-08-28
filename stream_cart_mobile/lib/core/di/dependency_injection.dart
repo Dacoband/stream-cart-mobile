@@ -547,6 +547,7 @@ Future<void> setupDependencies() async {
     getProductPrimaryImagesUseCase: getIt(),
     getFlashSalesUseCase: getIt(),
     getFlashSaleProductsUseCase: getIt(),
+  getActiveLiveStreamsUseCase: getIt(),
   ));
 
   getIt.registerFactory(() => SearchBloc(
