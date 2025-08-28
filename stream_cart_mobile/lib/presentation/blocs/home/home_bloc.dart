@@ -14,7 +14,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetProductsUseCase getProductsUseCase;
   final GetProductPrimaryImagesUseCase getProductPrimaryImagesUseCase;
   final GetFlashSalesUseCase getFlashSalesUseCase;
-  final GetFlashSaleProductsUseCase getFlashSaleProductsUseCase;
+  final GetFlashSaleProductsUseCase getFlashSaleProductsUseCase; 
 
   HomeBloc({
     required this.getCategoriesUseCase,
@@ -138,8 +138,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _onLoadProductImages(LoadProductImagesEvent event, Emitter<HomeState> emit) async {
     if (state is HomeLoaded) {
-      final currentState = state as HomeLoaded;
-      
       final result = await getProductPrimaryImagesUseCase(event.productIds);
       
       result.fold(
@@ -147,9 +145,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           // Don't change state on error, just log it silently
         },
         (primaryImages) {
-          // Get the current state again to ensure we have the latest flash sales data
-          final latestState = state as HomeLoaded;
-          emit(latestState.copyWith(productImages: primaryImages));
+          emit((state as HomeLoaded).copyWith(productImages: primaryImages));
         },
       );
     }
@@ -168,35 +164,45 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             emit(currentState.copyWith(isLoadingFlashSales: false));
           },
           (flashSales) async {
-            // Extract product IDs from flash sales
-            final productIds = flashSales
-                .map((flashSale) => flashSale.productId)
-                .toSet()
-                .toList();
+            final hasEmbeddedProductInfo = flashSales.any((fs) =>
+              (fs.productName != null && fs.productName!.isNotEmpty) ||
+              (fs.productImageUrl != null && fs.productImageUrl!.isNotEmpty)
+            );
 
-            if (productIds.isNotEmpty) {
-              final productsResult = await getFlashSaleProductsUseCase(productIds);
-              
-              productsResult.fold(
-                (failure) {
-                  emit(currentState.copyWith(
-                    flashSales: flashSales,
-                    isLoadingFlashSales: false,
-                  ));
-                },
-                (flashSaleProducts) {
-                  emit(currentState.copyWith(
-                    flashSales: flashSales,
-                    flashSaleProducts: flashSaleProducts,
-                    isLoadingFlashSales: false,
-                  ));
-                },
-              );
-            } else {
+            if (hasEmbeddedProductInfo) {
               emit(currentState.copyWith(
                 flashSales: flashSales,
                 isLoadingFlashSales: false,
               ));
+            } else {
+              final productIds = flashSales
+                  .map((flashSale) => flashSale.productId)
+                  .toSet()
+                  .toList();
+
+              if (productIds.isNotEmpty) {
+                final productsResult = await getFlashSaleProductsUseCase(productIds);
+                productsResult.fold(
+                  (failure) {
+                    emit(currentState.copyWith(
+                      flashSales: flashSales,
+                      isLoadingFlashSales: false,
+                    ));
+                  },
+                  (flashSaleProducts) {
+                    emit(currentState.copyWith(
+                      flashSales: flashSales,
+                      flashSaleProducts: flashSaleProducts,
+                      isLoadingFlashSales: false,
+                    ));
+                  },
+                );
+              } else {
+                emit(currentState.copyWith(
+                  flashSales: flashSales,
+                  isLoadingFlashSales: false,
+                ));
+              }
             }
           },
         );
