@@ -158,15 +158,82 @@ class FlashSaleSection extends StatelessWidget {
   }
 
   Widget _buildFlashSaleSection(BuildContext context, HomeLoaded state) {
+    final Map<int, List<FlashSaleEntity>> grouped = {};
+    for (final fs in state.flashSales) {
+      final slot = fs.slot;
+      grouped.putIfAbsent(slot, () => []).add(fs);
+    }
+    final sortedSlots = grouped.keys.toList()..sort();
+
+    if (sortedSlots.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Approx list height (match card height logic inside list builder)
+    final screenHeight = MediaQuery.of(context).size.height;
+    double listHeight;
+    if (screenHeight > 800) {
+      listHeight = 220.0; 
+    } else if (screenHeight > 700) {
+      listHeight = 200.0; 
+    } else if (screenHeight > 600) {
+      listHeight = 180.0; 
+    } else {
+      listHeight = 160.0; 
+    }
+
+    return DefaultTabController(
+      length: sortedSlots.length,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(context, state.flashSales),
+            if (sortedSlots.length > 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: _buildSlotTabs(sortedSlots),
+              ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: listHeight,
+              child: TabBarView(
+                physics: const BouncingScrollPhysics(),
+                children: sortedSlots.map((slot) {
+                  final list = grouped[slot]!;
+                  return _buildFlashSaleList(
+                    context,
+                    list,
+                    state.flashSaleProducts,
+                    state.productImages,
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlotTabs(List<int> slots) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionHeader(context, state.flashSales),
-          const SizedBox(height: 16),
-          _buildFlashSaleList(context, state.flashSales, state.flashSaleProducts, state.productImages),
-        ],
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: TabBar(
+        isScrollable: true,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.black87,
+        indicator: BoxDecoration(
+          color: Colors.red[600],
+          borderRadius: BorderRadius.circular(6),
+        ),
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        tabs: slots.map((s) => Tab(text: s == 0 ? 'Khác' : 'Slot $s')).toList(),
       ),
     );
   }
@@ -295,16 +362,14 @@ class FlashSaleSection extends StatelessWidget {
     List<ProductEntity> products,
     Map<String, String> productImages,
   ) {
-    // Filter only active flash sales
     final activeFlashSales = flashSales.where((fs) => fs.isCurrentlyActive).toList();
 
     if (activeFlashSales.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return LayoutBuilder(
+  return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate responsive height based on screen size
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
         
