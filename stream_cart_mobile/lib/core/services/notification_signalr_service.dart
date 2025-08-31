@@ -23,7 +23,7 @@ class NotificationSignalRService {
     if (_isConnected) return;
 
     try {
-      final serverUrl = '${Env.baseUrl}/notificationHub';
+      final serverUrl = '${Env.baseUrl}/hubs/notification';
 
       _hubConnection = HubConnectionBuilder()
           .withUrl(
@@ -38,16 +38,13 @@ class NotificationSignalRService {
 
       // Handle connection state changes
       _hubConnection?.onclose((error) async {
-        print('SignalR connection closed: $error');
         _isConnected = false;
       });
 
       _hubConnection?.onreconnecting((error) async {
-        print('SignalR reconnecting: $error');
       });
 
       _hubConnection?.onreconnected((connectionId) async {
-        print('SignalR reconnected: $connectionId');
         _isConnected = true;
       });
 
@@ -55,7 +52,6 @@ class NotificationSignalRService {
       _hubConnection?.on('ReceiveNotification', (arguments) {
         if (arguments != null && arguments.isNotEmpty) {
           final notificationJson = arguments[0] as String;
-          print('📢 New notification received: $notificationJson');
           onNotificationReceived?.call(notificationJson);
         }
       });
@@ -64,7 +60,6 @@ class NotificationSignalRService {
         if (arguments != null && arguments.length >= 2) {
           final notificationId = arguments[0] as String;
           final isRead = arguments[1] as bool;
-          print('📝 Notification updated: $notificationId, isRead: $isRead');
           onNotificationUpdated?.call(notificationId, isRead);
         }
       });
@@ -72,21 +67,14 @@ class NotificationSignalRService {
       _hubConnection?.on('UnreadCountChanged', (arguments) {
         if (arguments != null && arguments.isNotEmpty) {
           final count = arguments[0] as int;
-          print('🔢 Unread count changed: $count');
           onUnreadCountChanged?.call(count);
         }
       });
-
-      // Start connection
       await _hubConnection?.start();
       _isConnected = true;
-      print('✅ SignalR connected successfully');
-
-      // Join notification group for current user
       await joinNotificationGroup();
 
     } catch (e) {
-      print('❌ SignalR connection failed: $e');
       _isConnected = false;
     }
   }
@@ -95,9 +83,8 @@ class NotificationSignalRService {
     if (_isConnected && _hubConnection != null) {
       try {
         await _hubConnection!.invoke('JoinNotificationGroup');
-        print('✅ Joined notification group');
       } catch (e) {
-        print('❌ Failed to join notification group: $e');
+        return Future.error('Failed to join notification group: $e');
       }
     }
   }
@@ -106,9 +93,8 @@ class NotificationSignalRService {
     if (_isConnected && _hubConnection != null) {
       try {
         await _hubConnection!.invoke('LeaveNotificationGroup');
-        print('✅ Left notification group');
       } catch (e) {
-        print('❌ Failed to leave notification group: $e');
+        return Future.error('Failed to leave notification group: $e');
       }
     }
   }
@@ -119,9 +105,8 @@ class NotificationSignalRService {
         await leaveNotificationGroup();
         await _hubConnection!.stop();
         _isConnected = false;
-        print('✅ SignalR disconnected');
       } catch (e) {
-        print('❌ SignalR disconnect error: $e');
+        return Future.error('Failed to disconnect: $e');
       }
     }
   }

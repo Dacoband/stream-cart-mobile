@@ -13,7 +13,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
   final GetUnreadNotificationCountUseCase getUnreadNotificationCountUseCase;
 
-  // Keep track of current data for pagination
   List<NotificationEntity> _currentNotifications = [];
   int _currentPage = 1;
   int _totalItem = 0;
@@ -37,7 +36,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
   @override
   Future<void> close() {
-    // Cancel any ongoing operations if needed
     return super.close();
   }
 
@@ -48,12 +46,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     if (isClosed) return;
     
     if (event.isRefresh) {
-      // Don't emit loading if it's a refresh
     } else {
       emit(NotificationLoading());
     }
-
-    // Reset pagination for new query
     _currentPage = event.pageIndex ?? 1;
     _pageSize = event.pageSize ?? 10;
     _currentType = event.type;
@@ -164,7 +159,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         emit(NotificationError(failure.message));
       },
       (response) {
-        // Update the notification in current list
         final updatedNotifications = _currentNotifications.map((notification) {
           if (notification.notificationId == event.notificationId) {
             return notification.copyWith(isRead: true);
@@ -173,19 +167,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         }).toList();
 
         _currentNotifications = updatedNotifications;
-
-        // Emit success message
         emit(NotificationMarkAsReadSuccess(
           response.message,
           event.notificationId,
         ));
-
-        // Update unread count and reload current state
         if (!isClosed) {
           add(LoadUnreadCount());
         }
-
-        // Return to loaded state with updated data
         if (state is NotificationLoaded && !isClosed) {
           final currentState = state as NotificationLoaded;
           emit(currentState.copyWith(
@@ -206,7 +194,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
     result.fold(
       (failure) {
-        // Don't emit error for unread count, just ignore
       },
       (count) {
         emit(UnreadCountLoaded(count));
@@ -219,7 +206,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     Emitter<NotificationState> emit,
   ) async {
     if (isClosed) return;
-    // Use current filters or new ones
     if (!isClosed) {
       add(LoadNotifications(
         type: event.type ?? _currentType,
@@ -230,16 +216,12 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       ));
     }
   }
-
-  // Getter for unread count (for external access)
   int get unreadCount {
     if (state is NotificationLoaded) {
       return (state as NotificationLoaded).unreadCount;
     }
     return 0;
   }
-
-  // Handle new notification received via SignalR
   Future<void> _onNewNotificationReceived(
     NewNotificationReceived event,
     Emitter<NotificationState> emit,
@@ -267,8 +249,6 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       print('Error handling new notification: $e');
     }
   }
-
-  // Handle notification update via SignalR
   Future<void> _onNotificationUpdated(
     NotificationUpdated event,
     Emitter<NotificationState> emit,
@@ -278,18 +258,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     try {
       if (state is NotificationLoaded) {
         final currentState = state as NotificationLoaded;
-        
-        // Update the specific notification
         final updatedNotifications = currentState.notifications.map((notification) {
           if (notification.notificationId == event.notificationId) {
             return notification.copyWith(isRead: event.isRead);
           }
           return notification;
         }).toList();
-
-        // Recalculate unread count
         final unreadCount = updatedNotifications.where((n) => !n.isRead).length;
-
         emit(currentState.copyWith(
           notifications: updatedNotifications,
           unreadCount: unreadCount,
