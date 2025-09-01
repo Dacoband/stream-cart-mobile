@@ -71,7 +71,7 @@ class ApiConstants {
 
 
   // Flash Sale endpoints
-  static const String flashSalesEndpoint = '/api/flashsales';
+  static const String flashSalesEndpoint = '/api/flashsales/current';
   static const String flashSaleDetailEndpoint = '/api/flashsales/{id}';
   
   // Product Image endpoints
