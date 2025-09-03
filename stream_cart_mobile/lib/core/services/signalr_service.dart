@@ -424,7 +424,7 @@ class SignalRService {
           if (_hasLivestreamId(messageData)) {
             onReceiveLivestreamMessage?.call(messageData);
           }
-          onStatusChanged?.call("✅ Nhận chat message qua SignalR ($eventName)");
+          // onStatusChanged?.call("✅ Nhận chat message qua SignalR ($eventName)"); // Tắt log để tránh spam
         }
       } catch (e) {
         onError?.call("Lỗi xử lý chat message ($eventName): $e");
@@ -478,7 +478,7 @@ class SignalRService {
             messageData = (messageData['message'] as Map).cast<String, dynamic>();
           }
           onReceiveLivestreamMessage?.call(messageData);
-          onStatusChanged?.call("Nhận livestream message qua SignalR ($eventName)");
+          // onStatusChanged?.call("Nhận livestream message qua SignalR ($eventName)"); // Tắt log để tránh spam
         }
       } catch (e) {
         onError?.call("Lỗi xử lý livestream message: $e");
@@ -506,7 +506,7 @@ class SignalRService {
       final payload = _decodeFirstArg(args);
       if (payload.isEmpty) return;
       onPinnedProductsUpdated?.call(payload);
-      onStatusChanged?.call('📌 Nhận pinned products ($evt)');
+      // onStatusChanged?.call('📌 Nhận pinned products ($evt)'); // Tắt log để tránh spam
     }
 
   _connection.on('PinnedProductsUpdated', (args) => _emitPinnedProductsUpdated(args, 'PinnedProductsUpdated'));
@@ -517,7 +517,7 @@ class SignalRService {
       final payload = _decodeFirstArg(args);
       if (payload.isEmpty) return;
       onProductAdded?.call(payload);
-      onStatusChanged?.call('🟢 Sản phẩm được thêm ($evt)');
+      // onStatusChanged?.call('🟢 Sản phẩm được thêm ($evt)'); // Tắt log để tránh spam
     }
     _connection.on('ProductAddedToLivestream', (args) => _emitProductAdded(args, 'ProductAddedToLivestream'));
 
@@ -525,7 +525,7 @@ class SignalRService {
       final payload = _decodeFirstArg(args);
       if (payload.isEmpty) return;
       onProductRemoved?.call(payload);
-      onStatusChanged?.call('🔴 Sản phẩm bị xoá ($evt)');
+      // onStatusChanged?.call('🔴 Sản phẩm bị xoá ($evt)'); // Tắt log để tránh spam
     }
     _connection.on('ProductRemovedFromLivestream', (args) => _emitProductRemoved(args, 'ProductRemovedFromLivestream'));
 
@@ -533,7 +533,7 @@ class SignalRService {
       final payload = _decodeFirstArg(args);
       if (payload.isEmpty) return;
       onLivestreamProductUpdated?.call(payload);
-      onStatusChanged?.call('✏️ Sản phẩm được cập nhật ($evt)');
+      // onStatusChanged?.call('✏️ Sản phẩm được cập nhật ($evt)'); // Tắt log để tránh spam
     }
     _connection.on('LivestreamProductUpdated', (args) => _emitProductUpdated(args, 'LivestreamProductUpdated'));
 
@@ -545,7 +545,7 @@ class SignalRService {
       } else {
         onProductPinStatusChanged?.call(payload);
       }
-      onStatusChanged?.call('📌 Trạng thái pin thay đổi ($evt)');
+      // onStatusChanged?.call('📌 Trạng thái pin thay đổi ($evt)'); // Tắt log để tránh spam
     }
     _connection.on('ProductPinStatusChanged', (args) => _emitPinChanged(args, 'ProductPinStatusChanged', isLiveVariant: false));
     _connection.on('LivestreamProductPinStatusChanged', (args) => _emitPinChanged(args, 'LivestreamProductPinStatusChanged', isLiveVariant: true));
@@ -558,7 +558,7 @@ class SignalRService {
       } else {
         onProductStockUpdated?.call(payload);
       }
-      onStatusChanged?.call('📦 Stock sản phẩm thay đổi ($evt)');
+      // onStatusChanged?.call('📦 Stock sản phẩm thay đổi ($evt)'); // Tắt log để tránh spam
     }
     _connection.on('ProductStockUpdated', (args) => _emitStockUpdated(args, 'ProductStockUpdated', isLiveVariant: false));
     _connection.on('LivestreamProductStockUpdated', (args) => _emitStockUpdated(args, 'LivestreamProductStockUpdated', isLiveVariant: true));
@@ -577,7 +577,7 @@ class SignalRService {
             return;
           }
           onReceiveViewerStats?.call(stats);
-          onStatusChanged?.call("📊 Nhận viewer stats qua SignalR");
+          // onStatusChanged?.call("📊 Nhận viewer stats qua SignalR"); // Tắt log để tránh spam
         }
       } catch (e) {
         onError?.call("Lỗi xử lý viewer stats: $e");
@@ -593,7 +593,7 @@ class SignalRService {
             
             if (userId != null && isTyping != null) {
               onUserTyping?.call(userId, isTyping);
-              onStatusChanged?.call("👤 User $userId ${isTyping ? 'đang gõ' : 'dừng gõ'}");
+              // onStatusChanged?.call("👤 User $userId ${isTyping ? 'đang gõ' : 'dừng gõ'}"); // Tắt log để tránh spam
             }
           }
         }
@@ -611,7 +611,7 @@ class SignalRService {
             
             if (userId != null) {
               onUserJoinedRoom?.call(userId, userName);
-              onStatusChanged?.call("👤 User $userId joined room");
+              // onStatusChanged?.call("👤 User $userId joined room"); // Tắt log để tránh spam
             }
           }
         }
@@ -631,7 +631,7 @@ class SignalRService {
             
             if (userId != null) {
               onUserLeftRoom?.call(userId, userName);
-              onStatusChanged?.call("👤 User $userId left room");
+              // onStatusChanged?.call("👤 User $userId left room"); // Tắt log để tránh spam
             }
           }
         }

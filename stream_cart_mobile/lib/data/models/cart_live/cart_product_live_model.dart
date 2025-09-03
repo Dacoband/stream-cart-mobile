@@ -8,7 +8,7 @@ part 'cart_product_live_model.g.dart';
 class CartProductLiveModel {
   final String cartItemId;
   final String productId;
-  final String variantID;
+  final String? variantID;
   final String productName;
   @JsonKey(fromJson: PriceDataLiveModel.fromJson, toJson: _priceDataToJson)
   final PriceDataLiveModel priceData;
@@ -26,7 +26,7 @@ class CartProductLiveModel {
   const CartProductLiveModel({
     required this.cartItemId,
     required this.productId,
-    required this.variantID,
+    this.variantID,
     required this.productName,
     required this.priceData,
     required this.quantity,
@@ -66,7 +66,7 @@ class CartProductLiveModel {
     return CartProductLiveModel(
       cartItemId: entity.cartItemId,
       productId: entity.productId,
-      variantID: entity.variantID,
+      variantID: entity.variantID, // Giờ đã nullable ở cả entity và model
       productName: entity.productName,
       priceData: PriceDataLiveModel.fromEntity(entity.priceData),
       quantity: entity.quantity,
