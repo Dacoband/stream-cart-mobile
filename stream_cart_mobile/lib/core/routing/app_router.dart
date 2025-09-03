@@ -53,6 +53,7 @@ import '../../presentation/pages/review/review_detail_page.dart';
 import '../../domain/entities/review/review_entity.dart';
 import '../../presentation/pages/shop_voucher/shop_voucher_list_page.dart';
 import '../../presentation/blocs/shop_voucher/shop_voucher_bloc.dart';
+import '../../presentation/pages/policy/policy_page.dart';
 import '../di/dependency_injection.dart' show getIt;
 
 class AppRouter {
@@ -96,6 +97,8 @@ class AppRouter {
   static const String reviewDetail = '/review-detail';
   // Live cart
   static const String liveCart = '/live-cart';
+  // Policy
+  static const String policy = '/policy';
 
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -139,6 +142,10 @@ class AppRouter {
             create: (context) => getIt<ChangePasswordBloc>(),
             child: const ChangePasswordPage(),
           ),
+        );
+      case policy:
+        return MaterialPageRoute(
+          builder: (_) => const PolicyPage(),
         );
       case productDetails:
         String productId;
