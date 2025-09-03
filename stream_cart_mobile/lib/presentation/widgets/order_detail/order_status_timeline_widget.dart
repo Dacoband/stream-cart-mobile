@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Timeline trạng thái đơn hàng
 class OrderStatusTimelineWidget extends StatelessWidget {
-  final int? status; // 0-4
+  final int? status; // Backend 0..10
 
   const OrderStatusTimelineWidget({
     Key? key,
@@ -19,7 +19,43 @@ class OrderStatusTimelineWidget extends StatelessWidget {
       _Step('Hoàn thành', Icons.check_circle_outline),
     ];
 
-    final active = (status ?? -1).clamp(0, steps.length - 1);
+    // Map backend enum to step index:
+    // 0 Waiting,1 Pending -> step 0 (Đặt hàng)
+    // 2 Processing,6 Packed -> step 1 (Xác nhận)
+    // 3 Shipped -> step 2 (Chuẩn bị) (or could treat as shipped vs prepared)
+    // 7 OnDelivery -> step 3 (Đang giao)
+    // 4 Delivered,10 Completed -> step 4 (Hoàn thành)
+    // 5 Cancelled -> treat as 0 but can style differently (not handled here)
+    // 8 Returning,9 Refunded -> treat as 4 (after completion pipeline) or keep 3 if still returning; choose 4 for now.
+    int mapped;
+    switch (status) {
+      case 0:
+      case 1:
+        mapped = 0;
+        break;
+      case 2:
+      case 6:
+        mapped = 1;
+        break;
+      case 3:
+        mapped = 2;
+        break;
+      case 7:
+        mapped = 3;
+        break;
+      case 4:
+      case 10:
+      case 8:
+      case 9:
+        mapped = 4;
+        break;
+      case 5: // Cancelled
+        mapped = 0; // show initial stage only; optionally could add cancelled overlay elsewhere
+        break;
+      default:
+        mapped = 0;
+    }
+    final active = mapped.clamp(0, steps.length - 1);
     const accent = Color(0xFFB0F847);
 
     return Container(

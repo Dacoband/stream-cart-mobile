@@ -357,6 +357,15 @@ class _OrderReviewsEntry extends StatelessWidget {
             ),
           ),
           TextButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(
+                AppRouter.writeReview,
+                arguments: {'orderId': orderId},
+              );
+            },
+            child: const Text('Viết'),
+          ),
+          TextButton(
             onPressed: () => Navigator.of(context).pushNamed(AppRouter.orderReviews, arguments: orderId),
             child: const Text('Xem tất cả'),
           ),

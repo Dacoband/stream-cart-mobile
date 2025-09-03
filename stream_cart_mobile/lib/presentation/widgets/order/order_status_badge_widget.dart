@@ -35,135 +35,93 @@ class OrderStatusBadgeWidget extends StatelessWidget {
   }
 
   Map<String, dynamic> _getStatusInfo(int? status) {
+    // Backend enum mapping (ref):
+    // 0 Waiting, 1 Pending, 2 Processing, 3 Shipped, 4 Delivered,
+    // 5 Cancelled, 6 Packed, 7 OnDelivery, 8 Returning, 9 Refunded, 10 Completed
     switch (status) {
-      case 0: // Pending/Chờ xác nhận
-        return {
-          'text': 'Chờ xác nhận',
-          'backgroundColor': Colors.orange[50],
-          'borderColor': Colors.orange[200],
-          'textColor': Colors.orange[700],
-        };
-      
-      case 1: // Confirmed/Đang chuẩn bị
-        return {
-          'text': 'Đang chuẩn bị',
-          'backgroundColor': Colors.blue[50],
-          'borderColor': Colors.blue[200],
-          'textColor': Colors.blue[700],
-        };
-      
-      case 2: // Shipping/Đang giao
-        return {
-          'text': 'Đang giao',
-          'backgroundColor': Colors.purple[50],
-          'borderColor': Colors.purple[200],
-          'textColor': Colors.purple[700],
-        };
-      
-      case 3: // Delivered/Hoàn thành
-        return {
-          'text': 'Hoàn thành',
-          'backgroundColor': Colors.green[50],
-          'borderColor': Colors.green[200],
-          'textColor': Colors.green[700],
-        };
-      
-      case 4: // Cancelled/Đã hủy
-        return {
-          'text': 'Đã hủy',
-          'backgroundColor': Colors.red[50],
-          'borderColor': Colors.red[200],
-          'textColor': Colors.red[700],
-        };
-      
-      case 5: // Returned/Trả hàng
-        return {
-          'text': 'Trả hàng',
-          'backgroundColor': Colors.grey[50],
-          'borderColor': Colors.grey[300],
-          'textColor': Colors.grey[700],
-        };
-      
-      case 6: // Refunded/Hoàn tiền
-        return {
-          'text': 'Hoàn tiền',
-          'backgroundColor': Colors.teal[50],
-          'borderColor': Colors.teal[200],
-          'textColor': Colors.teal[700],
-        };
-      
-      default: // Unknown status
-        return {
-          'text': 'Không xác định',
-          'backgroundColor': Colors.grey[100],
-          'borderColor': Colors.grey[300],
-          'textColor': Colors.grey[600],
-        };
+      case 0: // Waiting
+        return _build('Chờ xác nhận', Colors.orange);
+      case 1: // Pending (shop accepted, preparing)
+        return _build('Đang duyệt', Colors.blueGrey);
+      case 2: // Processing
+        return _build('Chuẩn bị hàng', Colors.blue);
+      case 6: // Packed
+        return _build('Đã đóng gói', Colors.indigo);
+      case 3: // Shipped
+        return _build('Đã gửi', Colors.deepPurple);
+      case 7: // OnDelivery
+        return _build('Đang giao', Colors.purple);
+      case 4: // Delivered
+        return _build('Đã giao', Colors.green);
+      case 10: // Completed (finalized)
+        return _build('Hoàn thành', Colors.green.shade700);
+      case 8: // Returning
+        return _build('Trả hàng', Colors.brown);
+      case 9: // Refunded
+        return _build('Hoàn tiền', Colors.teal);
+      case 5: // Cancelled
+        return _build('Đã hủy', Colors.red);
+      default:
+        return _build('Không xác định', Colors.grey);
     }
+  }
+
+  Map<String, dynamic> _build(String text, Color base) {
+    final Color textColor;
+    if (base is MaterialColor) {
+      textColor = base[700]!;
+    } else {
+      textColor = base;
+    }
+    return {
+      'text': text,
+      'backgroundColor': base.withOpacity(0.06),
+      'borderColor': base.withOpacity(0.35),
+      'textColor': textColor,
+    };
   }
 }
 
 // Extension để dễ sử dụng
 extension OrderStatusExtension on int? {
-  String get statusText {
-    switch (this) {
-      case 0:
-        return 'Chờ xác nhận';
-      case 1:
-        return 'Đang chuẩn bị';
-      case 2:
-        return 'Đang giao';
-      case 3:
-        return 'Hoàn thành';
-      case 4:
-        return 'Đã hủy';
-      case 5:
-        return 'Trả hàng';
-      case 6:
-        return 'Hoàn tiền';
-      default:
-        return 'Không xác định';
-    }
-  }
+  String get statusText => OrderStatusBadgeWidget(status: this)._getStatusInfo(this)['text'];
 
   Color get statusColor {
     switch (this) {
       case 0:
         return Colors.orange;
       case 1:
-        return Colors.blue;
+        return Colors.blueGrey;
       case 2:
-        return Colors.purple;
-      case 3:
-        return Colors.green;
-      case 4:
-        return Colors.red;
-      case 5:
-        return Colors.grey;
+        return Colors.blue;
       case 6:
+        return Colors.indigo;
+      case 3:
+        return Colors.deepPurple;
+      case 7:
+        return Colors.purple;
+      case 4:
+        return Colors.green;
+      case 10:
+        return Colors.green.shade700;
+      case 8:
+        return Colors.brown;
+      case 9:
         return Colors.teal;
+      case 5:
+        return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  bool get canCancel {
-    return this == 0 || this == 1; // Chỉ có thể hủy khi chờ xác nhận hoặc đang chuẩn bị
-  }
+  bool get canCancel => this != null && (this == 0 || this == 1 || this == 2); // Cho phép hủy trước khi đóng gói / gửi
 
-  bool get canReorder {
-    return this == 3 || this == 4; // Có thể đặt lại khi hoàn thành hoặc đã hủy
-  }
+  bool get canReorder => this == 4 || this == 5 || this == 9 || this == 10; // Giao, huỷ, hoàn tiền, hoàn thành
 
-  bool get isCompleted {
-    return this == 3; // Hoàn thành
-  }
+  bool get isCompleted => this == 10; // Hoàn thành cuối cùng
 
-  bool get isCancelled {
-    return this == 4; // Đã hủy
-  }
+  bool get isCancelled => this == 5; // Đã hủy
 
-  bool get isActive {
-    return this != null && this! >= 0 && this! <= 2; // Đang trong quá trình xử lý
-  }
+  bool get isActive => this != null && {0,1,2,6,3,7}.contains(this); // đang trong pipeline fulfilment
 }

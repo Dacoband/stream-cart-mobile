@@ -348,9 +348,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   _buildMenuItem(
                     icon: Icons.help_outline,
-                    title: 'Hỗ trợ',
+                    title: 'Chính sách của chúng tôi',
                     onTap: () {
-                      // TODO: Navigate to support
+                      Navigator.pushNamed(context, AppRouter.policy);
                     },
                   ),
                   _buildMenuItem(

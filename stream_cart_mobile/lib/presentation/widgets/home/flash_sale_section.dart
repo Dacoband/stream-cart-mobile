@@ -4,7 +4,6 @@ import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../blocs/home/home_bloc.dart';
 import '../../blocs/home/home_state.dart';
-import '../../blocs/home/home_event.dart';
 import 'flash_sale_item_card.dart';
 
 class FlashSaleSection extends StatelessWidget {
@@ -21,7 +20,7 @@ class FlashSaleSection extends StatelessWidget {
           if (state.flashSales.isNotEmpty) {
             return _buildFlashSaleSection(context, state);
           }
-          return _buildDebugSection(context);
+          return _buildEmptyFlashSaleMessage(context);
         }
         return const SizedBox.shrink();
       },
@@ -116,41 +115,31 @@ class FlashSaleSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDebugSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.orange[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[300]!),
-      ),
+  Widget _buildEmptyFlashSaleMessage(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          Row(
-            children: [
-              Icon(Icons.flash_on, color: Colors.orange[700]),
-              const SizedBox(width: 8),
-              Text(
-                'Flash Sale Debug',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange[700],
-                ),
-              ),
-            ],
-          ),
+          // Reuse the section header styling (no countdown when empty)
+          _buildSectionHeader(context, const []),
           const SizedBox(height: 8),
-          const Text('No flash sales found. This might be because:'),
-          const Text('• Flash Sale API returned empty data'),
-          const Text('• API error occurred'),
-          const Text('• No active flash sales at this time'),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () {
-              context.read<HomeBloc>().add(const RefreshFlashSalesEvent());
-            },
-            child: const Text('Refresh Flash Sales'),
+          Container(
+            height: 140,
+            alignment: Alignment.center,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.flash_off, size: 32, color: Colors.grey),
+                SizedBox(height: 8),
+                Text('Chưa có Flash Sale nào', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
           ),
         ],
       ),

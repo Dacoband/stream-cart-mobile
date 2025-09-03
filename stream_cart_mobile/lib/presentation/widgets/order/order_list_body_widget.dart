@@ -26,17 +26,29 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
-  int? _lastTabIndex; // guard to prevent duplicate fetches
+  int? _lastTabIndex; 
   
-  // Order status values
-  final List<int?> _orderStatuses = [null, 0, 1, 2, 3, 4]; // null = all, 0-4 = specific statuses
+  final List<int?> _orderStatuses = [
+    null, // Tất cả
+    0,    // Chờ xác nhận (Waiting/Pending)
+    2,    // Đang xử lý (Processing/Packed)
+    7,    // Đang giao (OnDelivery)
+    4,    // Đã giao (Delivered)
+    3,    // Đã gửi (Shipped) - thay cho Hoàn thành (10) theo Option B
+    5,    // Đã hủy (Cancelled)
+    8,    // Trả hàng (Returning)
+    9,    // Hoàn tiền (Refunded)
+  ];
   final List<String> _tabTitles = [
     'Tất cả',
     'Chờ xác nhận',
-    'Đang chuẩn bị',
+    'Xử lý',
     'Đang giao',
-    'Hoàn thành',
+    'Đã giao',
+    'Đã gửi', // đổi từ Hoàn thành
     'Đã hủy',
+    'Trả hàng',
+    'Hoàn tiền',
   ];
 
   @override
@@ -45,10 +57,9 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     _tabController = TabController(length: _tabTitles.length, vsync: this);
     _scrollController.addListener(_onScroll);
 
-    // Listen tab changes (swipe or tap) and fetch data once per index
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return; // wait until animation completes
-      if (_lastTabIndex == _tabController.index) return; // no-op if same
+      if (_tabController.indexIsChanging) return;
+      if (_lastTabIndex == _tabController.index) return;
       _onTabChanged();
     });
     
@@ -128,7 +139,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
           child: OrderTabBarWidget(
             tabController: _tabController,
             tabs: _tabTitles,
-            onTap: _onTabChanged, // tap fetches immediately; listener covers swipe
+            onTap: _onTabChanged,
           ),
         ),
         
@@ -259,38 +270,16 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
 
   String _getEmptyTitle() {
     final currentTab = _tabController.index;
-    switch (currentTab) {
-      case 1:
-        return 'Không có đơn hàng chờ xác nhận';
-      case 2:
-        return 'Không có đơn hàng đang chuẩn bị';
-      case 3:
-        return 'Không có đơn hàng đang giao';
-      case 4:
-        return 'Không có đơn hàng hoàn thành';
-      case 5:
-        return 'Không có đơn hàng đã hủy';
-      default:
-        return 'Chưa có đơn hàng nào';
-    }
+  if (currentTab == 0) return 'Chưa có đơn hàng nào';
+  return 'Không có đơn hàng ở trạng thái "${_tabTitles[currentTab]}"';
   }
 
   String _getEmptySubtitle() {
     final currentTab = _tabController.index;
-    switch (currentTab) {
-      case 1:
-        return 'Các đơn hàng chờ xác nhận sẽ hiển thị ở đây.';
-      case 2:
-        return 'Các đơn hàng đang được chuẩn bị sẽ hiển thị ở đây.';
-      case 3:
-        return 'Các đơn hàng đang giao sẽ hiển thị ở đây.';
-      case 4:
-        return 'Các đơn hàng hoàn thành sẽ hiển thị ở đây.';
-      case 5:
-        return 'Các đơn hàng đã hủy sẽ hiển thị ở đây.';
-      default:
-        return 'Bạn chưa có đơn hàng nào.\nHãy bắt đầu mua sắm ngay!';
+    if (currentTab == 0) {
+      return 'Bạn chưa có đơn hàng nào.\nHãy bắt đầu mua sắm ngay!';
     }
+    return 'Các đơn hàng trạng thái "${_tabTitles[currentTab]}" sẽ hiển thị ở đây.';
   }
 }
 
