@@ -11,15 +11,13 @@ CartProductLiveModel _$CartProductLiveModelFromJson(
     CartProductLiveModel(
       cartItemId: json['cartItemId'] as String,
       productId: json['productId'] as String,
-      variantID: json['variantID'] as String,
+      variantID: json['variantID'] as String?,
       productName: json['productName'] as String,
       priceData: PriceDataLiveModel.fromJson(
           json['priceData'] as Map<String, dynamic>),
       quantity: (json['quantity'] as num).toInt(),
       primaryImage: json['primaryImage'] as String,
-      attributes: (json['attributes'] as Map?)?.map(
-          (k, e) => MapEntry(k.toString(), e.toString()),
-        ),
+      attributes: CartProductLiveModel._attributesFromJson(json['attributes']),
       stockQuantity: (json['stockQuantity'] as num).toInt(),
       productStatus: json['productStatus'] as bool,
       length: (json['length'] as num).toDouble(),
@@ -38,7 +36,7 @@ Map<String, dynamic> _$CartProductLiveModelToJson(
       'priceData': CartProductLiveModel._priceDataToJson(instance.priceData),
       'quantity': instance.quantity,
       'primaryImage': instance.primaryImage,
-      'attributes': instance.attributes,
+      'attributes': CartProductLiveModel._attributesToJson(instance.attributes),
       'stockQuantity': instance.stockQuantity,
       'productStatus': instance.productStatus,
       'length': instance.length,

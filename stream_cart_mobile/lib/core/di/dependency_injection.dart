@@ -391,7 +391,7 @@ Future<void> setupDependencies() async {
     signalRChatBaseUrl,  // Use local variable
     getIt<StorageService>(),
     onStatusChanged: (status) {
-      print('SignalR Status: $status');
+      // print('SignalR Status: $status'); // Tắt log để tránh spam
     },
   ));
 

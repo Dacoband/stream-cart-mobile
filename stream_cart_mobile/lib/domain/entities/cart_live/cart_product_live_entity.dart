@@ -4,7 +4,7 @@ import 'price_data_live_entity.dart';
 class CartProductLiveEntity extends Equatable {
   final String cartItemId;
   final String productId;
-  final String variantID;
+  final String? variantID;
   final String productName;
   final PriceDataLiveEntity priceData;
   final int quantity;
@@ -20,7 +20,7 @@ class CartProductLiveEntity extends Equatable {
   const CartProductLiveEntity({
     required this.cartItemId,
     required this.productId,
-    required this.variantID,
+    this.variantID,
     required this.productName,
     required this.priceData,
     required this.quantity,
