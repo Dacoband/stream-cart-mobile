@@ -399,14 +399,31 @@ class AppRouter {
           ),
         );
       case writeReview:
-        final productId = settings.arguments as String?;
-        if (productId == null || productId.isEmpty) {
-          return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Thiếu productId'))));
+        String? productId;
+        String? orderId;
+        String? livestreamId;
+        final args = settings.arguments;
+        if (args is String) {
+          productId = args;
+        } else if (args is Map) {
+          productId = args['productId'] as String?;
+          orderId = args['orderId'] as String?;
+          livestreamId = args['livestreamId'] as String?;
+        }
+    final provided = [productId, orderId, livestreamId]
+      .where((e) => e != null && e.trim().isNotEmpty)
+      .length;
+        if (provided != 1) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('Thiếu hoặc thừa tham số: cần 1 trong productId/orderId/livestreamId')),
+            ),
+          );
         }
         return MaterialPageRoute(
           builder: (_) => BlocProvider(
             create: (context) => getIt<ReviewBloc>(),
-            child: WriteReviewPage(productId: productId),
+            child: WriteReviewPage(productId: productId, orderId: orderId, livestreamId: livestreamId),
           ),
         );
       case editReview:
