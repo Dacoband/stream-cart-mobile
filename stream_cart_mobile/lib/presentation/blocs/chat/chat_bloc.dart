@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:signalr_core/signalr_core.dart';
 import 'package:stream_cart_mobile/domain/entities/account/account_entity.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
@@ -16,13 +15,12 @@ import '../../../domain/usecases/chat/update_message_usecase.dart';
 import '../../../domain/usecases/chat/receive_message_usecase.dart';
 import '../../../domain/usecases/chat/mark_chat_room_as_read_usecase.dart';
 import '../../../domain/usecases/chat/send_typing_indicator_usecase.dart';
-import '../../../domain/usecases/chat/connect_signalr_usecase.dart';
-import '../../../domain/usecases/chat/disconnect_signalr_usecase.dart';
+
 import '../../../domain/usecases/chat/join_chat_room_usecase.dart';
 import '../../../domain/usecases/chat/leave_chat_room_usecase.dart';
 import '../../../domain/usecases/chat/load_shop_chat_rooms_usecase.dart';
 import '../../../domain/usecases/chat/get_unread_count_usecase.dart';
-import '../../../core/services/signalr_service.dart';
+import '../../../core/services/chat_hub.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../auth/auth_bloc.dart';
 import '../auth/auth_state.dart';
@@ -39,15 +37,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ReceiveMessageUseCase receiveMessageUseCase;
   final MarkChatRoomAsReadUseCase markChatRoomAsReadUseCase;
   final SendTypingIndicatorUseCase sendTypingIndicatorUseCase;
-  final ConnectSignalRUseCase connectSignalRUseCase;
-  final DisconnectSignalRUseCase disconnectSignalRUseCase;
+
   final JoinChatRoomUseCase joinChatRoomUseCase;
   final LeaveChatRoomUseCase leaveChatRoomUseCase;
   final LoadShopChatRoomsUseCase loadShopChatRoomsUseCase;
   final GetUnreadCountUseCase getUnreadCountUseCase;
 
-  // SignalR Service
-  final SignalRService signalRService;
+  // SignalR Chat Client
+  final SignalRChatClient signalRChatClient;
 
   // State tracking
   String? _currentChatRoomId;
@@ -70,13 +67,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     required this.receiveMessageUseCase,
     required this.markChatRoomAsReadUseCase,
     required this.sendTypingIndicatorUseCase,
-    required this.connectSignalRUseCase,
-    required this.disconnectSignalRUseCase,
+
     required this.joinChatRoomUseCase,
     required this.leaveChatRoomUseCase,
     required this.loadShopChatRoomsUseCase,
     required this.getUnreadCountUseCase,
-    required this.signalRService,
+    required this.signalRChatClient,
   }) : super(ChatInitial()) {
     // Register event handlers
     on<LoadChatRoomsEvent>(_onLoadChatRooms);
@@ -111,50 +107,80 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _setupSignalRListeners() {
-    // Updated callback signatures according to refactored SignalRService
-    signalRService.onUserTyping = (userId, isTyping) {
-      add(TypingReceivedEvent(
-        userId: userId,
-        chatRoomId: _currentChatRoomId ?? '',
-        userName: 'Unknown User',
-        isTyping: isTyping,
-        timestamp: DateTime.now(),
-      ));
-    };
-
-    signalRService.onReceiveChatMessage = (messageData) {
-      add(ReceiveMessageEvent(messageData: messageData));
-    };
-  // Legacy callback compatibility if service were to expose onReceiveMessage again
-  // (No-op if not provided)
-
-    signalRService.onUserJoinedRoom = (userId, userName) {
-      add(UserJoinedRoomEvent(
-        userId: userId,
-        chatRoomId: _currentChatRoomId ?? '',
-        userName: userName,
-      ));
-    };
-
-    signalRService.onUserLeftRoom = (userId, userName) {
-      add(UserLeftRoomEvent(
-        userId: userId,
-        chatRoomId: _currentChatRoomId ?? '',
-        userName: userName,
-      ));
-    };
-
-    signalRService.onStatusChanged = (status) {
-      // Handle status changes if needed
-    };
-
-    signalRService.onConnectionStateChanged = (state) {
-      if (state == HubConnectionState.connected) {
-        final target = _currentChatRoomId ?? _pendingJoinChatRoomId;
-        if (target != null) {
-          add(JoinChatRoomEvent(chatRoomId: target));
-        }
+    // Setup event callbacks for SignalR Chat Client
+    signalRChatClient.onUserTyping = (data) {
+      final userId = data['userId'] as String?;
+      final chatRoomId = data['chatRoomId'] as String?;
+      final isTyping = data['isTyping'] as bool?;
+      
+      if (userId != null && chatRoomId != null && isTyping != null) {
+        add(TypingReceivedEvent(
+          userId: userId,
+          chatRoomId: chatRoomId,
+          userName: 'Unknown User',
+          isTyping: isTyping,
+          timestamp: DateTime.now(),
+        ));
       }
+    };
+
+    signalRChatClient.onReceiveChatMessage = (payload) {
+      add(ReceiveMessageEvent(payload: payload));
+    };
+
+    signalRChatClient.onReceiveMessage = (payload) {
+      add(ReceiveMessageEvent(payload: payload));
+    };
+
+    signalRChatClient.onUserJoined = (data) {
+      final userId = data['userId'] as String?;
+      final chatRoomId = data['chatRoomId'] as String?;
+      final userName = data['userName'] as String?;
+      
+      if (userId != null && chatRoomId != null) {
+        add(UserJoinedRoomEvent(
+          userId: userId,
+          chatRoomId: chatRoomId,
+          userName: userName,
+        ));
+      }
+    };
+
+    signalRChatClient.onUserLeft = (data) {
+      final userId = data['userId'] as String?;
+      final chatRoomId = data['chatRoomId'] as String?;
+      final userName = data['userName'] as String?;
+      
+      if (userId != null && chatRoomId != null) {
+        add(UserLeftRoomEvent(
+          userId: userId,
+          chatRoomId: chatRoomId,
+          userName: userName,
+        ));
+      }
+    };
+
+    signalRChatClient.onReconnecting = (error) {
+      add(const SignalRConnectionChangedEvent(isConnected: false, error: 'Reconnecting'));
+    };
+
+    signalRChatClient.onReconnected = (connectionId) {
+      final target = _currentChatRoomId ?? _pendingJoinChatRoomId;
+      if (target != null) {
+        add(JoinChatRoomEvent(chatRoomId: target));
+      }
+      add(const SignalRConnectionChangedEvent(isConnected: true));
+    };
+
+    signalRChatClient.onConnectionClosed = (error) {
+      add(SignalRConnectionChangedEvent(
+        isConnected: false, 
+        error: error?.toString() ?? 'Connection closed'
+      ));
+    };
+
+    signalRChatClient.onError = (error) {
+      add(ChatErrorEvent(error: error.toString()));
     };
   }
 
@@ -303,21 +329,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (_isSignalRConnected) {
           try {
             if (_currentChatRoomId != event.chatRoomId) {
-              final joinResult = await joinChatRoomUseCase(JoinChatRoomParams(chatRoomId: event.chatRoomId));
-              joinResult.fold(
-                (l) => null,
-                (r) {
-                  _currentChatRoomId = event.chatRoomId;
-                },
-              );
+              await signalRChatClient.joinChatRoom(event.chatRoomId);
+              _currentChatRoomId = event.chatRoomId;
             }
-            await signalRService.sendChatMessage(
-              chatRoomId: event.chatRoomId,
-              message: event.content,
+            await signalRChatClient.sendMessage(
+              event.chatRoomId,
+              event.content,
             );
           } catch (e) {
-            // ignore: avoid_print
-            print('[ChatBloc] Realtime send failed: $e');
+            // Realtime send failed silently
           }
         } else {
           add(JoinChatRoomEvent(chatRoomId: event.chatRoomId));
@@ -342,7 +362,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onReceiveMessage(ReceiveMessageEvent event, Emitter<ChatState> emit) async {
     final prevState = state;
     final result = await receiveMessageUseCase(ReceiveMessageParams(
-      messageData: event.messageData,
+      messageData: event.payload.toMap(),
     ));
 
     result.fold(
@@ -350,6 +370,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         emit(ChatError(message: failure.message));
       },
       (parsedMessage) {
+        // Skip own messages to avoid duplicates when sending
+        final currentUser = _getCurrentUser();
+        if (currentUser != null && parsedMessage.senderUserId == currentUser.id) {
+          return;
+        }
+        
         var message = parsedMessage;
         if ((message.chatRoomId).isEmpty && _currentChatRoomId != null) {
           message = message.copyWith(chatRoomId: _currentChatRoomId);
@@ -377,18 +403,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Typing Indicator
   Future<void> _onSendTypingIndicator(SendTypingIndicatorEvent event, Emitter<ChatState> emit) async {
-    final result = await sendTypingIndicatorUseCase(SendTypingIndicatorParams(
-      chatRoomId: event.chatRoomId,
-      isTyping: event.isTyping,
-    ));
-
-    result.fold(
-      (failure) => emit(ChatError(message: failure.message)),
-      (_) => emit(TypingIndicatorSent(
+    try {
+      await signalRChatClient.setTypingStatus(
+        event.chatRoomId,
+        event.isTyping,
+      );
+      emit(TypingIndicatorSent(
         chatRoomId: event.chatRoomId,
         isTyping: event.isTyping,
-      )),
-    );
+      ));
+    } catch (error) {
+      emit(ChatError(message: error.toString()));
+    }
   }
 
   void _onUserTypingChanged(UserTypingChangedEvent event, Emitter<ChatState> emit) {
@@ -428,36 +454,36 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       return;
     }
 
-    final result = await connectSignalRUseCase();
-
-    result.fold(
-      (failure) {
-        emit(SignalRConnectionError(error: failure.message));
-      },
-      (_) {
+    try {
+      final success = await signalRChatClient.initializeConnection();
+      
+      if (success) {
         _isSignalRConnected = true;
         _reconnectAttempts = 0;
         emit(const SignalRConnected());
+        
         // Auto join room nếu có pending
         if (_pendingJoinChatRoomId != null) {
           add(JoinChatRoomEvent(chatRoomId: _pendingJoinChatRoomId!));
         }
-      },
-    );
+      } else {
+        emit(const SignalRConnectionError(error: 'Failed to initialize SignalR connection'));
+      }
+    } catch (error) {
+      emit(SignalRConnectionError(error: error.toString()));
+    }
   }
 
   Future<void> _onDisconnectSignalR(DisconnectSignalREvent event, Emitter<ChatState> emit) async {
-    final result = await disconnectSignalRUseCase();
-
-    result.fold(
-      (failure) => emit(SignalRConnectionError(error: failure.message)),
-      (_) {
-        _isSignalRConnected = false;
-        _currentChatRoomId = null;
-        _reconnectTimer?.cancel();
-        emit(const SignalRDisconnected());
-      },
-    );
+    try {
+      await signalRChatClient.disconnect();
+      _isSignalRConnected = false;
+      _currentChatRoomId = null;
+      _reconnectTimer?.cancel();
+      emit(const SignalRDisconnected());
+    } catch (error) {
+      emit(SignalRConnectionError(error: error.toString()));
+    }
   }
 
   void _onSignalRConnectionChanged(SignalRConnectionChangedEvent event, Emitter<ChatState> emit) {
@@ -482,34 +508,37 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
 
     if (_currentChatRoomId != null && _currentChatRoomId != event.chatRoomId) {
-      await leaveChatRoomUseCase(LeaveChatRoomParams(chatRoomId: _currentChatRoomId!));
+      try {
+        await signalRChatClient.leaveChatRoom(_currentChatRoomId!);
+      } catch (e) {
+      }
     }
 
-    final result = await joinChatRoomUseCase(JoinChatRoomParams(chatRoomId: event.chatRoomId));
-    result.fold(
-      (failure) => emit(ChatError(message: failure.message)),
-      (_) {
+    try {
+      final success = await signalRChatClient.joinChatRoom(event.chatRoomId);
+      
+      if (success) {
         _currentChatRoomId = event.chatRoomId;
         _pendingJoinChatRoomId = null;
         emit(ChatRoomJoined(chatRoomId: event.chatRoomId));
-      },
-    );
+      } else {
+        emit(ChatError(message: 'Failed to join chat room'));
+      }
+    } catch (error) {
+      emit(ChatError(message: error.toString()));
+    }
   }
 
   Future<void> _onLeaveChatRoom(LeaveChatRoomEvent event, Emitter<ChatState> emit) async {
-    final result = await leaveChatRoomUseCase(LeaveChatRoomParams(
-      chatRoomId: event.chatRoomId,
-    ));
-
-    result.fold(
-      (failure) => emit(ChatError(message: failure.message)),
-      (_) {
-        if (_currentChatRoomId == event.chatRoomId) {
-          _currentChatRoomId = null;
-        }
-        emit(ChatRoomLeft(chatRoomId: event.chatRoomId));
-      },
-    );
+    try {
+      await signalRChatClient.leaveChatRoom(event.chatRoomId);
+      if (_currentChatRoomId == event.chatRoomId) {
+        _currentChatRoomId = null;
+      }
+      emit(ChatRoomLeft(chatRoomId: event.chatRoomId));
+    } catch (error) {
+      emit(ChatError(message: error.toString()));
+    }
   }
 
   // Shop Chat Rooms
@@ -619,18 +648,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   // Get current user role as UserRole enum
   UserRole? _getUserRole() {
-    final currentUser = _getCurrentUser();
-    final dynamic roleValue = currentUser?.role;
-    if (roleValue == null) return null;
-    if (roleValue is int) {
-      return UserRole.fromValue(roleValue);
+    try {
+      final authBloc = getIt<AuthBloc>();
+      final authState = authBloc.state;
+      
+      if (authState is AuthSuccess) {
+        final user = authState.loginResponse.account;
+        final dynamic roleValue = user.role;
+        if (roleValue == null) return null;
+        if (roleValue is int) {
+          return UserRole.fromValue(roleValue);
+        }
+        if (roleValue is String) {
+          final v = roleValue.toLowerCase();
+          if (v == 'customer') return UserRole.customer;
+          if (v == 'seller') return UserRole.seller;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
-    if (roleValue is String) {
-      final v = roleValue.toLowerCase();
-      if (v == 'customer') return UserRole.customer;
-      if (v == 'seller') return UserRole.seller;
-    }
-    return null;
   }
 
   // Validate user role
@@ -667,13 +705,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _reconnectTimer?.cancel();
     _typingTimer?.cancel();
     
-    // Remove SignalR listeners để tránh memory leaks
-    signalRService.removeListeners();
+    // Dispose SignalR Chat Client để tránh memory leaks
+    signalRChatClient.dispose();
     
     // Disconnect SignalR if connected
     if (_isSignalRConnected) {
       try {
-        await disconnectSignalRUseCase();
+        await signalRChatClient.disconnect();
       } catch (e) {
         // Handle error silently
       }

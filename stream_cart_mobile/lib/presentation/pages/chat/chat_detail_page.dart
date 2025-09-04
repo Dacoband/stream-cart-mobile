@@ -31,6 +31,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
   List<ChatMessage> _cachedMessages = [];
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final Set<String> _typingUsers = {};
 
   @override
   void initState() {
@@ -108,6 +109,25 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
     if (currentUserId == null) return message.isMine;
     final isActuallyMine = message.senderUserId == currentUserId;
     return isActuallyMine;
+  }
+
+  String _formatDate(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (messageDate.isAtSameMomentAs(today)) {
+      return 'Hôm nay';
+    } else if (messageDate.isAtSameMomentAs(yesterday)) {
+      return 'Hôm qua';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -161,9 +181,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                   ),
                 );
               } else if (state is SignalRConnectionError) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Tooltip(
+                    message: 'Connection Error: ${state.error}',
+                    child: const Icon(Icons.circle, color: Colors.red, size: 12),
+                  ),
+                );
+              } else if (state is SignalRDisconnected) {
                 return const Padding(
                   padding: EdgeInsets.all(8.0),
-                  child: Icon(Icons.circle, color: Colors.red, size: 12),
+                  child: Icon(Icons.circle, color: Colors.orange, size: 12),
                 );
               }
               return const SizedBox.shrink();
@@ -189,13 +217,39 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
         listener: (context, state) {
           // Connection status updates
           if (state is SignalRConnected) {
+            // Connection successful
           } else if (state is SignalRConnectionError) {
+            // Connection failed - could show error message
+          } else if (state is SignalRDisconnected) {
+            // Disconnected - attempt reconnection
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                context.read<ChatBloc>().add(const ConnectSignalREvent());
+              }
+            });
           } else if (state is ChatRoomJoined) {
+            // Successfully joined room
+          } else if (state is UserTypingChanged) {
+            if (state.chatRoomId == widget.chatRoomId) {
+              setState(() {
+                if (state.isTyping) {
+                  _typingUsers.add(state.userId);
+                } else {
+                  _typingUsers.remove(state.userId);
+                }
+              });
+            }
           }
           
           // Cache messages when loaded
           if (state is ChatMessagesLoaded) {
             _cachedMessages = List.from(state.messages);
+            // Auto scroll to latest message after initial/full load
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _scrollToBottom();
+              }
+            });
             
             // Schedule mark as read with delay
             Future.delayed(const Duration(milliseconds: 500), () {
@@ -244,44 +298,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
             // SignalR Status Widget
             const SignalRStatusWidget(),
             
-            // Test SignalR Connection Button (temporary)
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<ChatBloc>().add(const ConnectSignalREvent());
-                    },
-                    child: const Text('Test SignalR'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<ChatBloc>().add(JoinChatRoomEvent(
-                        chatRoomId: widget.chatRoomId,
-                      ));
-                    },
-                    child: const Text('Join Room'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final bloc = context.read<ChatBloc>();
-                      try {
-                        await bloc.signalRService.sendChatMessage(
-                          chatRoomId: widget.chatRoomId,
-                          message: 'direct-${DateTime.now().millisecondsSinceEpoch}',
-                        );
-                      } catch (e) {
-                      }
-                    },
-                    child: const Text('Direct Send'),
-                  ),
-                ],
-              ),
-            ),
-            
             // Messages List - PERSISTENT VERSION
             Expanded(
               child: BlocBuilder<ChatBloc, ChatState>(
@@ -306,55 +322,93 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                         final message = sortedMessages[index];
                         final isMyMessage = _isMyMessage(message);
                         
-                        return Align(
-                          alignment: isMyMessage 
-                              ? Alignment.centerRight 
-                              : Alignment.centerLeft,
-                          child: Container(
-                            margin: EdgeInsets.only(
-                              left: isMyMessage ? 50 : 8,
-                              right: isMyMessage ? 8 : 50,
-                              top: 4,
-                              bottom: 4,
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isMyMessage ? Colors.blue : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: isMyMessage 
-                                  ? CrossAxisAlignment.end 
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                if (!isMyMessage) // Only show sender name for others' messages
-                                  Text(
-                                    message.senderName ?? "Unknown",
-                                    style: const TextStyle(
-                                      fontSize: 12, 
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black54,
+                        // Check if we need to show date separator
+                        bool showDateSeparator = false;
+                        if (index == 0) {
+                          showDateSeparator = true;
+                        } else {
+                          final previousMessage = sortedMessages[index - 1];
+                          final currentDate = DateTime(
+                            message.sentAt.year,
+                            message.sentAt.month,
+                            message.sentAt.day,
+                          );
+                          final previousDate = DateTime(
+                            previousMessage.sentAt.year,
+                            previousMessage.sentAt.month,
+                            previousMessage.sentAt.day,
+                          );
+                          showDateSeparator = !currentDate.isAtSameMomentAs(previousDate);
+                        }
+                        
+                        return Column(
+                          children: [
+                            // Date separator
+                            if (showDateSeparator)
+                              Container(
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                child: Text(
+                                  _formatDate(message.sentAt),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            
+                            // Message bubble
+                            Align(
+                              alignment: isMyMessage 
+                                  ? Alignment.centerRight 
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  left: isMyMessage ? 50 : 8,
+                                  right: isMyMessage ? 8 : 50,
+                                  top: 4,
+                                  bottom: 4,
+                                ),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isMyMessage ? Colors.blue : Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: isMyMessage 
+                                      ? CrossAxisAlignment.end 
+                                      : CrossAxisAlignment.start,
+                                  children: [
+                                    if (!isMyMessage) // Only show sender name for others' messages
+                                      Text(
+                                        message.senderName ?? "Unknown",
+                                        style: const TextStyle(
+                                          fontSize: 12, 
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    if (!isMyMessage) const SizedBox(height: 4),
+                                    Text(
+                                      message.content,
+                                      style: TextStyle(
+                                        color: isMyMessage ? Colors.white : Colors.black,
+                                        fontSize: 14,
+                                      ),
                                     ),
-                                  ),
-                                if (!isMyMessage) const SizedBox(height: 4),
-                                Text(
-                                  message.content,
-                                  style: TextStyle(
-                                    color: isMyMessage ? Colors.white : Colors.black,
-                                    fontSize: 14,
-                                  ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatTime(message.sentAt),
+                                      style: TextStyle(
+                                        fontSize: 10, 
+                                        color: isMyMessage ? Colors.white70 : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${isMyMessage ? "You" : "Them"} | ${message.sentAt.toString().substring(11, 19)}',
-                                  style: TextStyle(
-                                    fontSize: 10, 
-                                    color: isMyMessage ? Colors.white70 : Colors.grey,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
+                          ],
                         );
                       },
                     );
@@ -374,6 +428,30 @@ class _ChatDetailPageState extends State<ChatDetailPage> with WidgetsBindingObse
                 },
               ),
             ),
+            
+            // Typing indicator
+            if (_typingUsers.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${_typingUsers.length == 1 ? 'Someone is' : '${_typingUsers.length} people are'} typing...',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             
             // Chat Input
             Container(
