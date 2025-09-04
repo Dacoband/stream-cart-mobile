@@ -43,12 +43,22 @@ class CartLiveBloc extends Bloc<CartLiveEvent, CartLiveState> {
 	}
 
 			Future<void> _ensureListening() async {
-				if (_listening) return;
+				if (_listening) {
+					return;
+				}
 				listenEventsUsecase.listen(
-					onLoaded: (cart) => add(CartLiveRealtimeLoadedInternalEvent(cart)),
-					onUpdated: (action, cart, raw) => add(CartLiveRealtimeUpdatedInternalEvent(action, cart, raw)),
-					onCleared: (payload) => add(CartLiveRealtimeClearedInternalEvent(payload)),
-					onError: (msg) => add(CartLiveRealtimeErrorInternalEvent(msg)),
+					onLoaded: (cart) {
+						add(CartLiveRealtimeLoadedInternalEvent(cart));
+					},
+					onUpdated: (action, cart, raw) {
+						add(CartLiveRealtimeUpdatedInternalEvent(action, cart, raw));
+					},
+					onCleared: (payload) {
+						add(CartLiveRealtimeClearedInternalEvent(payload));
+					},
+					onError: (msg) {
+						add(CartLiveRealtimeErrorInternalEvent(msg));
+					},
 				);
 				_listening = true;
 			}
@@ -56,8 +66,11 @@ class CartLiveBloc extends Bloc<CartLiveEvent, CartLiveState> {
 	Future<void> _onLoad(LoadCartLiveEvent event, Emitter<CartLiveState> emit) async {
 		emit(CartLiveLoading());
 		await _ensureListening();
+		
 		try {
+			// Start loading - the realtime events will handle state updates
 			await getCartUsecase(event.livestreamId);
+			
 		} catch (e) {
 			emit(CartLiveError('Không thể tải giỏ hàng live: $e'));
 		}
@@ -220,6 +233,9 @@ class CartLiveBloc extends Bloc<CartLiveEvent, CartLiveState> {
 
 		@override
 		Future<void> close() {
+			// Clean up event listeners to prevent "Cannot add new events after calling close" error
+			listenEventsUsecase.cleanup();
+			_listening = false;
 			return super.close();
 		}
 }

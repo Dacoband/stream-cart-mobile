@@ -27,6 +27,15 @@ class LiveKitService {
     _listenRoomEvents();
     try {
       await room.connect(url, token, connectOptions: connectOptions);
+      
+      // Explicitly ensure no local tracks are published - chỉ xem và nghe thôi
+      // Disable any potential auto-publish of camera/mic
+      await room.localParticipant?.setMicrophoneEnabled(false);
+      await room.localParticipant?.setCameraEnabled(false);
+      
+      // Đảm bảo viewer-only mode
+      await _ensureViewerOnlyMode();
+      
   } catch (e) {
       rethrow;
     }
@@ -81,5 +90,36 @@ class LiveKitService {
   void _ensureConfigured() {
     if (_configured) return;
   _configured = true;
+  }
+
+  /// Đảm bảo camera và mic luôn tắt cho viewer (chỉ xem và nghe)
+  Future<void> _ensureViewerOnlyMode() async {
+    final room = _room;
+    if (room == null) return;
+    
+    try {
+      // Tắt hoàn toàn camera và mic cho viewer
+      await room.localParticipant?.setMicrophoneEnabled(false);
+      await room.localParticipant?.setCameraEnabled(false);
+      
+      // Stop tất cả local tracks để đảm bảo không publish
+      final localParticipant = room.localParticipant;
+      if (localParticipant != null) {
+        // Stop tất cả video tracks
+        for (final track in localParticipant.videoTrackPublications) {
+          try {
+            await track.track?.stop();
+          } catch (_) {}
+        }
+        // Stop tất cả audio tracks
+        for (final track in localParticipant.audioTrackPublications) {
+          try {
+            await track.track?.stop();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {
+      // Ignore errors but ensure viewer-only mode
+    }
   }
 }
