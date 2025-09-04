@@ -150,6 +150,7 @@ import '../../domain/usecases/order/get_order_by_id_usecase.dart';
 import '../../domain/usecases/order/get_order_by_code_usecase.dart';
 import '../../domain/usecases/order/create_multiple_orders_usecase.dart';
 import '../../domain/usecases/order/cancel_order_usecase.dart';
+import '../../domain/usecases/order/update_order_status_usecase.dart';
 import '../../domain/usecases/order/get_order_item_by_id_usecase.dart';
 import '../../domain/usecases/order/get_order_items_by_order_usecase.dart';
 import '../../domain/usecases/order/add_order_item_usecase.dart';
@@ -344,6 +345,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetOrderByCodeUseCase(getIt()));
   getIt.registerLazySingleton(() => CreateMultipleOrdersUseCase(getIt()));
   getIt.registerLazySingleton(() => CancelOrderUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateOrderStatusUseCase(getIt()));
 
   // Order Item Use cases
   getIt.registerLazySingleton(() => GetOrderItemByIdUseCase(getIt()));
@@ -627,6 +629,7 @@ Future<void> setupDependencies() async {
       getOrderByCodeUseCase: getIt(),
       createMultipleOrdersUseCase: getIt(),
       cancelOrderUseCase: getIt(),
+      updateOrderStatusUseCase: getIt(),
     ));
 
     getIt.registerFactory(() => OrderItemBloc(

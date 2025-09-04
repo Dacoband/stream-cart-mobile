@@ -97,6 +97,7 @@ class ApiConstants {
   static const String orderShippingInfoEndpoint = '/api/orders/{id}/shipping-info'; // PUT, cập nhật thông tin vận chuyển của đơn hàng
   static const String orderTrackingCodeEndpoint = '/api/orders/{id}/tracking-code'; // PUT, cập nhật mã đơn của đơn hàng
   static const String orderCodeEndpoint = '/api/orders/{id}/code'; // GET, lấy đơn hàng theo mã đơn hàng
+  static const String updateOrderStatusEndpoint = '/api/orders/{id}/status'; // PUT, cập nhật trạng thái đơn hàng
 
 
   // Order Item endpoints

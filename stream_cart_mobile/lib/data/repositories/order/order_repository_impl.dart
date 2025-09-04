@@ -157,4 +157,32 @@ class OrderRepositoryImpl implements OrderRepository {
       return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
     }
   }
+
+  @override
+  Future<Either<Failure, OrderEntity>> updateOrderStatus(String id, int status) async {
+    try {
+      final remoteOrder = await remoteDataSource.updateOrderStatus(id, status);
+      return Right(remoteOrder.toEntity());
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return Left(UnauthorizedFailure('Vui lòng đăng nhập để cập nhật trạng thái đơn hàng'));
+      } else if (e.response?.statusCode == 404) {
+        return Left(ServerFailure('Không tìm thấy đơn hàng'));
+      } else if (e.response?.statusCode == 400) {
+        final responseData = e.response?.data;
+        final message = responseData?['message'] ?? 'Trạng thái đơn hàng không hợp lệ';
+        return Left(ServerFailure(message));
+      } else if (e.response?.statusCode == 403) {
+        return Left(ServerFailure('Không có quyền cập nhật trạng thái đơn hàng này'));
+      } else if (e.response?.statusCode == 409) {
+        return Left(ServerFailure('Không thể cập nhật trạng thái đơn hàng hiện tại'));
+      } else {
+        return Left(NetworkFailure('Lỗi kết nối: ${e.message}'));
+      }
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Lỗi không xác định: ${e.toString()}'));
+    }
+  }
 }

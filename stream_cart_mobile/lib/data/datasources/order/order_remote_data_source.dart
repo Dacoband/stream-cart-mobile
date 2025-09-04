@@ -12,6 +12,7 @@ abstract class OrderRemoteDataSource {
   Future<OrderModel> getOrderByCode(String code);
   Future<List<OrderModel>> createMultipleOrders(CreateOrderRequestModel request);
   Future<OrderModel> cancelOrder(String id);
+  Future<OrderModel> updateOrderStatus(String id, int status);
 }
 
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
@@ -112,6 +113,23 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
       throw Exception('Failed to cancel order: $e');
     }
   }
+
+  @override
+  Future<OrderModel> updateOrderStatus(String id, int status) async {
+    try {
+      final response = await _dioClient.put(
+        ApiConstants.updateOrderStatusEndpoint.replaceAll('{id}', id),
+        data: {'status': status},
+      );
+
+      return OrderModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioException(e);
+    } catch (e) {
+      throw Exception('Failed to update order status: $e');
+    }
+  }
+
   Exception _handleDioException(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:

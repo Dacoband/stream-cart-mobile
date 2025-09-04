@@ -12,45 +12,45 @@ class OrderStatusTimelineWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const steps = [
-      _Step('Đặt hàng', Icons.shopping_cart_outlined),
+      _Step('Thanh toán', Icons.payment_outlined),
       _Step('Xác nhận', Icons.verified_outlined),
-      _Step('Chuẩn bị', Icons.inventory_2_outlined),
-      _Step('Đang giao', Icons.local_shipping_outlined),
-      _Step('Hoàn thành', Icons.check_circle_outline),
+      _Step('Đóng gói', Icons.inventory_2_outlined),
+      _Step('Giao hàng', Icons.local_shipping_outlined),
+      _Step('Thành công', Icons.check_circle_outline),
     ];
 
     // Map backend enum to step index:
-    // 0 Waiting,1 Pending -> step 0 (Đặt hàng)
-    // 2 Processing,6 Packed -> step 1 (Xác nhận)
-    // 3 Shipped -> step 2 (Chuẩn bị) (or could treat as shipped vs prepared)
-    // 7 OnDelivery -> step 3 (Đang giao)
-    // 4 Delivered,10 Completed -> step 4 (Hoàn thành)
-    // 5 Cancelled -> treat as 0 but can style differently (not handled here)
-    // 8 Returning,9 Refunded -> treat as 4 (after completion pipeline) or keep 3 if still returning; choose 4 for now.
+    // 0 Waiting -> step 0 (Thanh toán) - chờ thanh toán
+    // 1 Pending -> step 1 (Xác nhận) - chờ shop xác nhận
+    // 2 Processing -> step 2 (Đóng gói) - shop đang đóng gói
+    // 6 Packed -> step 2 (Đóng gói) - đã đóng gói
+    // 3 Shipped,7 OnDelivery -> step 3 (Giao hàng)
+    // 4 Delivered,10 Completed -> step 4 (Thành công)
+    // 5 Cancelled,8 Returning,9 Refunded -> handle separately
     int mapped;
     switch (status) {
-      case 0:
-      case 1:
+      case 0: // Waiting - chờ thanh toán
         mapped = 0;
         break;
-      case 2:
-      case 6:
+      case 1: // Pending - chờ xác nhận
         mapped = 1;
         break;
-      case 3:
+      case 2: // Processing - đang đóng gói
+      case 6: // Packed - đã đóng gói
         mapped = 2;
         break;
-      case 7:
+      case 3: // Shipped
+      case 7: // OnDelivery - đang giao hàng
         mapped = 3;
         break;
-      case 4:
-      case 10:
-      case 8:
-      case 9:
+      case 4: // Delivered - đã giao
+      case 10: // Completed - thành công
         mapped = 4;
         break;
       case 5: // Cancelled
-        mapped = 0; // show initial stage only; optionally could add cancelled overlay elsewhere
+      case 8: // Returning
+      case 9: // Refunded
+        mapped = 0; // show initial stage only
         break;
       default:
         mapped = 0;

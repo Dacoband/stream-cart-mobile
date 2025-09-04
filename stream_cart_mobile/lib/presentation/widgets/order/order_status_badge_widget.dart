@@ -14,7 +14,7 @@ class OrderStatusBadgeWidget extends StatelessWidget {
     final statusInfo = _getStatusInfo(status);
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: statusInfo['backgroundColor'],
         borderRadius: BorderRadius.circular(12),
@@ -26,10 +26,12 @@ class OrderStatusBadgeWidget extends StatelessWidget {
       child: Text(
         statusInfo['text'],
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w600,
           color: statusInfo['textColor'],
         ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }
@@ -39,28 +41,28 @@ class OrderStatusBadgeWidget extends StatelessWidget {
     // 0 Waiting, 1 Pending, 2 Processing, 3 Shipped, 4 Delivered,
     // 5 Cancelled, 6 Packed, 7 OnDelivery, 8 Returning, 9 Refunded, 10 Completed
     switch (status) {
-      case 0: // Waiting
+      case 0: // Waiting - Chờ thanh toán
+        return _build('Chờ thanh toán', Colors.yellow);
+      case 1: // Pending - Chờ xác nhận
         return _build('Chờ xác nhận', Colors.orange);
-      case 1: // Pending (shop accepted, preparing)
-        return _build('Đang duyệt', Colors.blueGrey);
-      case 2: // Processing
-        return _build('Chuẩn bị hàng', Colors.blue);
+      case 2: // Processing - Đang chuẩn bị hàng
+        return _build('Đang chuẩn bị hàng', Colors.blue);
       case 6: // Packed
         return _build('Đã đóng gói', Colors.indigo);
-      case 3: // Shipped
-        return _build('Đã gửi', Colors.deepPurple);
-      case 7: // OnDelivery
-        return _build('Đang giao', Colors.purple);
-      case 4: // Delivered
-        return _build('Đã giao', Colors.green);
-      case 10: // Completed (finalized)
-        return _build('Hoàn thành', Colors.green.shade700);
+      case 3: // Shipped - Chờ lấy hàng
+        return _build('Chờ lấy hàng', Colors.deepPurple);
+      case 7: // OnDelivery - Đang giao hàng
+        return _build('Đang giao hàng', Colors.purple);
+      case 4: // Delivered - Đã giao hàng
+        return _build('Đã giao hàng', Colors.green);
+      case 10: // Completed - Giao thành công
+        return _build('Giao thành công', Colors.green.shade700);
       case 8: // Returning
         return _build('Trả hàng', Colors.brown);
       case 9: // Refunded
         return _build('Hoàn tiền', Colors.teal);
-      case 5: // Cancelled
-        return _build('Đã hủy', Colors.red);
+      case 5: // Cancelled - Hủy đơn
+        return _build('Hủy đơn', Colors.red);
       default:
         return _build('Không xác định', Colors.grey);
     }
@@ -119,7 +121,7 @@ extension OrderStatusExtension on int? {
 
   bool get canReorder => this == 4 || this == 5 || this == 9 || this == 10; // Giao, huỷ, hoàn tiền, hoàn thành
 
-  bool get isCompleted => this == 10; // Hoàn thành cuối cùng
+  bool get isCompleted => this == 4 || this == 10; // Thành công (status 4 và 10)
 
   bool get isCancelled => this == 5; // Đã hủy
 
