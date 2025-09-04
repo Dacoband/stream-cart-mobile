@@ -6,9 +6,7 @@ class GetLivestreamCartUsecase {
   final LivestreamCartService cartService;
   GetLivestreamCartUsecase(this.cartService);
 
-  Future<PreviewOrderLiveModel?> call(String livestreamId) async {
-    print('[GetLivestreamCartUsecase] 🔄 Loading cart for livestreamId: $livestreamId');
-    
+  Future<PreviewOrderLiveModel?> call(String livestreamId) async {  
     try {
       await cartService.loadCartWithRetry(livestreamId, maxRetries: 3);
       return null;
