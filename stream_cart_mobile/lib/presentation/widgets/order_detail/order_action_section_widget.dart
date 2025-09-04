@@ -314,9 +314,10 @@ class OrderActionSectionWidget extends StatelessWidget {
   }
 
   void _handleRateOrder(BuildContext context) {
+    // Navigate đến trang xem reviews của order này
     Navigator.pushNamed(
       context,
-      '/rate-order',
+      '/order-reviews',
       arguments: order.id,
     );
   }

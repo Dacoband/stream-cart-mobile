@@ -15,13 +15,14 @@ class WriteReviewPage extends StatefulWidget {
 
   const WriteReviewPage({super.key, this.productId, this.orderId, this.livestreamId})
       : assert(
-          (productId != null ? 1 : 0) + (orderId != null ? 1 : 0) + (livestreamId != null ? 1 : 0) == 1,
-          'Exactly one of productId, orderId, livestreamId must be provided',
+          productId != null || orderId != null || livestreamId != null,
+          'At least one of productId, orderId, livestreamId must be provided',
         );
 
-  bool get isProduct => productId != null;
-  bool get isOrder => orderId != null;
-  bool get isLivestream => livestreamId != null;
+  bool get isProduct => productId != null && orderId == null && livestreamId == null;
+  bool get isOrder => orderId != null && productId == null && livestreamId == null;
+  bool get isLivestream => livestreamId != null && productId == null && orderId == null;
+  bool get isProductFromOrder => productId != null && orderId != null && livestreamId == null;
 
   @override
   State<WriteReviewPage> createState() => _WriteReviewPageState();
@@ -33,7 +34,8 @@ class _WriteReviewPageState extends State<WriteReviewPage> {
   String get _title {
     if (widget.isOrder) return 'Đánh giá đơn hàng';
     if (widget.isLivestream) return 'Đánh giá livestream';
-    return 'Viết đánh giá'; // product
+    if (widget.isProductFromOrder) return 'Đánh giá sản phẩm';
+    return 'Viết đánh giá'; // product only
   }
 
   Future<void> _handleSubmit({required int rating, required String text, required List<String> images}) async {

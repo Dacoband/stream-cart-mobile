@@ -417,13 +417,22 @@ class AppRouter {
           orderId = args['orderId'] as String?;
           livestreamId = args['livestreamId'] as String?;
         }
-    final provided = [productId, orderId, livestreamId]
-      .where((e) => e != null && e.trim().isNotEmpty)
-      .length;
-        if (provided != 1) {
+        
+        // Check if we have valid parameters
+        final hasProduct = productId != null && productId.trim().isNotEmpty;
+        final hasOrder = orderId != null && orderId.trim().isNotEmpty;
+        final hasLivestream = livestreamId != null && livestreamId.trim().isNotEmpty;
+        
+        // Allow productId + orderId combination, or single parameter
+        final isValidCombination = (hasProduct && hasOrder && !hasLivestream) || // Product review for specific order
+                                   (hasProduct && !hasOrder && !hasLivestream) || // Product review only
+                                   (!hasProduct && hasOrder && !hasLivestream) || // Order review only
+                                   (!hasProduct && !hasOrder && hasLivestream);   // Livestream review only
+        
+        if (!isValidCombination) {
           return MaterialPageRoute(
             builder: (_) => const Scaffold(
-              body: Center(child: Text('Thiếu hoặc thừa tham số: cần 1 trong productId/orderId/livestreamId')),
+              body: Center(child: Text('Tham số không hợp lệ: cần productId, orderId, livestreamId hoặc productId+orderId')),
             ),
           );
         }
