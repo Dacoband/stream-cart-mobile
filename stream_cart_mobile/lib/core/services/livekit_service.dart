@@ -12,36 +12,57 @@ class LiveKitService {
   Room? get room => _room;
   RoomDisconnectedEvent? get lastDisconnect => _lastDisconnect;
 
-  Future<void> connect({required String url, required String token, bool forceRelay = false}) async {
+  Future<void> connect({required String url, required String token, bool forceRelay = false, bool isViewer = true}) async {
     await disconnect();
     _ensureConfigured();
-    final roomOptions = const RoomOptions(
-      adaptiveStream: true,
-      dynacast: true,
-    );
+    
+    // Cấu hình room options khác nhau cho viewer và host
+    RoomOptions roomOptions;
+    if (isViewer) {
+      // Viewer-only mode: disable tất cả local publishing
+      roomOptions = const RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
+        defaultCameraCaptureOptions: CameraCaptureOptions(
+          maxFrameRate: 0, // Disable camera capture hoàn toàn
+        ),
+        defaultAudioCaptureOptions: AudioCaptureOptions(
+          noiseSuppression: false,
+          echoCancellation: false,
+          autoGainControl: false,
+        ),
+      );
+    } else {
+      // Host mode: enable normal publishing
+      roomOptions = const RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
+      );
+    }
+    
     final connectOptions = const ConnectOptions(
       autoSubscribe: true,
     );
+    
     final room = Room(roomOptions: roomOptions);
     _room = room;
-    _listenRoomEvents();
+    _listenRoomEvents(isViewer);
+    
     try {
       await room.connect(url, token, connectOptions: connectOptions);
       
-      // Explicitly ensure no local tracks are published - chỉ xem và nghe thôi
-      // Disable any potential auto-publish of camera/mic
-      await room.localParticipant?.setMicrophoneEnabled(false);
-      await room.localParticipant?.setCameraEnabled(false);
+      // Chỉ enforce viewer-only mode nếu là viewer
+      if (isViewer) {
+        await _ensureViewerOnlyMode();
+        _startViewerOnlyModeWatcher();
+      }
       
-      // Đảm bảo viewer-only mode
-      await _ensureViewerOnlyMode();
-      
-  } catch (e) {
+    } catch (e) {
       rethrow;
     }
   }
 
-  void _listenRoomEvents() {
+  void _listenRoomEvents([bool isViewer = true]) {
     _listener?.dispose();
     final room = _room;
     if (room == null) return;
@@ -53,6 +74,12 @@ class LiveKitService {
       }
       if (event is TrackPublishedEvent || event is ParticipantConnectedEvent) {
         forceSubscribeAll();
+      }
+      
+      // Chỉ enforce viewer-only mode nếu là viewer
+      if (isViewer && event is TrackPublishedEvent && event.participant is LocalParticipant) {
+        // Nếu local participant vô tình publish track, unpublish ngay
+        _ensureViewerOnlyMode();
       }
     });
   }
@@ -89,7 +116,27 @@ class LiveKitService {
 
   void _ensureConfigured() {
     if (_configured) return;
-  _configured = true;
+    _configured = true;
+  }
+
+  /// Kiểm tra định kỳ để đảm bảo viewer-only mode
+  void _startViewerOnlyModeWatcher() {
+    Timer.periodic(const Duration(seconds: 2), (timer) {
+      final room = _room;
+      if (room == null || room.connectionState != ConnectionState.connected) {
+        timer.cancel();
+        return;
+      }
+      
+      final localParticipant = room.localParticipant;
+      if (localParticipant != null) {
+        // Kiểm tra nếu có tracks được publish, unpublish ngay
+        if (localParticipant.videoTrackPublications.isNotEmpty ||
+            localParticipant.audioTrackPublications.isNotEmpty) {
+          _ensureViewerOnlyMode();
+        }
+      }
+    });
   }
 
   /// Đảm bảo camera và mic luôn tắt cho viewer (chỉ xem và nghe)
@@ -98,26 +145,43 @@ class LiveKitService {
     if (room == null) return;
     
     try {
-      // Tắt hoàn toàn camera và mic cho viewer
-      await room.localParticipant?.setMicrophoneEnabled(false);
-      await room.localParticipant?.setCameraEnabled(false);
-      
-      // Stop tất cả local tracks để đảm bảo không publish
       final localParticipant = room.localParticipant;
-      if (localParticipant != null) {
-        // Stop tất cả video tracks
-        for (final track in localParticipant.videoTrackPublications) {
-          try {
-            await track.track?.stop();
-          } catch (_) {}
-        }
-        // Stop tất cả audio tracks
-        for (final track in localParticipant.audioTrackPublications) {
-          try {
-            await track.track?.stop();
-          } catch (_) {}
-        }
+      if (localParticipant == null) return;
+      
+      // Tắt hoàn toàn camera và mic
+      await localParticipant.setMicrophoneEnabled(false);
+      await localParticipant.setCameraEnabled(false);
+      
+      // Unpublish tất cả local tracks nếu có
+      final videoTrackPubs = List.from(localParticipant.videoTrackPublications);
+      for (final track in videoTrackPubs) {
+        try {
+          await track.unpublish();
+        } catch (_) {}
       }
+      
+      final audioTrackPubs = List.from(localParticipant.audioTrackPublications);
+      for (final track in audioTrackPubs) {
+        try {
+          await track.unpublish();
+        } catch (_) {}
+      }
+      
+      // Stop và dispose tất cả local tracks
+      for (final track in videoTrackPubs) {
+        try {
+          await track.track?.stop();
+          track.track?.dispose();
+        } catch (_) {}
+      }
+      
+      for (final track in audioTrackPubs) {
+        try {
+          await track.track?.stop();
+          track.track?.dispose();
+        } catch (_) {}
+      }
+      
     } catch (_) {
       // Ignore errors but ensure viewer-only mode
     }

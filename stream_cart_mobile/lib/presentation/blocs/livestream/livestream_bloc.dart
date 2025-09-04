@@ -265,7 +265,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		if (currentState.isConnectedRoom || currentState.isConnectingRoom) return;
 		emit(currentState.copyWith(isConnectingRoom: true));
 		try {
-					await liveKitService.connect(url: event.url, token: event.token);
+					await liveKitService.connect(url: event.url, token: event.token, isViewer: true);
 					try {
 						final signalR = getIt<SignalRService>();
 						await signalR.connect();
