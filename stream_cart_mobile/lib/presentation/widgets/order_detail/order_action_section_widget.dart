@@ -58,6 +58,19 @@ class OrderActionSectionWidget extends StatelessWidget {
       );
     }
 
+    // Confirm Received Button - chỉ hiện khi order status = 4 (Đã giao hàng)
+    if (_canConfirmReceived()) {
+      actions.add(
+        _buildActionButton(
+          context: context,
+          title: 'Xác nhận đã nhận hàng',
+          icon: Icons.done_all_outlined,
+          color: Colors.green[700]!,
+          onTap: () => _showConfirmReceivedDialog(context),
+        ),
+      );
+    }
+
     // Reorder Button - cho các order đã hoàn thành hoặc hủy
     if (_canReorder()) {
       actions.add(
@@ -156,6 +169,11 @@ class OrderActionSectionWidget extends StatelessWidget {
     return order.orderStatus == 0 || order.orderStatus == 1;
   }
 
+  // Logic kiểm tra có thể confirm received không
+  bool _canConfirmReceived() {
+    return order.orderStatus == 4; // Đã giao hàng
+  }
+
   // Logic kiểm tra có thể reorder không
   bool _canReorder() {
     return order.orderStatus == 4 || order.orderStatus == 5;
@@ -168,26 +186,68 @@ class OrderActionSectionWidget extends StatelessWidget {
 
   // Logic kiểm tra có thể rate order không
   bool _canRateOrder() {
-    return order.orderStatus == 4;
+    return order.orderStatus == 10; // Chỉ cho phép đánh giá khi đã hoàn thành
   }
 
   void _showCancelOrderDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận hủy đơn'),
         content: const Text('Bạn có chắc muốn hủy đơn hàng này?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Không'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              _handleCancelOrder(context);
+              Navigator.pop(dialogContext);
+              _handleCancelOrder(context); // Use original context
             },
             child: const Text('Hủy đơn'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmReceivedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xác nhận đã nhận hàng'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Bạn đã nhận được hàng và hài lòng với sản phẩm?'),
+            SizedBox(height: 8),
+            Text(
+              'Lưu ý: Sau khi xác nhận, bạn không thể hoàn trả sản phẩm.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.orange,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Chưa nhận'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _handleConfirmReceived(context); // Use original context, not dialogContext
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Đã nhận hàng'),
           ),
         ],
       ),
@@ -201,6 +261,23 @@ class OrderActionSectionWidget extends StatelessWidget {
       const SnackBar(
         content: Text('Đã gửi yêu cầu hủy đơn'),
         backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _handleConfirmReceived(BuildContext context) {
+    // Cập nhật status từ 4 (Đã giao hàng) -> 10 (Thành công)
+    context.read<OrderBloc>().add(
+      UpdateOrderStatusEvent(
+        orderId: order.id,
+        status: 10,
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đã xác nhận nhận hàng thành công'),
+        backgroundColor: Colors.green,
       ),
     );
   }

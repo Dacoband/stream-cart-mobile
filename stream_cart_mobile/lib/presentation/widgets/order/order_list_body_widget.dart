@@ -28,27 +28,25 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
   final ScrollController _scrollController = ScrollController();
   int? _lastTabIndex; 
   
-  final List<int?> _orderStatuses = [
-    null, // Tất cả
-    0,    // Chờ xác nhận (Waiting/Pending)
-    2,    // Đang xử lý (Processing/Packed)
-    7,    // Đang giao (OnDelivery)
-    4,    // Đã giao (Delivered)
-    3,    // Đã gửi (Shipped) - thay cho Hoàn thành (10) theo Option B
-    5,    // Đã hủy (Cancelled)
-    8,    // Trả hàng (Returning)
-    9,    // Hoàn tiền (Refunded)
+  final List<List<int>?> _orderStatuses = [
+    null,     // Tất cả
+    [0],      // Chờ thanh toán (Waiting)
+    [1],      // Chờ xác nhận (Pending)
+    [2],      // Chờ đóng gói (Processing)
+    [7],      // Chờ giao hàng (OnDelivery)
+    [4],      // Đã giao hàng (Delivered - status 4)
+    [10],     // Thành công (Completed - status 10)
+    [5],      // Hủy đơn (Cancelled)
   ];
   final List<String> _tabTitles = [
     'Tất cả',
+    'Chờ thanh toán',
     'Chờ xác nhận',
-    'Xử lý',
-    'Đang giao',
-    'Đã giao',
-    'Đã gửi', // đổi từ Hoàn thành
-    'Đã hủy',
-    'Trả hàng',
-    'Hoàn tiền',
+    'Chờ đóng gói',
+    'Chờ giao hàng',
+    'Đã giao hàng',
+    'Thành công',
+    'Hủy đơn',
   ];
 
   @override
@@ -65,7 +63,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     
     // Load initial orders
     _lastTabIndex = 0;
-    _loadOrders(status: _orderStatuses[0]);
+    _loadOrders(statusList: _orderStatuses[0]);
   }
 
   @override
@@ -77,11 +75,22 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
 
   void _onScroll() {
     if (_isBottom) {
-      final currentStatus = _orderStatuses[_tabController.index];
+      final currentStatusList = _orderStatuses[_tabController.index];
+      // Với multiple status, chọn status chính để load more
+      int? statusToLoad;
+      if (currentStatusList == null) {
+        statusToLoad = null;
+      } else if (currentStatusList.length == 1) {
+        statusToLoad = currentStatusList.first;
+      } else {
+        // Chọn status chính cho multiple status
+        statusToLoad = currentStatusList.contains(10) ? 10 : currentStatusList.first;
+      }
+      
       context.read<OrderBloc>().add(
         LoadMoreOrdersEvent(
           accountId: widget.accountId,
-          status: currentStatus,
+          status: statusToLoad,
         ),
       );
     }
@@ -94,21 +103,57 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     return currentScroll >= (maxScroll * 0.9);
   }
 
-  void _loadOrders({int? status}) {
+  void _loadOrders({List<int>? statusList}) {
+    // Nếu statusList null (tab "Tất cả"), load tất cả orders
+    if (statusList == null) {
+      context.read<OrderBloc>().add(
+        GetOrdersByAccountEvent(
+          accountId: widget.accountId,
+          status: null,
+        ),
+      );
+      return;
+    }
+    
+    // Nếu chỉ có 1 status, load trực tiếp
+    if (statusList.length == 1) {
+      context.read<OrderBloc>().add(
+        GetOrdersByAccountEvent(
+          accountId: widget.accountId,
+          status: statusList.first,
+        ),
+      );
+      return;
+    }
+    
+    // Nếu có nhiều status, chọn status chính để load
+    // Đối với tab "Thành công" có [4, 10], chọn status 10 (Completed) làm chính
+    final mainStatus = statusList.contains(10) ? 10 : statusList.first;
     context.read<OrderBloc>().add(
       GetOrdersByAccountEvent(
         accountId: widget.accountId,
-        status: status,
+        status: mainStatus,
       ),
     );
   }
 
   Future<void> _refreshOrders() async {
-    final currentStatus = _orderStatuses[_tabController.index];
+    final currentStatusList = _orderStatuses[_tabController.index];
+    // Với multiple status, chọn status chính để refresh
+    int? statusToRefresh;
+    if (currentStatusList == null) {
+      statusToRefresh = null;
+    } else if (currentStatusList.length == 1) {
+      statusToRefresh = currentStatusList.first;
+    } else {
+      // Chọn status chính cho multiple status
+      statusToRefresh = currentStatusList.contains(10) ? 10 : currentStatusList.first;
+    }
+    
     context.read<OrderBloc>().add(
       RefreshOrdersEvent(
         accountId: widget.accountId,
-        status: currentStatus,
+        status: statusToRefresh,
       ),
     );
   }
@@ -118,7 +163,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     if (_lastTabIndex == newIndex) return;
     _lastTabIndex = newIndex;
     final currentStatus = _orderStatuses[newIndex];
-    _loadOrders(status: currentStatus);
+    _loadOrders(statusList: currentStatus);
   }
 
   @override
@@ -157,6 +202,22 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
     );
   }
 
+  // Helper method để filter orders theo tab hiện tại
+  List<dynamic> _filterOrdersByCurrentTab(List<dynamic> orders) {
+    final currentStatusList = _orderStatuses[_tabController.index];
+    
+    // Tab "Tất cả" - hiển thị tất cả orders
+    if (currentStatusList == null) {
+      return orders;
+    }
+    
+    // Filter orders theo status list của tab hiện tại
+    return orders.where((order) {
+      final orderStatus = order.orderStatus as int?;
+      return currentStatusList.contains(orderStatus);
+    }).toList();
+  }
+
   Widget _buildOrderList() {
     return BlocConsumer<OrderBloc, OrderState>(
       listener: (context, state) {
@@ -183,18 +244,21 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
         }
         
         if (state is OrderRefreshing) {
+          final filteredOrders = _filterOrdersByCurrentTab(state.currentOrders);
           return PullToRefreshWrapperWidget(
             onRefresh: _refreshOrders,
-            child: _buildOrdersList(state.currentOrders, isRefreshing: true),
+            child: _buildOrdersList(filteredOrders, isRefreshing: true),
           );
         }
         
         if (state is OrderLoadingMore) {
-          return _buildOrdersList(state.currentOrders, isLoadingMore: true);
+          final filteredOrders = _filterOrdersByCurrentTab(state.currentOrders);
+          return _buildOrdersList(filteredOrders, isLoadingMore: true);
         }
         
         if (state is OrdersByAccountLoaded) {
-          if (state.orders.isEmpty) {
+          final filteredOrders = _filterOrdersByCurrentTab(state.orders);
+          if (filteredOrders.isEmpty) {
             return PullToRefreshWrapperWidget(
               onRefresh: _refreshOrders,
               child: EmptyOrderWidget(
@@ -207,7 +271,7 @@ class _OrderListBodyWidgetState extends State<OrderListBodyWidget>
           
           return PullToRefreshWrapperWidget(
             onRefresh: _refreshOrders,
-            child: _buildOrdersList(state.orders, hasReachedMax: state.hasReachedMax),
+            child: _buildOrdersList(filteredOrders, hasReachedMax: state.hasReachedMax),
           );
         }
         

@@ -5,6 +5,7 @@ import '../../../domain/usecases/order/get_order_by_id_usecase.dart';
 import '../../../domain/usecases/order/get_order_by_code_usecase.dart';
 import '../../../domain/usecases/order/create_multiple_orders_usecase.dart';
 import '../../../domain/usecases/order/cancel_order_usecase.dart';
+import '../../../domain/usecases/order/update_order_status_usecase.dart';
 import 'order_event.dart';
 import 'order_state.dart';
 
@@ -14,6 +15,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final GetOrderByCodeUseCase _getOrderByCodeUseCase;
   final CreateMultipleOrdersUseCase _createMultipleOrdersUseCase;
   final CancelOrderUseCase _cancelOrderUseCase;
+  final UpdateOrderStatusUseCase _updateOrderStatusUseCase;
 
   static const int _pageSize = 10;
   List<OrderEntity> _allOrders = [];
@@ -26,11 +28,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     required GetOrderByCodeUseCase getOrderByCodeUseCase,
     required CreateMultipleOrdersUseCase createMultipleOrdersUseCase,
     required CancelOrderUseCase cancelOrderUseCase,
+    required UpdateOrderStatusUseCase updateOrderStatusUseCase,
   })  : _getOrdersByAccountUseCase = getOrdersByAccountUseCase,
         _getOrderByIdUseCase = getOrderByIdUseCase,
         _getOrderByCodeUseCase = getOrderByCodeUseCase,
         _createMultipleOrdersUseCase = createMultipleOrdersUseCase,
         _cancelOrderUseCase = cancelOrderUseCase,
+        _updateOrderStatusUseCase = updateOrderStatusUseCase,
         super(const OrderInitial()) {
     
     on<GetOrdersByAccountEvent>(_onGetOrdersByAccount);
@@ -38,6 +42,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<GetOrderByCodeEvent>(_onGetOrderByCode);
     on<CreateMultipleOrdersEvent>(_onCreateMultipleOrders);
     on<CancelOrderEvent>(_onCancelOrder);
+    on<UpdateOrderStatusEvent>(_onUpdateOrderStatus);
     on<RefreshOrdersEvent>(_onRefreshOrders);
     on<LoadMoreOrdersEvent>(_onLoadMoreOrders);
     on<ResetOrderStateEvent>(_onResetOrderState);
@@ -228,5 +233,24 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     _currentPage = 0;
     _hasReachedMax = false;
     emit(const OrderInitial());
+  }
+
+  Future<void> _onUpdateOrderStatus(
+    UpdateOrderStatusEvent event,
+    Emitter<OrderState> emit,
+  ) async {
+    final result = await _updateOrderStatusUseCase(
+      UpdateOrderStatusParams(
+        orderId: event.orderId,
+        status: event.status,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(OrderError(message: failure.message)),
+      (updatedOrder) => emit(const OrderOperationSuccess(
+        message: 'Cập nhật trạng thái đơn hàng thành công',
+      )),
+    );
   }
 }

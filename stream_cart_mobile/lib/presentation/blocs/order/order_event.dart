@@ -86,3 +86,16 @@ class ResetOrderStateEvent extends OrderEvent {
   @override
   List<Object?> get props => [];
 }
+
+class UpdateOrderStatusEvent extends OrderEvent {
+  final String orderId;
+  final int status;
+
+  const UpdateOrderStatusEvent({
+    required this.orderId,
+    required this.status,
+  });
+
+  @override
+  List<Object?> get props => [orderId, status];
+}

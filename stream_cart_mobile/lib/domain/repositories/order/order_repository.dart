@@ -18,4 +18,6 @@ abstract class OrderRepository {
   });
   //Get order details by order code
   Future<Either<Failure, OrderEntity>> getOrderDetailsByCode(String code);
+  // PUT /api/orders/{id}/status
+  Future<Either<Failure, OrderEntity>> updateOrderStatus(String id, int status);
 }

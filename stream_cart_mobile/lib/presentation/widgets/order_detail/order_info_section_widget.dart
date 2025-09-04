@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../domain/entities/order/order_entity.dart';
+import '../order/order_status_badge_widget.dart';
 
 // Thông tin đơn hàng (code, date, status)
 class OrderInfoSectionWidget extends StatelessWidget {
@@ -79,7 +80,9 @@ class OrderInfoSectionWidget extends StatelessWidget {
           _buildInfoRow(
             'Trạng thái đơn hàng:',
             _getStatusText(order.orderStatus),
-            valueWidget: _buildStatusChip(order.orderStatus),
+            valueWidget: Flexible(
+              child: OrderStatusBadgeWidget(status: order.orderStatus),
+            ),
           ),
 
           const SizedBox(height: 12),
@@ -113,10 +116,47 @@ class OrderInfoSectionWidget extends StatelessWidget {
             ),
           ),
 
+          // Thông báo tự động hoàn thành cho status 4
+          if (order.orderStatus == 4) ...[
+            const SizedBox(height: 16),
+            _buildAutoCompleteNotice(),
+          ],
+
           if (order.customerNotes != null && order.customerNotes!.isNotEmpty) ...[
             const SizedBox(height: 12),
             _buildInfoRow('Ghi chú:', order.customerNotes!),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAutoCompleteNotice() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: Colors.blue[700],
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Đơn hàng sẽ tự động hoàn thành sau 3 ngày nếu bạn không xác nhận đã nhận hàng.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.blue[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -134,7 +174,7 @@ class OrderInfoSectionWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 100,
+          width: 120, // Tăng width cho label để giảm space cho value
           child: Text(
             label,
             style: TextStyle(
@@ -144,66 +184,57 @@ class OrderInfoSectionWidget extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: valueWidget ?? GestureDetector(
-            onTap: onTap,
-            child: Text(
-              value,
-              style: valueStyle ?? TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: valueColor ?? Colors.black87,
+          child: valueWidget != null 
+            ? Container(
+                alignment: Alignment.centerLeft,
+                child: valueWidget,
+              )
+            : GestureDetector(
+                onTap: onTap,
+                child: Text(
+                  value,
+                  style: valueStyle ?? TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: valueColor ?? Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
-            ),
-          ),
         ),
       ],
     );
   }
 
-  Widget _buildStatusChip(int status) {
-    final statusInfo = _getStatusInfo(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: statusInfo['color'].withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: statusInfo['color'].withOpacity(0.35),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        statusInfo['text'],
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: statusInfo['color'],
-        ),
-      ),
-    );
-  }
-
-  Map<String, dynamic> _getStatusInfo(int status) {
-    switch (status) {
-      case 0:
-        return {'text': 'Chờ xác nhận', 'color': Colors.orange};
-      case 1:
-        return {'text': 'Đã xác nhận', 'color': Colors.blue};
-      case 2:
-        return {'text': 'Đang chuẩn bị', 'color': Colors.purple};
-      case 3:
-        return {'text': 'Đang giao', 'color': Colors.indigo};
-      case 4:
-        return {'text': 'Hoàn thành', 'color': Colors.green};
-      case 5:
-        return {'text': 'Đã hủy', 'color': Colors.red};
-      default:
-        return {'text': 'Không xác định', 'color': Colors.grey};
-    }
-  }
-
   String _getStatusText(int status) {
-    return _getStatusInfo(status)['text'];
+    // Sử dụng cùng logic với OrderStatusBadgeWidget để đảm bảo tính nhất quán
+    switch (status) {
+      case 0: // Waiting - Chờ thanh toán
+        return 'Chờ thanh toán';
+      case 1: // Pending - Chờ xác nhận
+        return 'Chờ xác nhận';
+      case 2: // Processing - Đang chuẩn bị hàng
+        return 'Đang chuẩn bị hàng';
+      case 6: // Packed
+        return 'Đã đóng gói';
+      case 3: // Shipped - Chờ lấy hàng
+        return 'Chờ lấy hàng';
+      case 7: // OnDelivery - Đang giao hàng
+        return 'Đang giao hàng';
+      case 4: // Delivered - Đã giao hàng
+        return 'Đã giao hàng';
+      case 10: // Completed - Giao thành công
+        return 'Giao thành công';
+      case 8: // Returning
+        return 'Trả hàng';
+      case 9: // Refunded
+        return 'Hoàn tiền';
+      case 5: // Cancelled - Hủy đơn
+        return 'Hủy đơn';
+      default:
+        return 'Không xác định';
+    }
   }
 
   // Payment status helpers
