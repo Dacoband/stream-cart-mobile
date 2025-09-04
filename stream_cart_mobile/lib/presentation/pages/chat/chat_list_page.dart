@@ -57,7 +57,7 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     }
 
     final roleValue = authState.loginResponse.account.role;
-    final userRole = UserRole.fromValue(roleValue ?? 1);
+    final userRole = UserRole.fromValue(roleValue);
     
     // Connect SignalR first
     context.read<ChatBloc>().add(const ConnectSignalREvent());
@@ -98,7 +98,7 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
     }
 
     final roleValue = authState.loginResponse.account.role;
-    final userRole = UserRole.fromValue(roleValue ?? 1);
+    final userRole = UserRole.fromValue(roleValue);
     
     // Dispatch appropriate event based on role
     if (userRole == UserRole.customer) {
@@ -214,9 +214,17 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                     child: Icon(Icons.circle, color: Colors.green, size: 12),
                   );
                 } else if (state is SignalRConnectionError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Tooltip(
+                      message: 'Connection Error',
+                      child: const Icon(Icons.circle, color: Colors.red, size: 12),
+                    ),
+                  );
+                } else if (state is SignalRDisconnected) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: Icon(Icons.circle, color: Colors.red, size: 12),
+                    child: Icon(Icons.circle, color: Colors.orange, size: 12),
                   );
                 }
                 return IconButton(
@@ -231,6 +239,28 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
           children: [
             // SignalR Status Widget
             const SignalRStatusWidget(),
+            
+            // Search Bar
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm cuộc trò chuyện...',
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(25),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                onChanged: (value) {
+                  // TODO: Implement search functionality
+                  // For now, this is just UI
+                },
+              ),
+            ),
             
             // Chat Rooms List
             Expanded(
@@ -308,6 +338,19 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
                     return const CustomLoadingWidget();
                   }
                   
+                  if (state is SignalRDisconnected) {
+                    // Auto-reconnect when disconnected
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        Future.delayed(const Duration(seconds: 3), () {
+                          if (mounted) {
+                            context.read<ChatBloc>().add(const ConnectSignalREvent());
+                          }
+                        });
+                      }
+                    });
+                  }
+                  
                   return const Center(
                     child: Text(
                       'Kéo xuống để tải danh sách chat',
@@ -323,7 +366,7 @@ class _ChatListPageState extends State<ChatListPage> with RouteAware {
           builder: (context, authState) {
             if (authState is AuthSuccess) {
               final roleValue = authState.loginResponse.account.role;
-              final userRole = UserRole.fromValue(roleValue ?? 1);
+              final userRole = UserRole.fromValue(roleValue);
               
               // Only show FAB for customers
               if (userRole == UserRole.customer) {

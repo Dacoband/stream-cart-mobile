@@ -19,6 +19,9 @@ import '../../../core/di/dependency_injection.dart';
 import '../../../core/services/signalr_service.dart';
 import '../../../domain/entities/livestream/livestream_message_entity.dart';
 import '../../../domain/entities/livestream/livestream_product_entity.dart';
+import '../auth/auth_bloc.dart';
+import '../auth/auth_state.dart';
+import '../../../domain/entities/account/account_entity.dart';
 
 class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	final GetLiveStreamUseCase getLiveStreamUseCase;
@@ -262,7 +265,7 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		if (currentState.isConnectedRoom || currentState.isConnectingRoom) return;
 		emit(currentState.copyWith(isConnectingRoom: true));
 		try {
-					await liveKitService.connect(url: event.url, token: event.token);
+					await liveKitService.connect(url: event.url, token: event.token, isViewer: true);
 					try {
 						final signalR = getIt<SignalRService>();
 						await signalR.connect();
@@ -448,6 +451,13 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 	Future<void> _onLiveStreamMessageReceived(LiveStreamMessageReceived event, Emitter<LiveStreamState> emit) async {
 		final currentState = state;
 		if (currentState is! LiveStreamLoaded) return;
+
+		// Skip own messages to avoid duplicates when sending
+		final currentUser = _getCurrentUser();
+		if (currentUser != null && currentUser.id == event.message.senderId) {
+			return;
+		}
+
 		final updated = [...currentState.joinedMessages];
 		if (!updated.any((m) => m.id == event.message.id)) {
 			updated.add(event.message);
@@ -510,6 +520,20 @@ class LiveStreamBloc extends Bloc<LiveStreamEvent, LiveStreamState> {
 		}
 		if (latePrimary != null) {
 			emit(st.copyWith(primaryVideoTrack: latePrimary, participants: liveKitService.remoteParticipants));
+		}
+	}
+
+	// Helper method to get current user
+	AccountEntity? _getCurrentUser() {
+		try {
+			final authBloc = getIt<AuthBloc>();
+			final authState = authBloc.state;
+			if (authState is AuthSuccess) {
+				return authState.loginResponse.account;
+			}
+			return null;
+		} catch (e) {
+			return null;
 		}
 	}
 

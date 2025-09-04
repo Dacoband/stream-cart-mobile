@@ -15,6 +15,8 @@ import '../../core/services/storage_service.dart';
 import '../../core/services/http_service.dart';
 import '../../core/services/search_history_service.dart';
 import '../../core/services/image_upload_service.dart';
+import '../../core/services/chat_hub.dart';
+import '../../core/config/env.dart';
 import '../../data/datasources/auth/auth_local_data_source.dart';
 import '../../data/datasources/auth/auth_remote_data_source.dart';
 import '../../data/datasources/deliveries/deliveries_remote_data_source.dart';
@@ -219,7 +221,8 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies() async {
   await dotenv.load(fileName: ".env");
   await getIt.reset();
-  String signalRChatBaseUrl = dotenv.env['SIGNALR_CHAT_BASE_URL']!;
+  // Use same base URL as API for SignalR
+  String signalRChatBaseUrl = Env.baseUrl;
 
   // Core services
   getIt.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
@@ -388,11 +391,16 @@ Future<void> setupDependencies() async {
 
   // SignalR Service 
   getIt.registerLazySingleton<SignalRService>(() => SignalRService(
-    signalRChatBaseUrl,  // Use local variable
+    signalRChatBaseUrl,
     getIt<StorageService>(),
     onStatusChanged: (status) {
-      // print('SignalR Status: $status'); // Tắt log để tránh spam
     },
+  ));
+
+  // Register SignalR Chat Hub Client as factory
+  getIt.registerFactory<SignalRChatClient>(() => getSignalRChatClient(
+    baseUrl: signalRChatBaseUrl,
+    storageService: getIt<StorageService>(),
   ));
 
   // Use cases 
@@ -425,13 +433,11 @@ Future<void> setupDependencies() async {
     receiveMessageUseCase: getIt(),
     markChatRoomAsReadUseCase: getIt(),
     sendTypingIndicatorUseCase: getIt(),
-    connectSignalRUseCase: getIt(),
-    disconnectSignalRUseCase: getIt(),
     joinChatRoomUseCase: getIt(),
     leaveChatRoomUseCase: getIt(),
     loadShopChatRoomsUseCase: getIt(),
     getUnreadCountUseCase: getIt(),
-    signalRService: getIt(),
+    signalRChatClient: getIt(),
   ));
 
   // === PRODUCT VARIANTS === 

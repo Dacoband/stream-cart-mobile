@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../core/services/chat_hub.dart';
 
 abstract class ChatEvent extends Equatable {
   const ChatEvent();
@@ -115,12 +116,12 @@ class UpdateMessageEvent extends ChatEvent {
 }
 
 class ReceiveMessageEvent extends ChatEvent {
-  final Map<String, dynamic> messageData;
+  final ReceiveMessagePayload payload;
 
-  const ReceiveMessageEvent({required this.messageData});
+  const ReceiveMessageEvent({required this.payload});
 
   @override
-  List<Object> get props => [messageData];
+  List<Object> get props => [payload];
 }
 
 // Chat Room Actions

@@ -39,15 +39,26 @@ class _LiveCartPageState extends State<LiveCartPage> {
         actions: [
           BlocBuilder<CartLiveBloc, CartLiveState>(
             builder: (context, state) {
-              if (state is CartLiveLoaded || state is CartLiveUpdated) {
-                final cart = state is CartLiveLoaded ? state.cart : (state as CartLiveUpdated).cart;
-                if (cart.listCartItem.isNotEmpty) {
-                  return IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Reload',
-                    onPressed: () => context.read<CartLiveBloc>().add(LoadCartLiveEvent(widget.livestreamId)),
-                  );
-                }
+              // Show refresh button for all states except initial
+              if (state is! CartLiveInitial) {
+                return IconButton(
+                  icon: state is CartLiveLoading 
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFB0F847)),
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+                  tooltip: 'Reload Cart',
+                  onPressed: state is CartLiveLoading 
+                    ? null
+                    : () {
+                        context.read<CartLiveBloc>().add(LoadCartLiveEvent(widget.livestreamId));
+                      },
+                );
               }
               return const SizedBox.shrink();
             },
@@ -165,16 +176,40 @@ class _LiveCartPageState extends State<LiveCartPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                  Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
-                  Text(state.message, style: TextStyle(color: Colors.grey[600])),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context
-                        .read<CartLiveBloc>()
-                        .add(LoadCartLiveEvent(widget.livestreamId)),
-                    child: const Text('Thử lại'),
-                  )
+                  Text(
+                    'Không thể tải giỏ hàng',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.message, 
+                    style: TextStyle(color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<CartLiveBloc>().add(LoadCartLiveEvent(widget.livestreamId));
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Thử lại'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB0F847),
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Quay lại'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             );
