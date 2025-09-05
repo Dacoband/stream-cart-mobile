@@ -147,7 +147,7 @@ class LiveCartSummaryWidget extends StatelessWidget {
     return discount;
   }
 
-  double _selectedItemsTotal() => _selectedItemsSubtotal() - _selectedItemsDiscount();
+  double _selectedItemsTotal() => _selectedItemsSubtotal();
 
   double _selectedItemsOriginalTotal() {
     if (selectedIds.isEmpty) return 0;

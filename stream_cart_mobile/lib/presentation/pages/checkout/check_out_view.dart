@@ -382,6 +382,7 @@ class _CheckoutViewState extends State<CheckoutView> {
     final orderRequest = CreateOrderRequestEntity(
       paymentMethod: selectedPaymentMethod,
       addressId: deliveryState.shippingAddress.id,
+      livestreamId: widget.livestreamId, // Truyền livestreamId vào order request
       ordersByShop: widget.previewOrderData.listCartItem.map((shop) {
         final selectedService = deliveryState.getSelectedServiceForShop(shop.shopId);
         
