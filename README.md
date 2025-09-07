@@ -1,4 +1,4 @@
-# 🛒 Stream Cart Mobile 🇻🇳
+# 🛒 Stream Cart Mobile
 
 <div align="center">
   <img src="stream_cart_mobile/assets/icons/app_icon.png" alt="Stream Cart Logo" width="128" height="128">
