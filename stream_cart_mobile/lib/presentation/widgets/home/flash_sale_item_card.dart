@@ -198,7 +198,14 @@ class FlashSaleItemCard extends StatelessWidget {
   Widget _buildPriceRow() {
     final formatter = NumberFormat.decimalPattern('vi_VN');
     String f(num v) => formatter.format(v.round());
-    final hasDiscount = product.basePrice > flashSale.flashSalePrice && product.basePrice > 0;
+    double originalPrice = 0;
+    if (product.finalPrice > 0) {
+      originalPrice = product.finalPrice;
+    } else if (product.basePrice > 0) {
+      originalPrice = product.basePrice;
+    }
+    final hasDiscount = originalPrice > flashSale.flashSalePrice && originalPrice > 0;
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -220,7 +227,7 @@ class FlashSaleItemCard extends StatelessWidget {
               ),
               if (hasDiscount)
                 Text(
-                  '${f(product.basePrice)}đ',
+                  '${f(originalPrice)}đ',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.grey,
@@ -296,8 +303,13 @@ class FlashSaleItemCard extends StatelessWidget {
   }
 
   Widget _buildDiscountBadge() {
-    double original = product.basePrice;
-    if (product.finalPrice > original) original = product.finalPrice;
+    double original = 0;
+    if (product.finalPrice > 0) {
+      original = product.finalPrice;
+    } else if (product.basePrice > 0) {
+      original = product.basePrice;
+    }
+    
     final diff = original - flashSale.flashSalePrice;
     String label;
     if (original > 0 && diff > 0) {
