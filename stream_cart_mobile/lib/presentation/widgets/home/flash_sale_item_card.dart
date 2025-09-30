@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../domain/entities/flash-sale/flash_sale_entity.dart';
 import '../../../domain/entities/products/product_entity.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class FlashSaleItemCard extends StatelessWidget {
   final FlashSaleEntity flashSale;
@@ -67,9 +67,9 @@ class FlashSaleItemCard extends StatelessWidget {
                       children: [
                         _buildProductName(),
                         const SizedBox(height: 6),
-                        _buildSoldBarCapsule(),
-                        const Spacer(),
                         _buildPriceRow(),
+                        const SizedBox(height: 6),
+                        _buildSoldBanner(),
                       ],
                     ),
                   ),
@@ -196,94 +196,82 @@ class FlashSaleItemCard extends StatelessWidget {
   }
 
   Widget _buildPriceRow() {
-    final formatter = NumberFormat.decimalPattern('vi_VN');
-    String f(num v) => formatter.format(v.round());
+    // Chọn giá gốc hiển thị: ưu tiên số cao hơn giữa basePrice và finalPrice (nếu > flashSalePrice)
+    final candidates = <double>[
+      if (product.basePrice > 0) product.basePrice,
+      if (product.finalPrice > 0) product.finalPrice,
+    ];
     double originalPrice = 0;
-    if (product.finalPrice > 0) {
-      originalPrice = product.finalPrice;
-    } else if (product.basePrice > 0) {
-      originalPrice = product.basePrice;
+    if (candidates.isNotEmpty) {
+      originalPrice = candidates.reduce((a, b) => a > b ? a : b);
     }
-    final hasDiscount = originalPrice > flashSale.flashSalePrice && originalPrice > 0;
+    final hasDiscount = originalPrice > flashSale.flashSalePrice;
+    final flashSalePriceText = CurrencyFormatter.formatVND(flashSale.flashSalePrice);
+    final originalPriceText = CurrencyFormatter.formatVND(originalPrice);
     
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${f(flashSale.flashSalePrice)}đ',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.red[600],
-                  height: 1.1,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (hasDiscount)
-                Text(
-                  '${f(originalPrice)}đ',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey,
-                    decoration: TextDecoration.lineThrough,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-            ],
+        // Giá flash sale
+        Flexible(
+          child: Text(
+            flashSalePriceText,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.red[600],
+              height: 1.1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (hasDiscount) ...[
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              originalPriceText,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+                decoration: TextDecoration.lineThrough,
+                height: 1.1,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildSoldBarCapsule() {
-    final soldPct = flashSale.soldPercentage.clamp(0, 100);
-    final remaining = flashSale.quantityAvailable;
-    final total = flashSale.quantityAvailable + flashSale.quantitySold;
+  // Removed old capsule style sold bar; replaced with bottom red banner.
+
+  Widget _buildSoldBanner() {
+    // Theo API: quantityAvailable là tổng số lượng của flash sale, quantitySold là đã bán
+    // Để an toàn, nếu dữ liệu không nhất quán (total < sold hoặc total == 0) thì fallback dùng tổng = available + sold
+    int total = flashSale.quantityAvailable;
+    final sold = flashSale.quantitySold;
+    if (total <= 0 || total < sold) {
+      total = flashSale.quantityAvailable + flashSale.quantitySold;
+    }
+    final text = total > 0 ? 'Đã bán $sold/$total' : 'Đã bán $sold';
     return Container(
-      height: 22,
+      height: 24,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(30),
+        color: Colors.red[600],
+        borderRadius: BorderRadius.circular(6),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: (soldPct / 100).clamp(0.0, 1.0),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.orange[400]!, Colors.red[500]!],
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: Center(
-              child: Text(
-                soldPct > 0
-                    ? 'Đã bán ${soldPct.toInt()}% · Còn $remaining'
-                    : 'Còn $remaining / $total',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: soldPct > 0 ? Colors.white : Colors.grey[800],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          )
-        ],
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -303,11 +291,12 @@ class FlashSaleItemCard extends StatelessWidget {
   }
 
   Widget _buildDiscountBadge() {
+    // Đồng bộ với cách chọn giá gốc ở phần hiển thị giá: ưu tiên basePrice
     double original = 0;
-    if (product.finalPrice > 0) {
-      original = product.finalPrice;
-    } else if (product.basePrice > 0) {
+    if (product.basePrice > 0) {
       original = product.basePrice;
+    } else if (product.finalPrice > 0) {
+      original = product.finalPrice;
     }
     
     final diff = original - flashSale.flashSalePrice;

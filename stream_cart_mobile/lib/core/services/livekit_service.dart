@@ -50,8 +50,6 @@ class LiveKitService {
     
     try {
       await room.connect(url, token, connectOptions: connectOptions);
-      
-      // Chỉ enforce viewer-only mode nếu là viewer
       if (isViewer) {
         await _ensureViewerOnlyMode();
         _startViewerOnlyModeWatcher();
@@ -75,10 +73,7 @@ class LiveKitService {
       if (event is TrackPublishedEvent || event is ParticipantConnectedEvent) {
         forceSubscribeAll();
       }
-      
-      // Chỉ enforce viewer-only mode nếu là viewer
       if (isViewer && event is TrackPublishedEvent && event.participant is LocalParticipant) {
-        // Nếu local participant vô tình publish track, unpublish ngay
         _ensureViewerOnlyMode();
       }
     });
@@ -139,7 +134,6 @@ class LiveKitService {
     });
   }
 
-  /// Đảm bảo camera và mic luôn tắt cho viewer (chỉ xem và nghe)
   Future<void> _ensureViewerOnlyMode() async {
     final room = _room;
     if (room == null) return;
@@ -147,12 +141,9 @@ class LiveKitService {
     try {
       final localParticipant = room.localParticipant;
       if (localParticipant == null) return;
-      
-      // Tắt hoàn toàn camera và mic
+      // Tắt camera và mic
       await localParticipant.setMicrophoneEnabled(false);
       await localParticipant.setCameraEnabled(false);
-      
-      // Unpublish tất cả local tracks nếu có
       final videoTrackPubs = List.from(localParticipant.videoTrackPublications);
       for (final track in videoTrackPubs) {
         try {
@@ -166,8 +157,6 @@ class LiveKitService {
           await track.unpublish();
         } catch (_) {}
       }
-      
-      // Stop và dispose tất cả local tracks
       for (final track in videoTrackPubs) {
         try {
           await track.track?.stop();
@@ -183,7 +172,6 @@ class LiveKitService {
       }
       
     } catch (_) {
-      // Ignore errors but ensure viewer-only mode
     }
   }
 }

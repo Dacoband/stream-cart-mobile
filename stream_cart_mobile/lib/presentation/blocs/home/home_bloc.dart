@@ -108,7 +108,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onRefreshHomeData(RefreshHomeDataEvent event, Emitter<HomeState> emit) async {
-  // Refresh everything including livestreams & flash sales
   add(const LoadHomeDataEvent());
   }
 
@@ -144,7 +143,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       
       result.fold(
         (failure) {
-          // Don't change state on error, just log it silently
         },
         (primaryImages) {
           emit((state as HomeLoaded).copyWith(productImages: primaryImages));
@@ -155,62 +153,63 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   Future<void> _onLoadFlashSales(LoadFlashSalesEvent event, Emitter<HomeState> emit) async {
     final currentState = state;
-    if (currentState is HomeLoaded) {
-      emit(currentState.copyWith(isLoadingFlashSales: true));
+    if (currentState is! HomeLoaded) return;
+    emit(currentState.copyWith(isLoadingFlashSales: true));
 
-      try {
-        final flashSalesResult = await getFlashSalesUseCase();
-        
-        await flashSalesResult.fold(
-          (failure) async {
-            emit(currentState.copyWith(isLoadingFlashSales: false));
-          },
-          (flashSales) async {
-            final hasEmbeddedProductInfo = flashSales.any((fs) =>
-              (fs.productName != null && fs.productName!.isNotEmpty) ||
-              (fs.productImageUrl != null && fs.productImageUrl!.isNotEmpty)
-            );
+    try {
+      final flashSalesResult = await getFlashSalesUseCase();
+      await flashSalesResult.fold(
+        (failure) async {
+          emit(currentState.copyWith(isLoadingFlashSales: false));
+        },
+        (flashSales) async {
+          // Thu thập productId để lấy chi tiết sản phẩm (giá gốc, v.v.)
+          final productIds = flashSales.map((fs) => fs.productId).toSet().toList();
 
-            if (hasEmbeddedProductInfo) {
+          if (productIds.isEmpty) {
+            emit(currentState.copyWith(
+              flashSales: flashSales,
+              flashSaleProducts: const [],
+              isLoadingFlashSales: false,
+            ));
+            return;
+          }
+
+          final productsResult = await getFlashSaleProductsUseCase(productIds);
+          await productsResult.fold(
+            (failure) async {
+              // Nếu lỗi, vẫn hiển thị danh sách flash sale
               emit(currentState.copyWith(
                 flashSales: flashSales,
                 isLoadingFlashSales: false,
               ));
-            } else {
-              final productIds = flashSales
-                  .map((flashSale) => flashSale.productId)
-                  .toSet()
-                  .toList();
+            },
+            (flashSaleProducts) async {
+              // Hợp nhất ảnh đại diện sản phẩm (nếu thiếu)
+              Map<String, String> mergedImages = Map.of(currentState.productImages);
+              try {
+                final idsToFetch = flashSaleProducts
+                    .map((p) => p.id)
+                    .where((id) => !mergedImages.containsKey(id))
+                    .toList();
+                if (idsToFetch.isNotEmpty) {
+                  final imagesRes = await getProductPrimaryImagesUseCase(idsToFetch);
+                  imagesRes.fold((_) {}, (imgs) => mergedImages.addAll(imgs));
+                }
+              } catch (_) {}
 
-              if (productIds.isNotEmpty) {
-                final productsResult = await getFlashSaleProductsUseCase(productIds);
-                productsResult.fold(
-                  (failure) {
-                    emit(currentState.copyWith(
-                      flashSales: flashSales,
-                      isLoadingFlashSales: false,
-                    ));
-                  },
-                  (flashSaleProducts) {
-                    emit(currentState.copyWith(
-                      flashSales: flashSales,
-                      flashSaleProducts: flashSaleProducts,
-                      isLoadingFlashSales: false,
-                    ));
-                  },
-                );
-              } else {
-                emit(currentState.copyWith(
-                  flashSales: flashSales,
-                  isLoadingFlashSales: false,
-                ));
-              }
-            }
-          },
-        );
-      } catch (e) {
-        emit(currentState.copyWith(isLoadingFlashSales: false));
-      }
+              emit(currentState.copyWith(
+                flashSales: flashSales,
+                flashSaleProducts: flashSaleProducts,
+                productImages: mergedImages,
+                isLoadingFlashSales: false,
+              ));
+            },
+          );
+        },
+      );
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingFlashSales: false));
     }
   }
 

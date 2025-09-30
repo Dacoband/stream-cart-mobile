@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/products/product_entity.dart';
 import '../../../core/routing/app_router.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 class ProductGrid extends StatefulWidget {
   final List<ProductEntity>? products;
@@ -40,7 +41,7 @@ class _ProductGridState extends State<ProductGrid>
           final crossAxisCount = screenWidth > 600 ? 3 : 2; 
           double aspectRatio;
           if (screenWidth < 340) {
-            aspectRatio = 0.56; // rất nhỏ → cao hơn
+            aspectRatio = 0.56;
           } else if (screenWidth < 380) {
             aspectRatio = 0.6;
           } else if (screenWidth < 420) {
@@ -193,7 +194,11 @@ class _ProductGridState extends State<ProductGrid>
                         children: [
                           Flexible(
                             child: Text(
-                              _formatPrice(hasDiscount ? product.finalPrice : product.basePrice),
+                              CurrencyFormatter.formatVND(
+                                hasDiscount && product.finalPrice > 0
+                                    ? product.finalPrice
+                                    : product.basePrice,
+                              ),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
@@ -206,7 +211,7 @@ class _ProductGridState extends State<ProductGrid>
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                _formatPrice(product.basePrice),
+                                CurrencyFormatter.formatVND(product.basePrice),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey.shade600,
@@ -246,13 +251,6 @@ class _ProductGridState extends State<ProductGrid>
   }
 
   // Removed mock builder as real data is always provided now.
-
-  String _formatPrice(double price) {
-    final formatter = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
-    String priceStr = price.toInt().toString();
-    priceStr = priceStr.replaceAllMapped(formatter, (Match m) => '${m[1]},');
-    return '${priceStr}₫';
-  }
 
   Widget _buildAdaptiveName(String name) {
     return LayoutBuilder(
