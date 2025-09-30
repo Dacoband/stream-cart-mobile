@@ -11,7 +11,7 @@ class ChatRoomEntity extends Equatable {
   final bool isActive;
   final String userName;
   final String? userAvatarUrl;
-  final String shopName;
+  final String? shopName;
   final String? shopLogoUrl;
   final ChatMessage? lastMessage;
   final int unreadCount;
@@ -26,7 +26,7 @@ class ChatRoomEntity extends Equatable {
     required this.isActive,
     required this.userName,
     this.userAvatarUrl,
-    required this.shopName,
+    this.shopName,
     this.shopLogoUrl,
     this.lastMessage,
     required this.unreadCount,

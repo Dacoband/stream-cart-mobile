@@ -25,7 +25,7 @@ ChatRoomModel _$ChatRoomModelFromJson(Map<String, dynamic> json) =>
           ? null
           : ChatMessageModel.fromJson(
               json['lastMessage'] as Map<String, dynamic>),
-      unreadCount: (json['unreadCount'] as num).toInt(),
+      unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ChatRoomModelToJson(ChatRoomModel instance) =>

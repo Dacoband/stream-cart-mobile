@@ -15,9 +15,10 @@ class ChatRoomModel {
   final bool isActive;
   final String userName;
   final String? userAvatarUrl;
-  final String shopName;
+  final String? shopName;
   final String? shopLogoUrl;
   final ChatMessageModel? lastMessage;
+  @JsonKey(defaultValue: 0)
   final int unreadCount;
 
   const ChatRoomModel({
@@ -30,10 +31,10 @@ class ChatRoomModel {
     required this.isActive,
     required this.userName,
     this.userAvatarUrl,
-    required this.shopName,
+    this.shopName,
     this.shopLogoUrl,
     this.lastMessage,
-    required this.unreadCount,
+    this.unreadCount = 0,
   });
 
   factory ChatRoomModel.fromJson(Map<String, dynamic> json) => _$ChatRoomModelFromJson(json);
