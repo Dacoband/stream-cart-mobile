@@ -19,7 +19,7 @@ ChatRoomModel _$ChatRoomModelFromJson(Map<String, dynamic> json) =>
       isActive: json['isActive'] as bool,
       userName: json['userName'] as String,
       userAvatarUrl: json['userAvatarUrl'] as String?,
-      shopName: json['shopName'] as String,
+      shopName: json['shopName'] as String?,
       shopLogoUrl: json['shopLogoUrl'] as String?,
       lastMessage: json['lastMessage'] == null
           ? null

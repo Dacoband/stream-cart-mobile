@@ -26,28 +26,48 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     int? pageIndex,
     int? pageSize,
   }) async {
-    final url = ApiUrlHelper.getFullUrl(ApiConstants.notificationEndpoint);
-    
-    // Build query parameters
-    final Map<String, dynamic> queryParameters = {};
-    if (type != null) queryParameters['Type'] = type;
-    if (isRead != null) queryParameters['IsRead'] = isRead;
-    if (pageIndex != null) queryParameters['PageIndex'] = pageIndex;
-    if (pageSize != null) queryParameters['PageSize'] = pageSize;
+    try {
+      final url = ApiUrlHelper.getFullUrl(ApiConstants.notificationEndpoint);
+      final Map<String, dynamic> queryParameters = {};
+      if (type != null) queryParameters['Type'] = type;
+      if (isRead != null) queryParameters['IsRead'] = isRead;
+      if (pageIndex != null) queryParameters['PageIndex'] = pageIndex;
+      if (pageSize != null) queryParameters['PageSize'] = pageSize;
 
-    final response = await dio.get(
-      url,
-      queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
-    );
+      final response = await dio.get(
+        url,
+        queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
+      );
 
-    return NotificationResponseModel.fromJson(response.data);
+      return NotificationResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        try {
+          return NotificationResponseModel.fromJson(e.response!.data);
+        } catch (_) {
+          rethrow;
+        }
+      }
+      rethrow;
+    }
   }
 
   @override
   Future<NotificationResponseModel> markAsRead(String notificationId) async {
-    final url = ApiUrlHelper.getFullUrl('${ApiConstants.markAsReadEndpoint}/$notificationId');
-    
-    final response = await dio.patch(url);
-    return NotificationResponseModel.fromJson(response.data);
+    try {
+      final url = ApiUrlHelper.getFullUrl('${ApiConstants.markAsReadEndpoint}/$notificationId');
+      
+      final response = await dio.patch(url);
+      return NotificationResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        try {
+          return NotificationResponseModel.fromJson(e.response!.data);
+        } catch (_) {
+          rethrow;
+        }
+      }
+      rethrow;
+    }
   }
 }

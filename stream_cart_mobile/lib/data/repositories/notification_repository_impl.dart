@@ -27,8 +27,14 @@ class NotificationRepositoryImpl implements NotificationRepository {
       );
       
       if (response.success) {
-        // Convert data to NotificationListModel first, then to entity
-        final notificationListModel = NotificationListModel.fromJson(response.data);
+        final notificationListModel = response.data != null 
+            ? NotificationListModel.fromJson(response.data)
+            : const NotificationListModel(
+                totalItem: 0,
+                pageIndex: 1,
+                pageCount: 0,
+                notificationList: [],
+              );
         final notificationResponseEntity = NotificationResponseEntity(
           success: response.success,
           message: response.message,
@@ -37,7 +43,22 @@ class NotificationRepositoryImpl implements NotificationRepository {
         );
         return Right(notificationResponseEntity);
       } else {
-        return Left(ServerFailure(response.message));
+        if (response.message == "Không tìm thấy thông báo") {
+          final emptyNotificationResponseEntity = NotificationResponseEntity(
+            success: true, 
+            message: response.message,
+            data: const NotificationListEntity(
+              notificationList: [],
+              totalItem: 0,
+              pageIndex: 1,
+              pageCount: 0,
+            ),
+            errors: response.errors,
+          );
+          return Right(emptyNotificationResponseEntity);
+        } else {
+          return Left(ServerFailure(response.message));
+        }
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
@@ -80,18 +101,28 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<Either<Failure, int>> getUnreadCount() async {
     try {
-      // Get only unread notifications
       final response = await remoteDataSource.getNotifications(
         isRead: false,
         pageIndex: 1,
-        pageSize: 1000, // Get all unread notifications to count them
+        pageSize: 1000,
       );
       
       if (response.success) {
-        final notificationListModel = NotificationListModel.fromJson(response.data);
+        final notificationListModel = response.data != null 
+            ? NotificationListModel.fromJson(response.data)
+            : const NotificationListModel(
+                totalItem: 0,
+                pageIndex: 1,
+                pageCount: 0,
+                notificationList: [],
+              );
         return Right(notificationListModel.totalItem);
       } else {
-        return Left(ServerFailure(response.message));
+        if (response.message == "Không tìm thấy thông báo") {
+          return const Right(0);
+        } else {
+          return Left(ServerFailure(response.message));
+        }
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {

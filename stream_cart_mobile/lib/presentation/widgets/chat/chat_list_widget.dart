@@ -1,10 +1,8 @@
-// Hiển thị danh sách phòng chat (ListView của ChatEntity).
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_bloc.dart';
 import 'package:stream_cart_mobile/presentation/blocs/chat/chat_event.dart';
-import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart'; // Add this import
+import 'package:stream_cart_mobile/presentation/blocs/chat/chat_state.dart';
 import '../../pages/chat/chat_detail_page.dart';
 import 'package:stream_cart_mobile/domain/entities/chat/chat_room_entity.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -32,6 +30,7 @@ class ChatListWidget extends StatelessWidget {
           itemCount: chatRooms.length,
           itemBuilder: (context, index) {
             final chatRoom = chatRooms[index];
+            final String displayShopName = (chatRoom.shopName ?? '').trim();
             return Container(
               color: Colors.white,
               child: Card(
@@ -63,8 +62,8 @@ class ChatListWidget extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            chatRoom.shopName.isNotEmpty
-                                ? chatRoom.shopName.substring(0, 1).toUpperCase()
+                            displayShopName.isNotEmpty
+                                ? displayShopName.substring(0, 1).toUpperCase()
                                 : '?',
                             style: const TextStyle(
                               color: Colors.white,
@@ -104,7 +103,7 @@ class ChatListWidget extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          chatRoom.shopName,
+                          displayShopName.isNotEmpty ? displayShopName : 'Cửa hàng',
                           style: TextStyle(
                             color: Colors.black87,
                             fontSize: 15,
@@ -144,7 +143,6 @@ class ChatListWidget extends StatelessWidget {
                     margin: const EdgeInsets.only(top: 6),
                     child: BlocBuilder<ChatBloc, ChatState>(
                       builder: (context, state) {
-                        // Nếu có typing indicator đúng phòng này thì show, không thì bình thường
                         if (state is TypingIndicatorReceived &&
                             state.chatRoomId == chatRoom.id &&
                             state.isTyping == true) {
@@ -243,11 +241,9 @@ class ChatListWidget extends StatelessWidget {
   void _navigateToChatDetail(BuildContext context, ChatRoomEntity chatRoom) {
     final authState = context.read<AuthBloc>().state;
     String? userId;
-    String? userName;
 
     if (authState is AuthSuccess) {
       userId = authState.loginResponse.account.id;
-      userName = authState.loginResponse.account.username;
     }
     
     // FIX: Handle null values
@@ -267,7 +263,7 @@ class ChatListWidget extends StatelessWidget {
       chatRoomId: chatRoom.id,
     ));
 
-    // Navigate to chat detail - FIX: Handle null userName
+    // Navigate to chat detail
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -276,7 +272,9 @@ class ChatListWidget extends StatelessWidget {
           child: ChatDetailPage(
             chatRoomId: chatRoom.id,
             shopId: chatRoom.shopId,
-            shopName: chatRoom.shopName,
+            shopName: (chatRoom.shopName ?? '').trim().isNotEmpty
+                ? (chatRoom.shopName ?? '').trim()
+                : 'Cửa hàng',
           ),
         ),
       ),
