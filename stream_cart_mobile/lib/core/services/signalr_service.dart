@@ -47,6 +47,12 @@ class SignalRService {
   OnProductStockUpdated? onLivestreamProductStockUpdated;
 
   bool _isConnected = false;
+  /// Khi true, không forward các sự kiện hiện diện (UserJoined/UserLeft)
+  /// và lọc bỏ các chat message kiểu "đã tham gia livestream" khỏi UI.
+  bool suppressPresenceDisplay = false;
+  /// When true, presence-related hub invokes (join/leave/viewing) will be suppressed.
+  /// Use this to avoid notifying others when entering a livestream.
+  bool suppressPresenceEvents = false;
 
   SignalRService(
     this.baseUrl,
@@ -261,6 +267,10 @@ class SignalRService {
 
   // ---------- Viewing helpers (some servers require this to receive room events) ----------
   Future<void> startViewingLivestream(String livestreamId) async {
+    if (suppressPresenceEvents) {
+      onStatusChanged?.call('🔇 Bỏ qua StartViewingLivestream (suppressPresenceEvents=true)');
+      return;
+    }
     return _withRetry(() async {
       await ensureConnected();
       await _connection.invoke('StartViewingLivestream', args: [livestreamId]);
@@ -269,6 +279,10 @@ class SignalRService {
   }
 
   Future<void> stopViewingLivestream(String livestreamId) async {
+    if (suppressPresenceEvents) {
+      onStatusChanged?.call('🔇 Bỏ qua StopViewingLivestream (suppressPresenceEvents=true)');
+      return;
+    }
     return _withRetry(() async {
       await ensureConnected();
       await _connection.invoke('StopViewingLivestream', args: [livestreamId]);
@@ -339,6 +353,10 @@ class SignalRService {
   }
 
   Future<void> joinLivestreamChat(String livestreamId) async {
+    if (suppressPresenceEvents) {
+      onStatusChanged?.call('🔇 Bỏ qua JoinLivestreamChat (suppressPresenceEvents=true)');
+      return;
+    }
     return _withRetry(() async {
       await ensureConnected();
       try {
@@ -352,6 +370,10 @@ class SignalRService {
   }
 
   Future<void> leaveLivestreamChat(String livestreamId) async {
+    if (suppressPresenceEvents) {
+      onStatusChanged?.call('🔇 Bỏ qua LeaveLivestreamChat (suppressPresenceEvents=true)');
+      return;
+    }
     return _withRetry(() async {
       await ensureConnected();
       try {
@@ -420,6 +442,12 @@ class SignalRService {
               messageData = d;
             }
           }
+          // // Lọc bỏ thông điệp hệ thống "đã tham gia livestream" nếu cần ẩn
+          // if (suppressPresenceDisplay && _looksLikeJoinPresenceMessage(messageData)) {
+          //   return;
+          // }
+     
+
           onReceiveChatMessage?.call(messageData);
           if (_hasLivestreamId(messageData)) {
             onReceiveLivestreamMessage?.call(messageData);
@@ -609,7 +637,7 @@ class SignalRService {
             final userId = (data['UserId'] ?? data['userId']) as String?;
             final userName = (data['UserName'] ?? data['userName']) as String?;
             
-            if (userId != null) {
+            if (userId != null && !suppressPresenceDisplay) {
               onUserJoinedRoom?.call(userId, userName);
               // onStatusChanged?.call("👤 User $userId joined room"); // Tắt log để tránh spam
             }
@@ -629,7 +657,7 @@ class SignalRService {
             final userId = (data['UserId'] ?? data['userId']) as String?;
             final userName = (data['UserName'] ?? data['userName']) as String?;
             
-            if (userId != null) {
+            if (userId != null && !suppressPresenceDisplay) {
               onUserLeftRoom?.call(userId, userName);
               // onStatusChanged?.call("👤 User $userId left room"); // Tắt log để tránh spam
             }
@@ -707,4 +735,23 @@ class SignalRService {
     }
     onStatusChanged?.call("SignalR service đã được dispose");
   }
+
+//   bool _looksLikeJoinPresenceMessage(Map<String, dynamic> message) {
+//     try {
+//       final text = (message['text'] ?? message['message'] ?? message['content'] ?? message['body'] ?? '').toString().toLowerCase();
+//       if (text.isEmpty) return false;
+//       // Vietnamese phrases and generic English variants commonly used
+//       const patterns = [
+//         // 'đã tham gia livestream',
+//         'đã tham gia phòng',
+//         'joined the livestream',
+//         'joined the room',
+//         'has joined',
+//       ];
+//       for (final p in patterns) {
+//         if (text.contains(p)) return true;
+//       }
+//     } catch (_) {}
+//     return false;
+//   }
 }
