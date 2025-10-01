@@ -9,30 +9,27 @@ class LiveKitService {
   final _events = StreamController<RoomEvent>.broadcast();
   RoomDisconnectedEvent? _lastDisconnect;
   static bool _configured = false;
-  bool _forceSubscribeRemote = true;
+  bool _forceSubscribeRemote = true; // control forced subscription behavior
 
   Stream<RoomEvent> get events => _events.stream;
   Room? get room => _room;
   RoomDisconnectedEvent? get lastDisconnect => _lastDisconnect;
 
-  Future<void> connect({
-    required String url,
-    required String token,
-    bool forceRelay = false,
-    bool isViewer = true,
-    bool viewerSafeMode = false,
-    bool autoSubscribe = true,
-  }) async {
+  Future<void> connect({required String url, required String token, bool forceRelay = false, bool isViewer = true, bool viewerSafeMode = false}) async {
     await disconnect();
     _ensureConfigured();
     
+    // Debug: decode JWT to verify identity and grants (helps detect duplicate identity).
     try {
       final payload = _decodeJwtPayload(token);
       final identity = payload['sub'] ?? (payload['video'] is Map ? (payload['video']['identity'] ?? payload['video']['name']) : null);
       final grants = payload['video'];
       debugPrint('[LiveKit] Token identity: ${identity ?? 'unknown'} | grants.canPublish: ${grants is Map ? grants['canPublish'] : 'unknown'} | canSubscribe: ${grants is Map ? grants['canSubscribe'] : 'unknown'}');
     } catch (_) {
+      // ignore decode errors
     }
+
+    // Cấu hình room options khác nhau cho viewer và host
     RoomOptions roomOptions;
     if (isViewer) {
       // Viewer-only mode: disable tất cả local publishing.
@@ -41,7 +38,7 @@ class LiveKitService {
         adaptiveStream: viewerSafeMode ? false : true,
         dynacast: viewerSafeMode ? false : true,
         defaultCameraCaptureOptions: const CameraCaptureOptions(
-          maxFrameRate: 0,
+          maxFrameRate: 0, // Disable camera capture hoàn toàn
         ),
         defaultAudioCaptureOptions: const AudioCaptureOptions(
           noiseSuppression: false,
@@ -49,7 +46,7 @@ class LiveKitService {
           autoGainControl: false,
         ),
       );
-      _forceSubscribeRemote = !viewerSafeMode;
+      _forceSubscribeRemote = !viewerSafeMode; // skip force-subscribe in safe mode
     } else {
       // Host mode: enable normal publishing
       roomOptions = const RoomOptions(
@@ -59,8 +56,8 @@ class LiveKitService {
       _forceSubscribeRemote = true;
     }
     
-    final connectOptions = ConnectOptions(
-      autoSubscribe: autoSubscribe,
+    final connectOptions = const ConnectOptions(
+      autoSubscribe: true,
     );
     
     final room = Room(roomOptions: roomOptions);
@@ -77,38 +74,6 @@ class LiveKitService {
     } catch (e) {
       rethrow;
     }
-  }
-
-  /// Manually subscribe to a single remote camera video track to minimize renegotiations.
-  /// If [participantIdentity] is provided, it will try to subscribe to that participant's first video track.
-  Future<void> subscribeToFirstRemoteVideo({String? participantIdentity}) async {
-    final r = _room;
-    if (r == null) return;
-    try {
-      RemoteParticipant? target;
-      if (participantIdentity != null) {
-        if (r.remoteParticipants.values.isNotEmpty) {
-          try {
-            target = r.remoteParticipants.values.firstWhere(
-              (p) => p.identity == participantIdentity,
-            );
-          } catch (_) {
-            target = r.remoteParticipants.values.first;
-          }
-        }
-      } else {
-        target = r.remoteParticipants.values.isNotEmpty ? r.remoteParticipants.values.first : null;
-      }
-      if (target == null) return;
-      for (final pub in target.videoTrackPublications) {
-        if (!pub.subscribed) {
-          try {
-            await pub.subscribe();
-            break; // subscribe to just one
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
   }
 
   // Decode JWT payload (best-effort, no signature verification)
