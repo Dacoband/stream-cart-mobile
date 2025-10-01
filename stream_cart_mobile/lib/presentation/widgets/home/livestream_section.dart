@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/home/home_bloc.dart';
 import '../../blocs/home/home_state.dart';
+import '../../../core/routing/app_router.dart';
 
 class LiveStreamSection extends StatelessWidget {
   const LiveStreamSection({super.key});
@@ -33,51 +34,56 @@ class LiveStreamSection extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.live_tv,
-                    size: 20,
-                    color: Color.fromARGB(255, 68, 47, 44),
-                  ),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Đang Live',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color.fromARGB(255, 68, 47, 44),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.play_circle_fill,
+                      size: 26,
+                      color: Colors.red,
                     ),
-                  ),
-                ],
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF202328),
-                  border: Border.all(
-                    color: const Color(0xFFB0F847),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Xem LiveStream',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Xem trực tiếp các sản phẩm kèm theo deal hot',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to all livestreams
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                  ),
-                  child: const Text(
-                    'Xem thêm',
-                    style: TextStyle(
-                      color: Color(0xFFB0F847),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRouter.livestreamList);
+                },
+                icon: const Icon(Icons.arrow_forward, color: Colors.white, size: 14),
+                label: const Text('Xem thêm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  minimumSize: const Size(0, 0),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ],
@@ -104,7 +110,7 @@ class LiveStreamSection extends StatelessWidget {
           )
         else
           SizedBox(
-            height: 180,
+            height: 140,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
@@ -125,24 +131,27 @@ class LiveStreamSection extends StatelessWidget {
                     );
                   },
                   child: Container(
-                    width: 160,
+                    width: 200,
                     margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
+                    // decoration: BoxDecoration(
+                    //   color: Colors.white,
+                    //   borderRadius: BorderRadius.circular(12),
+                    //   boxShadow: [
+                    //     BoxShadow(
+                    //       color: Colors.grey.withOpacity(0.1),
+                    //       spreadRadius: 1,
+                    //       blurRadius: 4,
+                    //       offset: const Offset(0, 2),
+                    //     ),
+                    //   ],
+                    // ),
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          height: 100,
+                          height: 140,
                           child: Stack(
                             children: [
                               ClipRRect(
@@ -176,17 +185,7 @@ class LiveStreamSection extends StatelessWidget {
                                         child: Icon(Icons.live_tv, color: Colors.white.withOpacity(0.85), size: 40),
                                       ),
                               ),
-                              // Play overlay icon
-                              Center(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.black45,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  padding: const EdgeInsets.all(6),
-                                  child: const Icon(Icons.play_arrow, color: Colors.white, size: 24),
-                                ),
-                              ),
+                              // LIVE badge (top-left)
                               Positioned(
                                 top: 8,
                                 left: 8,
@@ -203,23 +202,45 @@ class LiveStreamSection extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              // Bottom gradient info overlay
                               Positioned(
-                                bottom: 8,
-                                right: 8,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.55),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Colors.black.withOpacity(0.65),
+                                        Colors.black.withOpacity(0.0),
+                                      ],
+                                    ),
                                   ),
-                                  child: Row(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.remove_red_eye, size: 10, color: Colors.white),
-                                      const SizedBox(width: 2),
                                       Text(
-                                        _formatViewerCount(stream.currentViewerCount),
-                                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                                        stream.shopName,
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.remove_red_eye, size: 12, color: Colors.white70),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _formatViewerCount(stream.currentViewerCount),
+                                            style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -228,34 +249,10 @@ class LiveStreamSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                stream.title,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                stream.shopName,
-                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
-                    ),
-                  ),
+                    ), // end Column
+                  ), // end ClipRRect
+                ), // end Container
                 );
               },
             ),
