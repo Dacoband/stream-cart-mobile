@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as badges;
+import '../../../core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/di/dependency_injection.dart';
@@ -523,6 +524,30 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildVariantPriceSection(dynamic selectedVariant) {
+    String _variantName(dynamic v) {
+      try {
+        final Map<String, String> attrs = (v.attributeValues is Map<String, String>)
+            ? v.attributeValues as Map<String, String>
+            : {};
+        if (attrs.isNotEmpty) {
+          final entries = attrs.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+          final values = entries.map((e) => e.value.trim()).where((s) => s.isNotEmpty).toList();
+          if (values.isNotEmpty) return values.join(' - ');
+        }
+      } catch (_) {}
+      return (selectedVariant.sku ?? '').toString();
+    }
+    double _variantFinalPrice(dynamic v) {
+      final double price = (v.price is num) ? (v.price as num).toDouble() : 0;
+      final double fs = (v.flashSalePrice is num) ? (v.flashSalePrice as num).toDouble() : 0;
+      final bool isPercent = fs > 0 && fs < 100;
+      final bool isAbsoluteSale = fs >= 1000 && fs < price;
+      if (isPercent) return (price * (1 - fs / 100)).clamp(0, double.infinity);
+      return isAbsoluteSale ? fs : price;
+    }
+
+    final double selFinal = _variantFinalPrice(selectedVariant);
+    final double selOriginal = (selectedVariant.price is num) ? (selectedVariant.price as num).toDouble() : 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -538,17 +563,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Row(
           children: [
             Text(
-              '${(selectedVariant.flashSalePrice > 0 ? selectedVariant.flashSalePrice : selectedVariant.price).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+              CurrencyFormatter.formatVND(selFinal),
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: Color.fromARGB(255, 116, 168, 38),
               ),
             ),
-            if (selectedVariant.flashSalePrice > 0) ...[
+            if (selOriginal > selFinal) ...[
               const SizedBox(width: 8),
               Text(
-                '${selectedVariant.price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+                CurrencyFormatter.formatVND(selOriginal),
                 style: const TextStyle(
                   fontSize: 15,
                   decoration: TextDecoration.lineThrough,
@@ -574,6 +599,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ],
           ],
         ),
+        const SizedBox(height: 4),
+        Text(
+          _variantName(selectedVariant),
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           'Kho: ${selectedVariant.stock}',
@@ -588,9 +622,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildPriceRangeSection(List<dynamic> variants) {
-    final prices = variants.map((v) => 
-      v.flashSalePrice > 0 ? v.flashSalePrice : v.price
-    ).toList();
+    double _variantFinalPrice(dynamic v) {
+      final double price = (v.price is num) ? (v.price as num).toDouble() : 0;
+      final double fs = (v.flashSalePrice is num) ? (v.flashSalePrice as num).toDouble() : 0;
+      final bool isPercent = fs > 0 && fs < 100;
+      final bool isAbsoluteSale = fs >= 1000 && fs < price;
+      if (isPercent) return (price * (1 - fs / 100)).clamp(0, double.infinity);
+      return isAbsoluteSale ? fs : price;
+    }
+    final prices = variants.map((v) => _variantFinalPrice(v)).toList();
     prices.sort();
     
     return Column(
@@ -607,7 +647,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         const SizedBox(height: 12),
         if (prices.first == prices.last)
           Text(
-            '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+            CurrencyFormatter.formatVND(prices.first),
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -616,7 +656,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           )
         else
           Text(
-            '${prices.first.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫ - ${prices.last.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+            '${CurrencyFormatter.formatVND(prices.first)} - ${CurrencyFormatter.formatVND(prices.last)}',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -675,6 +715,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildPriceSection(ProductDetailEntity product) {
+    double _productFinal(ProductDetailEntity p) {
+      if (p.finalPrice > 0 && p.finalPrice < p.basePrice) return p.finalPrice;
+      if (p.discountPrice > 0 && p.discountPrice < 100) {
+        return (p.basePrice * (1 - p.discountPrice / 100)).clamp(0, double.infinity);
+      }
+      if (p.discountPrice > 0 && p.discountPrice < p.basePrice) return p.discountPrice;
+      return p.basePrice;
+    }
+    final double finalPrice = _productFinal(product);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -690,7 +739,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Row(
           children: [
             Text(
-              '${product.finalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+              CurrencyFormatter.formatVND(finalPrice),
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -698,9 +747,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
             const SizedBox(width: 8),
-            if (product.discountPrice > 0) ...[
+            if (product.basePrice > finalPrice) ...[
               Text(
-                '${product.basePrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} ₫',
+                CurrencyFormatter.formatVND(product.basePrice),
                 style: const TextStyle(
                   fontSize: 14,
                   decoration: TextDecoration.lineThrough,
@@ -715,7 +764,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '-${((product.basePrice - product.finalPrice) / product.basePrice * 100).toStringAsFixed(0)}%',
+                  '-${(((product.basePrice - finalPrice) / (product.basePrice == 0 ? 1 : product.basePrice)) * 100).round()}%',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,

@@ -24,6 +24,43 @@ class CartItemWidget extends StatelessWidget {
     return '${priceStr}₫';
   }
 
+  String? _buildVariantLabel(CartItemEntity item) {
+    try {
+      final attrs = item.attributes;
+      String? sku;
+      String? variantName;
+      if (attrs != null && attrs.isNotEmpty) {
+        // Find SKU in attributes (case-insensitive)
+        final lowerKeys = attrs.map((k, v) => MapEntry(k.toString().toLowerCase(), v));
+        if (lowerKeys.containsKey('sku')) {
+          final v = lowerKeys['sku'];
+          if (v != null && v.toString().trim().isNotEmpty) sku = v.toString().trim();
+        }
+        // Build human name from other attributes (exclude sku)
+        final nameParts = <String>[];
+        attrs.forEach((k, v) {
+          if (k.toString().toLowerCase() == 'sku') return;
+          final val = v?.toString().trim();
+          if (val != null && val.isNotEmpty) nameParts.add(val);
+        });
+        if (nameParts.isNotEmpty) variantName = nameParts.join(' - ');
+      }
+      // Fallback to variantId as SKU only if it doesn't look like a GUID
+      if (sku == null) {
+        final vid = (item.variantId ?? '').trim();
+        final guidLike = RegExp(r'^[0-9a-fA-F-]{30,}$');
+        if (vid.isNotEmpty && !guidLike.hasMatch(vid)) {
+          sku = vid;
+        }
+      }
+
+      if (sku != null && variantName != null) return 'SKU: $sku • $variantName';
+      if (sku != null) return 'SKU: $sku';
+      if (variantName != null) return variantName;
+    } catch (_) {}
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -90,6 +127,19 @@ class CartItemWidget extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
+                  if (_buildVariantLabel(item) != null) ...[
+                    Text(
+                      _buildVariantLabel(item)!,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   
                   Row(
                     children: [

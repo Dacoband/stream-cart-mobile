@@ -160,16 +160,49 @@ class CheckoutOrderSummaryWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                if (product.variantId != null && product.variantId!.isNotEmpty) ...[
-                  Text(
-                    'Phân loại: ${product.variantId}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
+                Builder(builder: (_) {
+                  String? label;
+                  try {
+                    final attrs = product.attributes;
+                    String? sku;
+                    String? name;
+                    if (attrs != null && attrs.isNotEmpty) {
+                      final lower = attrs.map((k, v) => MapEntry(k.toString().toLowerCase(), v));
+                      if (lower.containsKey('sku')) {
+                        final v = lower['sku'];
+                        if (v != null && v.toString().trim().isNotEmpty) sku = v.toString().trim();
+                      }
+                      final parts = <String>[];
+                      attrs.forEach((k, v) {
+                        if (k.toString().toLowerCase() == 'sku') return;
+                        final vv = v?.toString().trim();
+                        if (vv != null && vv.isNotEmpty) parts.add(vv);
+                      });
+                      if (parts.isNotEmpty) name = parts.join(' - ');
+                    }
+                    if (sku == null) {
+                      final vid = (product.variantId ?? '').trim();
+                      final guidLike = RegExp(r'^[0-9a-fA-F-]{30,}$');
+                      if (vid.isNotEmpty && !guidLike.hasMatch(vid)) sku = vid;
+                    }
+                    if (sku != null && name != null) label = 'SKU: $sku • $name';
+                    else if (sku != null) label = 'SKU: $sku';
+                    else if (name != null) label = name;
+                  } catch (_) {}
+                  if (label == null) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  );
+                }),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/products/product_variants_entity.dart';
 import '../../blocs/product_variants/product_variants_bloc.dart';
@@ -7,6 +8,23 @@ import '../../blocs/product_variants/product_variants_state.dart';
 
 class VariantSelector extends StatelessWidget {
   const VariantSelector({super.key});
+
+  String _formatPrice(num value) => CurrencyFormatter.formatVND(value);
+
+  String _variantName(ProductVariantEntity v) {
+    try {
+      if (v.attributeValues.isNotEmpty) {
+        final entries = v.attributeValues.entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
+        final values = entries
+            .map((e) => (e.value).toString().trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (values.isNotEmpty) return values.join(' - ');
+      }
+    } catch (_) {}
+    return v.sku; // fallback
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +89,13 @@ class VariantSelector extends StatelessWidget {
             final variant = state.variants[index];
             final isSelected = state.selectedVariant?.id == variant.id;
             final isOutOfStock = variant.stock <= 0;
+      final double price = variant.price;
+      final double fs = variant.flashSalePrice;
+      final bool isPercent = fs > 0 && fs < 100;
+      final bool isAbsoluteSale = fs >= 1000 && fs < price; // guard to avoid 86 being treated as absolute
+      final double display = isPercent
+        ? (price * (1 - fs / 100)).clamp(0, double.infinity)
+        : (isAbsoluteSale ? fs : price);
             
             return GestureDetector(
               onTap: isOutOfStock ? null : () {
@@ -110,7 +135,7 @@ class VariantSelector extends StatelessWidget {
                           Row(
                             children: [
                               Text(
-                                '${(variant.flashSalePrice > 0 ? variant.flashSalePrice : variant.price).toStringAsFixed(0)}',
+                                _formatPrice(display),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -119,25 +144,14 @@ class VariantSelector extends StatelessWidget {
                                       : (isOutOfStock ? Colors.grey : Colors.black87),
                                 ),
                               ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '₫',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                  color: isSelected
-                                      ? primaryGreen
-                                      : (isOutOfStock ? Colors.grey : Colors.black54),
-                                ),
-                              ),
                             ],
                           ),
-                          if (variant.flashSalePrice > 0) ...[
+                          if (price > display) ...[
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 Text(
-                                  '${variant.price.toStringAsFixed(0)}₫',
+                                  _formatPrice(price),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey.shade500,
@@ -167,20 +181,29 @@ class VariantSelector extends StatelessWidget {
                       ),
                     ),
                     
-                    // SKU & Stock Section
+                    // Name, SKU & Stock Section
                     Expanded(
                       flex: 2,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            variant.sku,
+                            _variantName(variant),
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? primaryGreen
                                   : (isOutOfStock ? Colors.grey : Colors.black87),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'SKU: ${variant.sku}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -248,6 +271,14 @@ class VariantSelector extends StatelessWidget {
   }
 
   Widget _buildSelectedVariantInfo(BuildContext context, ProductVariantEntity selectedVariant) {
+  final double price = selectedVariant.price;
+  final double fs = selectedVariant.flashSalePrice;
+  final bool isPercent = fs > 0 && fs < 100;
+  final bool isAbsoluteSale = fs >= 1000 && fs < price;
+  final double display = isPercent
+    ? (price * (1 - fs / 100)).clamp(0, double.infinity)
+    : (isAbsoluteSale ? fs : price);
+  final name = _variantName(selectedVariant);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -276,7 +307,7 @@ class VariantSelector extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'SKU: ${selectedVariant.sku} - ${(selectedVariant.flashSalePrice > 0 ? selectedVariant.flashSalePrice : selectedVariant.price).toStringAsFixed(0)} ₫ (Kho: ${selectedVariant.stock})',
+                  '$name • ${_formatPrice(display)}\nSKU: ${selectedVariant.sku}  |  Kho: ${selectedVariant.stock}',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.blue.shade800,
