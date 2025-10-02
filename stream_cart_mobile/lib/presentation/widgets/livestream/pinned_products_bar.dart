@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/livestream/livestream_bloc.dart';
@@ -152,13 +153,13 @@ class _PinnedCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '${price.toStringAsFixed(0)} đ',
+                        CurrencyFormatter.formatVND(price),
                         style: const TextStyle(color: Color(0xFFB0F847), fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 6),
                       if (originalPrice > 0 && originalPrice > price)
                         Text(
-                          '${originalPrice.toStringAsFixed(0)} đ',
+                          CurrencyFormatter.formatVND(originalPrice),
                           style: TextStyle(
                             color: Colors.grey.shade500,
                             fontSize: 12,

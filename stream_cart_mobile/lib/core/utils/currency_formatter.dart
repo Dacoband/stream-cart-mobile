@@ -4,7 +4,7 @@ class CurrencyFormatter {
   CurrencyFormatter._();
 
   static final NumberFormat _vndFormatter = NumberFormat.currency(
-    locale: 'en_US',
+    locale: 'vi_VN',
     symbol: '',
     decimalDigits: 0,
   );
@@ -14,6 +14,6 @@ class CurrencyFormatter {
     if (!withSuffix) {
       return formatted;
     }
-    return '$formattedđ';
+      return '$formatted đ';
   }
 }

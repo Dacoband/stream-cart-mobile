@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_live/preview_order_live_model.dart';
 
 class LiveCartSummaryWidget extends StatelessWidget {
@@ -169,8 +169,5 @@ class LiveCartSummaryWidget extends StatelessWidget {
     return (discount / original * 100).round();
   }
 
-  String _fmt(double v) {
-    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: '', decimalDigits: 0);
-    return '${formatter.format(v)}₫';
-  }
+  String _fmt(double v) => CurrencyFormatter.formatVND(v);
 }

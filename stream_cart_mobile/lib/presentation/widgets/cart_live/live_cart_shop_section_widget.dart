@@ -36,7 +36,7 @@ class LiveCartShopSectionWidget extends StatelessWidget {
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                 ),
               ),
-              Text('${shopGroup.products.length} sp', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+              Text('${shopGroup.products.length} sản phẩm', style: TextStyle(fontSize: 11, color: Colors.grey[600])),
             ],
           ),
         ),

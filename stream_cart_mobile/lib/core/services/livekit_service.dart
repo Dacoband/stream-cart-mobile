@@ -10,6 +10,7 @@ class LiveKitService {
   RoomDisconnectedEvent? _lastDisconnect;
   static bool _configured = false;
   bool _forceSubscribeRemote = true; // control forced subscription behavior
+  bool _safePrimarySubscribed = false; // ensure single targeted subscribe in safe mode
 
   Stream<RoomEvent> get events => _events.stream;
   Room? get room => _room;
@@ -32,8 +33,7 @@ class LiveKitService {
     // Cấu hình room options khác nhau cho viewer và host
     RoomOptions roomOptions;
     if (isViewer) {
-      // Viewer-only mode: disable tất cả local publishing.
-      // viewerSafeMode: tắt adaptiveStream/dynacast để tránh ảnh hưởng publisher khi một số server/SDK xử lý aggressive dynacast.
+      // Viewer-only mode: disable tất cả local publishing
       roomOptions = RoomOptions(
         adaptiveStream: viewerSafeMode ? false : true,
         dynacast: viewerSafeMode ? false : true,
@@ -46,7 +46,7 @@ class LiveKitService {
           autoGainControl: false,
         ),
       );
-      _forceSubscribeRemote = !viewerSafeMode; // skip force-subscribe in safe mode
+      _forceSubscribeRemote = !viewerSafeMode;
     } else {
       // Host mode: enable normal publishing
       roomOptions = const RoomOptions(
@@ -69,6 +69,10 @@ class LiveKitService {
       if (isViewer) {
         await _ensureViewerOnlyMode();
         _startViewerOnlyModeWatcher();
+        if (viewerSafeMode) {
+          // attempt a targeted subscribe to primary camera to speed up first frame
+          _safeSubscribePrimary();
+        }
       }
       
     } catch (e) {
@@ -110,10 +114,35 @@ class LiveKitService {
       if (_forceSubscribeRemote && (event is TrackPublishedEvent || event is ParticipantConnectedEvent)) {
         forceSubscribeAll();
       }
+      if (viewerSafeMode && !_forceSubscribeRemote && (event is TrackPublishedEvent || event is ParticipantConnectedEvent)) {
+        // in safe mode, subscribe only to a primary camera once
+        _safeSubscribePrimary();
+      }
       if (isViewer && event is TrackPublishedEvent && event.participant is LocalParticipant) {
         _ensureViewerOnlyMode();
       }
     });
+  }
+
+  void _safeSubscribePrimary() {
+    if (_safePrimarySubscribed) return;
+    final r = _room;
+    if (r == null) return;
+    try {
+      for (final p in r.remoteParticipants.values) {
+        for (final pub in p.videoTrackPublications) {
+          // Prefer camera source first if SDK provides it, else take the first
+          final isCamera = pub.source == TrackSource.camera || pub.name.toLowerCase().contains('camera');
+          if (!pub.subscribed && (isCamera || true)) {
+            try {
+              pub.subscribe();
+              _safePrimarySubscribed = true;
+              return;
+            } catch (_) {}
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   List<RemoteParticipant> get remoteParticipants => _room?.remoteParticipants.values.toList() ?? [];
@@ -125,6 +154,7 @@ class LiveKitService {
     _listener?.dispose();
     _listener = null;
     _room = null;
+    _safePrimarySubscribed = false;
   }
 
   void dispose() {

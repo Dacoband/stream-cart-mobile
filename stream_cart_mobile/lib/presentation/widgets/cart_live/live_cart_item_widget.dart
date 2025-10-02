@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/cart_live/cart_product_live_model.dart';
 
 class LiveCartItemWidget extends StatelessWidget {
@@ -138,9 +139,7 @@ class LiveCartItemWidget extends StatelessWidget {
     );
   }
 
-  String _formatPrice(double v) {
-    return '${v.toStringAsFixed(0)}₫';
-  }
+  String _formatPrice(double v) => CurrencyFormatter.formatVND(v);
 
   String _variantText() {
     // Prefer explicit attribute values as variant name

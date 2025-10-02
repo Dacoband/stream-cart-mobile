@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/livestream/livestream_bloc.dart';
@@ -135,7 +136,7 @@ class _ExpandedCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${price.toStringAsFixed(0)} đ',
+                      CurrencyFormatter.formatVND(price),
                       style: const TextStyle(color: Color(0xFFB0F847), fontWeight: FontWeight.w700, fontSize: 12),
                     ),
                   ],

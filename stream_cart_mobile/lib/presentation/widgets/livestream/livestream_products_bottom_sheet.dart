@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/di/dependency_injection.dart';
 import '../../blocs/cart_live/cart_live_bloc.dart';
@@ -325,7 +326,7 @@ class _ProductCard extends StatelessWidget {
         const SizedBox(height: 4),
               if (product.originalPrice > 0 && product.originalPrice > product.price)
                 Text(
-                  '${product.originalPrice.toStringAsFixed(0)} đ',
+                  CurrencyFormatter.formatVND(product.originalPrice),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -338,7 +339,7 @@ class _ProductCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    '${product.price.toStringAsFixed(0)} đ',
+                    CurrencyFormatter.formatVND(product.price),
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: priceColor,
