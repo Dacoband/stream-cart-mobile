@@ -72,24 +72,62 @@ class OrderStatusTimelineWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          for (var i = 0; i < steps.length; i++) ...[
-            _Dot(label: steps[i].label, icon: steps[i].icon, active: i <= active),
-            if (i != steps.length - 1)
-              Expanded(
-                child: Container(
-                  height: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: i < active ? [accent, accent] : [Colors.grey.shade300, Colors.grey.shade300],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const double labelWidth = 66; // width used by each step (text)
+          const double connectorMin = 24; // minimal width between steps when cramped
+          final int n = steps.length;
+          final double minRequired = n * labelWidth + (n - 1) * connectorMin;
+
+          // If there's enough width, keep the flexible layout with Expanded connectors
+          if (constraints.maxWidth >= minRequired) {
+            return Row(
+              children: [
+                for (var i = 0; i < steps.length; i++) ...[
+                  _Dot(label: steps[i].label, icon: steps[i].icon, active: i <= active, labelWidth: labelWidth),
+                  if (i != steps.length - 1)
+                    Expanded(
+                      child: Container(
+                        height: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: i < active ? [accent, accent] : [Colors.grey.shade300, Colors.grey.shade300],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-          ],
-        ],
+                ],
+              ],
+            );
+          }
+
+          // Otherwise, allow horizontal scrolling with fixed-size connectors
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                for (var i = 0; i < steps.length; i++) ...[
+                  _Dot(label: steps[i].label, icon: steps[i].icon, active: i <= active, labelWidth: labelWidth),
+                  if (i != steps.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Container(
+                        width: connectorMin,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: i < active ? [accent, accent] : [Colors.grey.shade300, Colors.grey.shade300],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -99,7 +137,8 @@ class _Dot extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool active;
-  const _Dot({required this.label, required this.icon, required this.active});
+  final double labelWidth;
+  const _Dot({required this.label, required this.icon, required this.active, this.labelWidth = 66});
 
   @override
   Widget build(BuildContext context) {
@@ -128,11 +167,11 @@ class _Dot extends StatelessWidget {
                 ),
             ],
           ),
-          child: Icon(icon, size: 20, color: fg),
+          child: Icon(icon, size: 18, color: fg),
         ),
         const SizedBox(height: 6),
         SizedBox(
-          width: 66,
+          width: labelWidth,
           child: Text(
             label,
             textAlign: TextAlign.center,

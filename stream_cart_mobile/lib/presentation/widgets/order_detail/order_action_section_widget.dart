@@ -234,10 +234,10 @@ class OrderActionSectionWidget extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Chưa nhận'),
-          ),
+          // TextButton(
+          //   onPressed: () => Navigator.pop(dialogContext),
+          //   child: const Text('Chưa nhận'),
+          // ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
